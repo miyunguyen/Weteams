@@ -1,0 +1,16 @@
+{
+    "id": "df904964-0a92-4b04-9ec3-a3ddb4bdb607",
+    "version": "0.0.1",
+    "requiredApiVersion": "^1.44.0",
+    "iconFile": "icon.png",
+    "author": {
+        "name": "Minh Nguyen",
+        "homepage": "Minh Nguyen",
+        "support": "Minh Nguyen"
+    },
+    "name": "My Rocket Chat",
+    "nameSlug": "my-rocket-chat",
+    "classFile": "MyRocketChatApp.ts",
+    "description": "My Rocket Chat",
+    "implements": []
+}
