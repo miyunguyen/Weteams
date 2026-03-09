@@ -10,7 +10,7 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
 import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
-import { RoomPersistence } from "./RoomPersistence";
+import { RoomPersistence } from "./persistence/RoomPersistence";
 import { IRoom } from "@rocket.chat/apps-engine/definition/rooms";
 import { UIActionButtonContext } from "@rocket.chat/apps-engine/definition/ui";
 import {
