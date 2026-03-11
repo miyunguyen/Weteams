@@ -12,5 +12,16 @@
     "nameSlug": "my-rocket-chat",
     "classFile": "MyRocketChatApp.ts",
     "description": "My Rocket Chat",
-    "implements": []
+    "implements": [
+        "IPostRoomCreate",
+        "IUIKitInteractionHandler"
+    ],
+    "permissions": [
+        {
+            "name": "ui.registerButtons"
+        },
+        {
+            "name": "ui.interact"
+        }
+    ]
 }
