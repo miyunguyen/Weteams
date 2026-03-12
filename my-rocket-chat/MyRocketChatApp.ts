@@ -33,8 +33,8 @@ export class MyRocketChatApp
     extends App
     implements IPostRoomCreate, IUIKitInteractionHandler
 {
-    private static readonly JOIN_MODAL_BLOCK = "join_team_code_block";
-    private static readonly JOIN_MODAL_INPUT = "join_team_code_input";
+    private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
+    private readonly JOIN_MODAL_INPUT = "join_team_code_input";
 
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
         super(info, logger, accessors);
@@ -98,15 +98,15 @@ export class MyRocketChatApp
                     blocks: [
                         {
                             type: "input",
-                            blockId: MyRocketChatApp.JOIN_MODAL_BLOCK,
+                            blockId: this.JOIN_MODAL_BLOCK,
                             label: {
                                 type: "plain_text",
                                 text: "Join code",
                             },
                             element: {
                                 appId: this.getID(),
-                                blockId: MyRocketChatApp.JOIN_MODAL_BLOCK,
-                                actionId: MyRocketChatApp.JOIN_MODAL_INPUT,
+                                blockId: this.JOIN_MODAL_BLOCK,
+                                actionId: this.JOIN_MODAL_INPUT,
                                 type: "plain_text_input",
                                 placeholder: {
                                     type: "plain_text",
@@ -146,8 +146,8 @@ export class MyRocketChatApp
         const user = data.user;
         const rawCode = this.readInputValue(
             data.view && data.view.state ? data.view.state : undefined,
-            MyRocketChatApp.JOIN_MODAL_BLOCK,
-            MyRocketChatApp.JOIN_MODAL_INPUT,
+            this.JOIN_MODAL_BLOCK,
+            this.JOIN_MODAL_INPUT,
         );
         const joinCode = RoomPersistence.normalizeJoinCode(rawCode);
 
@@ -193,9 +193,7 @@ export class MyRocketChatApp
         this.getLogger().debug(
             "*************************************************",
         );
-        this.getLogger().debug(
-            "* POST ROOM CREATION - GENERATE JOIN CODE       *",
-        );
+        this.getLogger().debug("* POST ROOM CREATION - GENERATE JOIN CODE*");
         this.getLogger().debug(
             "*************************************************",
         );
