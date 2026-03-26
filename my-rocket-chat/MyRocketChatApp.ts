@@ -6,19 +6,10 @@ import {
     ILogger,
     IModify,
     IPersistence,
-    IPersistenceRead,
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
-import {
-    IAppInfo,
-    RocketChatAssociationModel,
-    RocketChatAssociationRecord,
-} from "@rocket.chat/apps-engine/definition/metadata";
-import {
-    IPostRoomCreate,
-    IRoom,
-} from "@rocket.chat/apps-engine/definition/rooms";
+import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
 import { UIActionButtonContext } from "@rocket.chat/apps-engine/definition/ui";
 import {
     UIKitActionButtonInteractionContext,
@@ -27,12 +18,7 @@ import {
     IUIKitInteractionHandler,
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
-import { RoomPersistence } from "./persistence/RoomPersistence";
-
-export class MyRocketChatApp
-    extends App
-    implements IPostRoomCreate, IUIKitInteractionHandler
-{
+export class MyRocketChatApp extends App implements IUIKitInteractionHandler {
     private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
     private readonly JOIN_MODAL_INPUT = "join_team_code_input";
 
@@ -47,12 +33,6 @@ export class MyRocketChatApp
         configuration.ui.registerButton({
             actionId: "join-team-btn",
             labelI18n: "Join team",
-            context: UIActionButtonContext.USER_DROPDOWN_ACTION,
-        });
-
-        configuration.ui.registerButton({
-            actionId: "debug-persistence-btn",
-            labelI18n: "Debug persistence",
             context: UIActionButtonContext.USER_DROPDOWN_ACTION,
         });
     }
@@ -123,15 +103,6 @@ export class MyRocketChatApp
             return context.getInteractionResponder().successResponse();
         }
 
-        if (data.actionId === "debug-persistence-btn") {
-            const all = await RoomPersistence.findAll(
-                read.getPersistenceReader(),
-            );
-            this.getLogger().log("==== Debug Join Code Index ====");
-            this.getLogger().log(all);
-            return context.getInteractionResponder().successResponse();
-        }
-
         return context.getInteractionResponder().successResponse();
     }
 
@@ -149,75 +120,26 @@ export class MyRocketChatApp
             this.JOIN_MODAL_BLOCK,
             this.JOIN_MODAL_INPUT,
         );
-        const joinCode = RoomPersistence.normalizeJoinCode(rawCode);
 
-        if (!joinCode) {
-            return context.getInteractionResponder().successResponse();
-        }
+        // if (!result.ok) {
+        //     this.getLogger().log(
+        //         "Join by code failed for user " +
+        //             user.username +
+        //             ", reason=" +
+        //             result.reason,
+        //     );
+        //     return context.getInteractionResponder().successResponse();
+        // }
 
-        const result = await RoomPersistence.joinUserByCode(
-            read,
-            modify,
-            user.username,
-            joinCode,
-        );
-
-        if (!result.ok) {
-            this.getLogger().log(
-                "Join by code failed for user " +
-                    user.username +
-                    ", reason=" +
-                    result.reason,
-            );
-            return context.getInteractionResponder().successResponse();
-        }
-
-        this.getLogger().log(
-            "User " +
-                user.username +
-                " joined room " +
-                result.roomId +
-                " by code " +
-                joinCode,
-        );
+        // this.getLogger().log(
+        //     "User " +
+        //         user.username +
+        //         " joined room " +
+        //         result.roomId +
+        //         " by code " +
+        //         joinCode,
+        // );
         return context.getInteractionResponder().successResponse();
-    }
-
-    public async executePostRoomCreate(
-        room: IRoom,
-        read: IRead,
-        _http: IHttp,
-        persistence: IPersistence,
-        _modify: IModify,
-    ): Promise<void> {
-        this.getLogger().debug(
-            "*************************************************",
-        );
-        this.getLogger().debug("* POST ROOM CREATION - GENERATE JOIN CODE*");
-        this.getLogger().debug(
-            "*************************************************",
-        );
-
-        const joinCode = await RoomPersistence.createUniqueForRoom(
-            persistence,
-            read.getPersistenceReader(),
-            room,
-            8,
-            20,
-        );
-
-        this.getLogger().log(
-            "Join code " +
-                joinCode +
-                " saved for room " +
-                room.id +
-                " - room name: " +
-                room.displayName,
-        );
-
-        const all = await RoomPersistence.findAll(read.getPersistenceReader());
-        this.getLogger().log("==== All join codes ====");
-        this.getLogger().log(all);
     }
 
     private readInputValue(

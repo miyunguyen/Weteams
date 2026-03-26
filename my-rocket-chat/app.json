@@ -13,7 +13,6 @@
     "classFile": "MyRocketChatApp.ts",
     "description": "My Rocket Chat",
     "implements": [
-        "IPostRoomCreate",
         "IUIKitInteractionHandler"
     ],
     "permissions": [
