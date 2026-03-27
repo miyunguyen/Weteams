@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Tenant {
+  id                 String    @id @default(uuid())
+  name               String
+  rocketUrl          String
+  adminUserId        String
+  adminAuthToken     String?
+  adminTokenExpireAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  users User[]
+  teams Team[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  tenantId     String
+  rocketUserId String
+  username     String
+  email        String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  roles       UserRole[]
+  teamMembers TeamMember[]
+  teams       Team[]
+
+  @@unique([tenantId, rocketUserId])
+}
+
+model Role {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+
+  users UserRole[]
+}
+
+model UserRole {
+  id       String @id @default(uuid())
+  userId   String
+  roleId   String
+  tenantId String
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId, tenantId])
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  tenantId  String
+  roomId    String
+  name      String
+  ownerId   String
+  joinCode  String
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  owner  User   @relation(fields: [ownerId], references: [id])
+
+  members  TeamMember[]
+  channels TeamChannel[]
+
+  @@unique([tenantId, joinCode])
+}
+
+model TeamMember {
+  id       String   @id @default(uuid())
+  teamId   String
+  userId   String
+  role     TeamRole
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+model TeamChannel {
+  id        String   @id @default(uuid())
+  teamId    String
+  roomId    String
+  name      String
+  isDefault Boolean
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id])
+}
+
+model JoinCodeLog {
+  id        String     @id @default(uuid())
+  tenantId  String
+  teamId    String
+  userId    String
+  joinCode  String
+  status    JoinStatus
+  createdAt DateTime   @default(now())
+}
+
+enum TeamRole {
+  OWNER
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum JoinStatus {
+  SUCCESS
+  FAIL
+}
