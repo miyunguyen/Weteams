@@ -13,7 +13,8 @@
     "classFile": "MyRocketChatApp.ts",
     "description": "My Rocket Chat",
     "implements": [
-        "IUIKitInteractionHandler"
+        "IUIKitInteractionHandler",
+        "IPostRoomCreate"
     ],
     "permissions": [
         {
@@ -21,6 +22,9 @@
         },
         {
             "name": "ui.interact"
+        },
+        {
+            "name": "networking"
         }
     ]
 }

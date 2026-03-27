@@ -29,11 +29,8 @@ export type TeamMinAggregateOutputType = {
   tenantId: string | null
   roomId: string | null
   name: string | null
-  ownerId: string | null
   joinCode: string | null
-  createdBy: string | null
   createdAt: Date | null
-  updatedAt: Date | null
 }
 
 export type TeamMaxAggregateOutputType = {
@@ -41,11 +38,8 @@ export type TeamMaxAggregateOutputType = {
   tenantId: string | null
   roomId: string | null
   name: string | null
-  ownerId: string | null
   joinCode: string | null
-  createdBy: string | null
   createdAt: Date | null
-  updatedAt: Date | null
 }
 
 export type TeamCountAggregateOutputType = {
@@ -53,11 +47,8 @@ export type TeamCountAggregateOutputType = {
   tenantId: number
   roomId: number
   name: number
-  ownerId: number
   joinCode: number
-  createdBy: number
   createdAt: number
-  updatedAt: number
   _all: number
 }
 
@@ -67,11 +58,8 @@ export type TeamMinAggregateInputType = {
   tenantId?: true
   roomId?: true
   name?: true
-  ownerId?: true
   joinCode?: true
-  createdBy?: true
   createdAt?: true
-  updatedAt?: true
 }
 
 export type TeamMaxAggregateInputType = {
@@ -79,11 +67,8 @@ export type TeamMaxAggregateInputType = {
   tenantId?: true
   roomId?: true
   name?: true
-  ownerId?: true
   joinCode?: true
-  createdBy?: true
   createdAt?: true
-  updatedAt?: true
 }
 
 export type TeamCountAggregateInputType = {
@@ -91,11 +76,8 @@ export type TeamCountAggregateInputType = {
   tenantId?: true
   roomId?: true
   name?: true
-  ownerId?: true
   joinCode?: true
-  createdBy?: true
   createdAt?: true
-  updatedAt?: true
   _all?: true
 }
 
@@ -175,12 +157,9 @@ export type TeamGroupByOutputType = {
   id: string
   tenantId: string
   roomId: string
-  name: string
-  ownerId: string
+  name: string | null
   joinCode: string
-  createdBy: string
   createdAt: Date
-  updatedAt: Date
   _count: TeamCountAggregateOutputType | null
   _min: TeamMinAggregateOutputType | null
   _max: TeamMaxAggregateOutputType | null
@@ -208,64 +187,47 @@ export type TeamWhereInput = {
   id?: Prisma.StringFilter<"Team"> | string
   tenantId?: Prisma.StringFilter<"Team"> | string
   roomId?: Prisma.StringFilter<"Team"> | string
-  name?: Prisma.StringFilter<"Team"> | string
-  ownerId?: Prisma.StringFilter<"Team"> | string
+  name?: Prisma.StringNullableFilter<"Team"> | string | null
   joinCode?: Prisma.StringFilter<"Team"> | string
-  createdBy?: Prisma.StringFilter<"Team"> | string
   createdAt?: Prisma.DateTimeFilter<"Team"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Team"> | Date | string
   tenant?: Prisma.XOR<Prisma.TenantScalarRelationFilter, Prisma.TenantWhereInput>
-  owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   members?: Prisma.TeamMemberListRelationFilter
-  channels?: Prisma.TeamChannelListRelationFilter
 }
 
 export type TeamOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   tenantId?: Prisma.SortOrder
   roomId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  ownerId?: Prisma.SortOrder
+  name?: Prisma.SortOrderInput | Prisma.SortOrder
   joinCode?: Prisma.SortOrder
-  createdBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
   tenant?: Prisma.TenantOrderByWithRelationInput
-  owner?: Prisma.UserOrderByWithRelationInput
   members?: Prisma.TeamMemberOrderByRelationAggregateInput
-  channels?: Prisma.TeamChannelOrderByRelationAggregateInput
 }
 
 export type TeamWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  tenantId_roomId?: Prisma.TeamTenantIdRoomIdCompoundUniqueInput
   tenantId_joinCode?: Prisma.TeamTenantIdJoinCodeCompoundUniqueInput
   AND?: Prisma.TeamWhereInput | Prisma.TeamWhereInput[]
   OR?: Prisma.TeamWhereInput[]
   NOT?: Prisma.TeamWhereInput | Prisma.TeamWhereInput[]
   tenantId?: Prisma.StringFilter<"Team"> | string
   roomId?: Prisma.StringFilter<"Team"> | string
-  name?: Prisma.StringFilter<"Team"> | string
-  ownerId?: Prisma.StringFilter<"Team"> | string
+  name?: Prisma.StringNullableFilter<"Team"> | string | null
   joinCode?: Prisma.StringFilter<"Team"> | string
-  createdBy?: Prisma.StringFilter<"Team"> | string
   createdAt?: Prisma.DateTimeFilter<"Team"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Team"> | Date | string
   tenant?: Prisma.XOR<Prisma.TenantScalarRelationFilter, Prisma.TenantWhereInput>
-  owner?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   members?: Prisma.TeamMemberListRelationFilter
-  channels?: Prisma.TeamChannelListRelationFilter
-}, "id" | "tenantId_joinCode">
+}, "id" | "tenantId_roomId" | "tenantId_joinCode">
 
 export type TeamOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   tenantId?: Prisma.SortOrder
   roomId?: Prisma.SortOrder
-  name?: Prisma.SortOrder
-  ownerId?: Prisma.SortOrder
+  name?: Prisma.SortOrderInput | Prisma.SortOrder
   joinCode?: Prisma.SortOrder
-  createdBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
   _count?: Prisma.TeamCountOrderByAggregateInput
   _max?: Prisma.TeamMaxOrderByAggregateInput
   _min?: Prisma.TeamMinOrderByAggregateInput
@@ -278,102 +240,75 @@ export type TeamScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Team"> | string
   tenantId?: Prisma.StringWithAggregatesFilter<"Team"> | string
   roomId?: Prisma.StringWithAggregatesFilter<"Team"> | string
-  name?: Prisma.StringWithAggregatesFilter<"Team"> | string
-  ownerId?: Prisma.StringWithAggregatesFilter<"Team"> | string
+  name?: Prisma.StringNullableWithAggregatesFilter<"Team"> | string | null
   joinCode?: Prisma.StringWithAggregatesFilter<"Team"> | string
-  createdBy?: Prisma.StringWithAggregatesFilter<"Team"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Team"> | Date | string
-  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Team"> | Date | string
 }
 
 export type TeamCreateInput = {
   id?: string
   roomId: string
-  name: string
+  name?: string | null
   joinCode: string
-  createdBy: string
   createdAt?: Date | string
-  updatedAt?: Date | string
   tenant: Prisma.TenantCreateNestedOneWithoutTeamsInput
-  owner: Prisma.UserCreateNestedOneWithoutTeamsInput
   members?: Prisma.TeamMemberCreateNestedManyWithoutTeamInput
-  channels?: Prisma.TeamChannelCreateNestedManyWithoutTeamInput
 }
 
 export type TeamUncheckedCreateInput = {
   id?: string
   tenantId: string
   roomId: string
-  name: string
-  ownerId: string
+  name?: string | null
   joinCode: string
-  createdBy: string
   createdAt?: Date | string
-  updatedAt?: Date | string
   members?: Prisma.TeamMemberUncheckedCreateNestedManyWithoutTeamInput
-  channels?: Prisma.TeamChannelUncheckedCreateNestedManyWithoutTeamInput
 }
 
 export type TeamUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tenant?: Prisma.TenantUpdateOneRequiredWithoutTeamsNestedInput
-  owner?: Prisma.UserUpdateOneRequiredWithoutTeamsNestedInput
   members?: Prisma.TeamMemberUpdateManyWithoutTeamNestedInput
-  channels?: Prisma.TeamChannelUpdateManyWithoutTeamNestedInput
 }
 
 export type TeamUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tenantId?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.TeamMemberUncheckedUpdateManyWithoutTeamNestedInput
-  channels?: Prisma.TeamChannelUncheckedUpdateManyWithoutTeamNestedInput
 }
 
 export type TeamCreateManyInput = {
   id?: string
   tenantId: string
   roomId: string
-  name: string
-  ownerId: string
+  name?: string | null
   joinCode: string
-  createdBy: string
   createdAt?: Date | string
-  updatedAt?: Date | string
 }
 
 export type TeamUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type TeamUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tenantId?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type TeamListRelationFilter = {
@@ -386,6 +321,11 @@ export type TeamOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type TeamTenantIdRoomIdCompoundUniqueInput = {
+  tenantId: string
+  roomId: string
+}
+
 export type TeamTenantIdJoinCodeCompoundUniqueInput = {
   tenantId: string
   joinCode: string
@@ -396,11 +336,8 @@ export type TeamCountOrderByAggregateInput = {
   tenantId?: Prisma.SortOrder
   roomId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  ownerId?: Prisma.SortOrder
   joinCode?: Prisma.SortOrder
-  createdBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
 }
 
 export type TeamMaxOrderByAggregateInput = {
@@ -408,11 +345,8 @@ export type TeamMaxOrderByAggregateInput = {
   tenantId?: Prisma.SortOrder
   roomId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  ownerId?: Prisma.SortOrder
   joinCode?: Prisma.SortOrder
-  createdBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
 }
 
 export type TeamMinOrderByAggregateInput = {
@@ -420,11 +354,8 @@ export type TeamMinOrderByAggregateInput = {
   tenantId?: Prisma.SortOrder
   roomId?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  ownerId?: Prisma.SortOrder
   joinCode?: Prisma.SortOrder
-  createdBy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  updatedAt?: Prisma.SortOrder
 }
 
 export type TeamScalarRelationFilter = {
@@ -474,48 +405,6 @@ export type TeamUncheckedUpdateManyWithoutTenantNestedInput = {
   deleteMany?: Prisma.TeamScalarWhereInput | Prisma.TeamScalarWhereInput[]
 }
 
-export type TeamCreateNestedManyWithoutOwnerInput = {
-  create?: Prisma.XOR<Prisma.TeamCreateWithoutOwnerInput, Prisma.TeamUncheckedCreateWithoutOwnerInput> | Prisma.TeamCreateWithoutOwnerInput[] | Prisma.TeamUncheckedCreateWithoutOwnerInput[]
-  connectOrCreate?: Prisma.TeamCreateOrConnectWithoutOwnerInput | Prisma.TeamCreateOrConnectWithoutOwnerInput[]
-  createMany?: Prisma.TeamCreateManyOwnerInputEnvelope
-  connect?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-}
-
-export type TeamUncheckedCreateNestedManyWithoutOwnerInput = {
-  create?: Prisma.XOR<Prisma.TeamCreateWithoutOwnerInput, Prisma.TeamUncheckedCreateWithoutOwnerInput> | Prisma.TeamCreateWithoutOwnerInput[] | Prisma.TeamUncheckedCreateWithoutOwnerInput[]
-  connectOrCreate?: Prisma.TeamCreateOrConnectWithoutOwnerInput | Prisma.TeamCreateOrConnectWithoutOwnerInput[]
-  createMany?: Prisma.TeamCreateManyOwnerInputEnvelope
-  connect?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-}
-
-export type TeamUpdateManyWithoutOwnerNestedInput = {
-  create?: Prisma.XOR<Prisma.TeamCreateWithoutOwnerInput, Prisma.TeamUncheckedCreateWithoutOwnerInput> | Prisma.TeamCreateWithoutOwnerInput[] | Prisma.TeamUncheckedCreateWithoutOwnerInput[]
-  connectOrCreate?: Prisma.TeamCreateOrConnectWithoutOwnerInput | Prisma.TeamCreateOrConnectWithoutOwnerInput[]
-  upsert?: Prisma.TeamUpsertWithWhereUniqueWithoutOwnerInput | Prisma.TeamUpsertWithWhereUniqueWithoutOwnerInput[]
-  createMany?: Prisma.TeamCreateManyOwnerInputEnvelope
-  set?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-  disconnect?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-  delete?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-  connect?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-  update?: Prisma.TeamUpdateWithWhereUniqueWithoutOwnerInput | Prisma.TeamUpdateWithWhereUniqueWithoutOwnerInput[]
-  updateMany?: Prisma.TeamUpdateManyWithWhereWithoutOwnerInput | Prisma.TeamUpdateManyWithWhereWithoutOwnerInput[]
-  deleteMany?: Prisma.TeamScalarWhereInput | Prisma.TeamScalarWhereInput[]
-}
-
-export type TeamUncheckedUpdateManyWithoutOwnerNestedInput = {
-  create?: Prisma.XOR<Prisma.TeamCreateWithoutOwnerInput, Prisma.TeamUncheckedCreateWithoutOwnerInput> | Prisma.TeamCreateWithoutOwnerInput[] | Prisma.TeamUncheckedCreateWithoutOwnerInput[]
-  connectOrCreate?: Prisma.TeamCreateOrConnectWithoutOwnerInput | Prisma.TeamCreateOrConnectWithoutOwnerInput[]
-  upsert?: Prisma.TeamUpsertWithWhereUniqueWithoutOwnerInput | Prisma.TeamUpsertWithWhereUniqueWithoutOwnerInput[]
-  createMany?: Prisma.TeamCreateManyOwnerInputEnvelope
-  set?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-  disconnect?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-  delete?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-  connect?: Prisma.TeamWhereUniqueInput | Prisma.TeamWhereUniqueInput[]
-  update?: Prisma.TeamUpdateWithWhereUniqueWithoutOwnerInput | Prisma.TeamUpdateWithWhereUniqueWithoutOwnerInput[]
-  updateMany?: Prisma.TeamUpdateManyWithWhereWithoutOwnerInput | Prisma.TeamUpdateManyWithWhereWithoutOwnerInput[]
-  deleteMany?: Prisma.TeamScalarWhereInput | Prisma.TeamScalarWhereInput[]
-}
-
 export type TeamCreateNestedOneWithoutMembersInput = {
   create?: Prisma.XOR<Prisma.TeamCreateWithoutMembersInput, Prisma.TeamUncheckedCreateWithoutMembersInput>
   connectOrCreate?: Prisma.TeamCreateOrConnectWithoutMembersInput
@@ -530,44 +419,22 @@ export type TeamUpdateOneRequiredWithoutMembersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TeamUpdateToOneWithWhereWithoutMembersInput, Prisma.TeamUpdateWithoutMembersInput>, Prisma.TeamUncheckedUpdateWithoutMembersInput>
 }
 
-export type TeamCreateNestedOneWithoutChannelsInput = {
-  create?: Prisma.XOR<Prisma.TeamCreateWithoutChannelsInput, Prisma.TeamUncheckedCreateWithoutChannelsInput>
-  connectOrCreate?: Prisma.TeamCreateOrConnectWithoutChannelsInput
-  connect?: Prisma.TeamWhereUniqueInput
-}
-
-export type TeamUpdateOneRequiredWithoutChannelsNestedInput = {
-  create?: Prisma.XOR<Prisma.TeamCreateWithoutChannelsInput, Prisma.TeamUncheckedCreateWithoutChannelsInput>
-  connectOrCreate?: Prisma.TeamCreateOrConnectWithoutChannelsInput
-  upsert?: Prisma.TeamUpsertWithoutChannelsInput
-  connect?: Prisma.TeamWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.TeamUpdateToOneWithWhereWithoutChannelsInput, Prisma.TeamUpdateWithoutChannelsInput>, Prisma.TeamUncheckedUpdateWithoutChannelsInput>
-}
-
 export type TeamCreateWithoutTenantInput = {
   id?: string
   roomId: string
-  name: string
+  name?: string | null
   joinCode: string
-  createdBy: string
   createdAt?: Date | string
-  updatedAt?: Date | string
-  owner: Prisma.UserCreateNestedOneWithoutTeamsInput
   members?: Prisma.TeamMemberCreateNestedManyWithoutTeamInput
-  channels?: Prisma.TeamChannelCreateNestedManyWithoutTeamInput
 }
 
 export type TeamUncheckedCreateWithoutTenantInput = {
   id?: string
   roomId: string
-  name: string
-  ownerId: string
+  name?: string | null
   joinCode: string
-  createdBy: string
   createdAt?: Date | string
-  updatedAt?: Date | string
   members?: Prisma.TeamMemberUncheckedCreateNestedManyWithoutTeamInput
-  channels?: Prisma.TeamChannelUncheckedCreateNestedManyWithoutTeamInput
 }
 
 export type TeamCreateOrConnectWithoutTenantInput = {
@@ -603,90 +470,27 @@ export type TeamScalarWhereInput = {
   id?: Prisma.StringFilter<"Team"> | string
   tenantId?: Prisma.StringFilter<"Team"> | string
   roomId?: Prisma.StringFilter<"Team"> | string
-  name?: Prisma.StringFilter<"Team"> | string
-  ownerId?: Prisma.StringFilter<"Team"> | string
+  name?: Prisma.StringNullableFilter<"Team"> | string | null
   joinCode?: Prisma.StringFilter<"Team"> | string
-  createdBy?: Prisma.StringFilter<"Team"> | string
   createdAt?: Prisma.DateTimeFilter<"Team"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Team"> | Date | string
-}
-
-export type TeamCreateWithoutOwnerInput = {
-  id?: string
-  roomId: string
-  name: string
-  joinCode: string
-  createdBy: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  tenant: Prisma.TenantCreateNestedOneWithoutTeamsInput
-  members?: Prisma.TeamMemberCreateNestedManyWithoutTeamInput
-  channels?: Prisma.TeamChannelCreateNestedManyWithoutTeamInput
-}
-
-export type TeamUncheckedCreateWithoutOwnerInput = {
-  id?: string
-  tenantId: string
-  roomId: string
-  name: string
-  joinCode: string
-  createdBy: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  members?: Prisma.TeamMemberUncheckedCreateNestedManyWithoutTeamInput
-  channels?: Prisma.TeamChannelUncheckedCreateNestedManyWithoutTeamInput
-}
-
-export type TeamCreateOrConnectWithoutOwnerInput = {
-  where: Prisma.TeamWhereUniqueInput
-  create: Prisma.XOR<Prisma.TeamCreateWithoutOwnerInput, Prisma.TeamUncheckedCreateWithoutOwnerInput>
-}
-
-export type TeamCreateManyOwnerInputEnvelope = {
-  data: Prisma.TeamCreateManyOwnerInput | Prisma.TeamCreateManyOwnerInput[]
-  skipDuplicates?: boolean
-}
-
-export type TeamUpsertWithWhereUniqueWithoutOwnerInput = {
-  where: Prisma.TeamWhereUniqueInput
-  update: Prisma.XOR<Prisma.TeamUpdateWithoutOwnerInput, Prisma.TeamUncheckedUpdateWithoutOwnerInput>
-  create: Prisma.XOR<Prisma.TeamCreateWithoutOwnerInput, Prisma.TeamUncheckedCreateWithoutOwnerInput>
-}
-
-export type TeamUpdateWithWhereUniqueWithoutOwnerInput = {
-  where: Prisma.TeamWhereUniqueInput
-  data: Prisma.XOR<Prisma.TeamUpdateWithoutOwnerInput, Prisma.TeamUncheckedUpdateWithoutOwnerInput>
-}
-
-export type TeamUpdateManyWithWhereWithoutOwnerInput = {
-  where: Prisma.TeamScalarWhereInput
-  data: Prisma.XOR<Prisma.TeamUpdateManyMutationInput, Prisma.TeamUncheckedUpdateManyWithoutOwnerInput>
 }
 
 export type TeamCreateWithoutMembersInput = {
   id?: string
   roomId: string
-  name: string
+  name?: string | null
   joinCode: string
-  createdBy: string
   createdAt?: Date | string
-  updatedAt?: Date | string
   tenant: Prisma.TenantCreateNestedOneWithoutTeamsInput
-  owner: Prisma.UserCreateNestedOneWithoutTeamsInput
-  channels?: Prisma.TeamChannelCreateNestedManyWithoutTeamInput
 }
 
 export type TeamUncheckedCreateWithoutMembersInput = {
   id?: string
   tenantId: string
   roomId: string
-  name: string
-  ownerId: string
+  name?: string | null
   joinCode: string
-  createdBy: string
   createdAt?: Date | string
-  updatedAt?: Date | string
-  channels?: Prisma.TeamChannelUncheckedCreateNestedManyWithoutTeamInput
 }
 
 export type TeamCreateOrConnectWithoutMembersInput = {
@@ -708,191 +512,53 @@ export type TeamUpdateToOneWithWhereWithoutMembersInput = {
 export type TeamUpdateWithoutMembersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tenant?: Prisma.TenantUpdateOneRequiredWithoutTeamsNestedInput
-  owner?: Prisma.UserUpdateOneRequiredWithoutTeamsNestedInput
-  channels?: Prisma.TeamChannelUpdateManyWithoutTeamNestedInput
 }
 
 export type TeamUncheckedUpdateWithoutMembersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tenantId?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  channels?: Prisma.TeamChannelUncheckedUpdateManyWithoutTeamNestedInput
-}
-
-export type TeamCreateWithoutChannelsInput = {
-  id?: string
-  roomId: string
-  name: string
-  joinCode: string
-  createdBy: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  tenant: Prisma.TenantCreateNestedOneWithoutTeamsInput
-  owner: Prisma.UserCreateNestedOneWithoutTeamsInput
-  members?: Prisma.TeamMemberCreateNestedManyWithoutTeamInput
-}
-
-export type TeamUncheckedCreateWithoutChannelsInput = {
-  id?: string
-  tenantId: string
-  roomId: string
-  name: string
-  ownerId: string
-  joinCode: string
-  createdBy: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  members?: Prisma.TeamMemberUncheckedCreateNestedManyWithoutTeamInput
-}
-
-export type TeamCreateOrConnectWithoutChannelsInput = {
-  where: Prisma.TeamWhereUniqueInput
-  create: Prisma.XOR<Prisma.TeamCreateWithoutChannelsInput, Prisma.TeamUncheckedCreateWithoutChannelsInput>
-}
-
-export type TeamUpsertWithoutChannelsInput = {
-  update: Prisma.XOR<Prisma.TeamUpdateWithoutChannelsInput, Prisma.TeamUncheckedUpdateWithoutChannelsInput>
-  create: Prisma.XOR<Prisma.TeamCreateWithoutChannelsInput, Prisma.TeamUncheckedCreateWithoutChannelsInput>
-  where?: Prisma.TeamWhereInput
-}
-
-export type TeamUpdateToOneWithWhereWithoutChannelsInput = {
-  where?: Prisma.TeamWhereInput
-  data: Prisma.XOR<Prisma.TeamUpdateWithoutChannelsInput, Prisma.TeamUncheckedUpdateWithoutChannelsInput>
-}
-
-export type TeamUpdateWithoutChannelsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  tenant?: Prisma.TenantUpdateOneRequiredWithoutTeamsNestedInput
-  owner?: Prisma.UserUpdateOneRequiredWithoutTeamsNestedInput
-  members?: Prisma.TeamMemberUpdateManyWithoutTeamNestedInput
-}
-
-export type TeamUncheckedUpdateWithoutChannelsInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  tenantId?: Prisma.StringFieldUpdateOperationsInput | string
-  roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
-  joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  members?: Prisma.TeamMemberUncheckedUpdateManyWithoutTeamNestedInput
 }
 
 export type TeamCreateManyTenantInput = {
   id?: string
   roomId: string
-  name: string
-  ownerId: string
+  name?: string | null
   joinCode: string
-  createdBy: string
   createdAt?: Date | string
-  updatedAt?: Date | string
 }
 
 export type TeamUpdateWithoutTenantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  owner?: Prisma.UserUpdateOneRequiredWithoutTeamsNestedInput
   members?: Prisma.TeamMemberUpdateManyWithoutTeamNestedInput
-  channels?: Prisma.TeamChannelUpdateManyWithoutTeamNestedInput
 }
 
 export type TeamUncheckedUpdateWithoutTenantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.TeamMemberUncheckedUpdateManyWithoutTeamNestedInput
-  channels?: Prisma.TeamChannelUncheckedUpdateManyWithoutTeamNestedInput
 }
 
 export type TeamUncheckedUpdateManyWithoutTenantInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  ownerId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type TeamCreateManyOwnerInput = {
-  id?: string
-  tenantId: string
-  roomId: string
-  name: string
-  joinCode: string
-  createdBy: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-}
-
-export type TeamUpdateWithoutOwnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  tenant?: Prisma.TenantUpdateOneRequiredWithoutTeamsNestedInput
-  members?: Prisma.TeamMemberUpdateManyWithoutTeamNestedInput
-  channels?: Prisma.TeamChannelUpdateManyWithoutTeamNestedInput
-}
-
-export type TeamUncheckedUpdateWithoutOwnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  tenantId?: Prisma.StringFieldUpdateOperationsInput | string
-  roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  members?: Prisma.TeamMemberUncheckedUpdateManyWithoutTeamNestedInput
-  channels?: Prisma.TeamChannelUncheckedUpdateManyWithoutTeamNestedInput
-}
-
-export type TeamUncheckedUpdateManyWithoutOwnerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  tenantId?: Prisma.StringFieldUpdateOperationsInput | string
-  roomId?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  joinCode?: Prisma.StringFieldUpdateOperationsInput | string
-  createdBy?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 
@@ -902,12 +568,10 @@ export type TeamUncheckedUpdateManyWithoutOwnerInput = {
 
 export type TeamCountOutputType = {
   members: number
-  channels: number
 }
 
 export type TeamCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   members?: boolean | TeamCountOutputTypeCountMembersArgs
-  channels?: boolean | TeamCountOutputTypeCountChannelsArgs
 }
 
 /**
@@ -927,28 +591,16 @@ export type TeamCountOutputTypeCountMembersArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.TeamMemberWhereInput
 }
 
-/**
- * TeamCountOutputType without action
- */
-export type TeamCountOutputTypeCountChannelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.TeamChannelWhereInput
-}
-
 
 export type TeamSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   tenantId?: boolean
   roomId?: boolean
   name?: boolean
-  ownerId?: boolean
   joinCode?: boolean
-  createdBy?: boolean
   createdAt?: boolean
-  updatedAt?: boolean
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
-  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   members?: boolean | Prisma.Team$membersArgs<ExtArgs>
-  channels?: boolean | Prisma.Team$channelsArgs<ExtArgs>
   _count?: boolean | Prisma.TeamCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["team"]>
 
@@ -957,13 +609,9 @@ export type TeamSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   tenantId?: boolean
   roomId?: boolean
   name?: boolean
-  ownerId?: boolean
   joinCode?: boolean
-  createdBy?: boolean
   createdAt?: boolean
-  updatedAt?: boolean
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
-  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["team"]>
 
 export type TeamSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -971,13 +619,9 @@ export type TeamSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   tenantId?: boolean
   roomId?: boolean
   name?: boolean
-  ownerId?: boolean
   joinCode?: boolean
-  createdBy?: boolean
   createdAt?: boolean
-  updatedAt?: boolean
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
-  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["team"]>
 
 export type TeamSelectScalar = {
@@ -985,48 +629,36 @@ export type TeamSelectScalar = {
   tenantId?: boolean
   roomId?: boolean
   name?: boolean
-  ownerId?: boolean
   joinCode?: boolean
-  createdBy?: boolean
   createdAt?: boolean
-  updatedAt?: boolean
 }
 
-export type TeamOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tenantId" | "roomId" | "name" | "ownerId" | "joinCode" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["team"]>
+export type TeamOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tenantId" | "roomId" | "name" | "joinCode" | "createdAt", ExtArgs["result"]["team"]>
 export type TeamInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
-  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   members?: boolean | Prisma.Team$membersArgs<ExtArgs>
-  channels?: boolean | Prisma.Team$channelsArgs<ExtArgs>
   _count?: boolean | Prisma.TeamCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TeamIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
-  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type TeamIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
-  owner?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 
 export type $TeamPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Team"
   objects: {
     tenant: Prisma.$TenantPayload<ExtArgs>
-    owner: Prisma.$UserPayload<ExtArgs>
     members: Prisma.$TeamMemberPayload<ExtArgs>[]
-    channels: Prisma.$TeamChannelPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     tenantId: string
     roomId: string
-    name: string
-    ownerId: string
+    name: string | null
     joinCode: string
-    createdBy: string
     createdAt: Date
-    updatedAt: Date
   }, ExtArgs["result"]["team"]>
   composites: {}
 }
@@ -1422,9 +1054,7 @@ readonly fields: TeamFieldRefs;
 export interface Prisma__TeamClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   tenant<T extends Prisma.TenantDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.TenantDefaultArgs<ExtArgs>>): Prisma.Prisma__TenantClient<runtime.Types.Result.GetResult<Prisma.$TenantPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  owner<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   members<T extends Prisma.Team$membersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Team$membersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamMemberPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  channels<T extends Prisma.Team$channelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Team$channelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1458,11 +1088,8 @@ export interface TeamFieldRefs {
   readonly tenantId: Prisma.FieldRef<"Team", 'String'>
   readonly roomId: Prisma.FieldRef<"Team", 'String'>
   readonly name: Prisma.FieldRef<"Team", 'String'>
-  readonly ownerId: Prisma.FieldRef<"Team", 'String'>
   readonly joinCode: Prisma.FieldRef<"Team", 'String'>
-  readonly createdBy: Prisma.FieldRef<"Team", 'String'>
   readonly createdAt: Prisma.FieldRef<"Team", 'DateTime'>
-  readonly updatedAt: Prisma.FieldRef<"Team", 'DateTime'>
 }
     
 
@@ -1885,30 +1512,6 @@ export type Team$membersArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   distinct?: Prisma.TeamMemberScalarFieldEnum | Prisma.TeamMemberScalarFieldEnum[]
-}
-
-/**
- * Team.channels
- */
-export type Team$channelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the TeamChannel
-   */
-  select?: Prisma.TeamChannelSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the TeamChannel
-   */
-  omit?: Prisma.TeamChannelOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.TeamChannelInclude<ExtArgs> | null
-  where?: Prisma.TeamChannelWhereInput
-  orderBy?: Prisma.TeamChannelOrderByWithRelationInput | Prisma.TeamChannelOrderByWithRelationInput[]
-  cursor?: Prisma.TeamChannelWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.TeamChannelScalarFieldEnum | Prisma.TeamChannelScalarFieldEnum[]
 }
 
 /**

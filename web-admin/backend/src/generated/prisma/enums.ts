@@ -10,18 +10,9 @@
 */
 
 export const TeamRole = {
-  OWNER: 'OWNER',
   TEACHER: 'TEACHER',
   STUDENT: 'STUDENT',
   PARENT: 'PARENT'
 } as const
 
 export type TeamRole = (typeof TeamRole)[keyof typeof TeamRole]
-
-
-export const JoinStatus = {
-  SUCCESS: 'SUCCESS',
-  FAIL: 'FAIL'
-} as const
-
-export type JoinStatus = (typeof JoinStatus)[keyof typeof JoinStatus]

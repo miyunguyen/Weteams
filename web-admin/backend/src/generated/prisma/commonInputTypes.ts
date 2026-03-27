@@ -152,36 +152,6 @@ export type EnumTeamRoleWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumTeamRoleFilter<$PrismaModel>
 }
 
-export type BoolFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedBoolFilter<$PrismaModel> | boolean
-}
-
-export type BoolWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedBoolFilter<$PrismaModel>
-  _max?: Prisma.NestedBoolFilter<$PrismaModel>
-}
-
-export type EnumJoinStatusFilter<$PrismaModel = never> = {
-  equals?: $Enums.JoinStatus | Prisma.EnumJoinStatusFieldRefInput<$PrismaModel>
-  in?: $Enums.JoinStatus[] | Prisma.ListEnumJoinStatusFieldRefInput<$PrismaModel>
-  notIn?: $Enums.JoinStatus[] | Prisma.ListEnumJoinStatusFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumJoinStatusFilter<$PrismaModel> | $Enums.JoinStatus
-}
-
-export type EnumJoinStatusWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.JoinStatus | Prisma.EnumJoinStatusFieldRefInput<$PrismaModel>
-  in?: $Enums.JoinStatus[] | Prisma.ListEnumJoinStatusFieldRefInput<$PrismaModel>
-  notIn?: $Enums.JoinStatus[] | Prisma.ListEnumJoinStatusFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumJoinStatusWithAggregatesFilter<$PrismaModel> | $Enums.JoinStatus
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumJoinStatusFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumJoinStatusFilter<$PrismaModel>
-}
-
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -331,36 +301,6 @@ export type NestedEnumTeamRoleWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumTeamRoleFilter<$PrismaModel>
   _max?: Prisma.NestedEnumTeamRoleFilter<$PrismaModel>
-}
-
-export type NestedBoolFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedBoolFilter<$PrismaModel> | boolean
-}
-
-export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: boolean | Prisma.BooleanFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedBoolFilter<$PrismaModel>
-  _max?: Prisma.NestedBoolFilter<$PrismaModel>
-}
-
-export type NestedEnumJoinStatusFilter<$PrismaModel = never> = {
-  equals?: $Enums.JoinStatus | Prisma.EnumJoinStatusFieldRefInput<$PrismaModel>
-  in?: $Enums.JoinStatus[] | Prisma.ListEnumJoinStatusFieldRefInput<$PrismaModel>
-  notIn?: $Enums.JoinStatus[] | Prisma.ListEnumJoinStatusFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumJoinStatusFilter<$PrismaModel> | $Enums.JoinStatus
-}
-
-export type NestedEnumJoinStatusWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.JoinStatus | Prisma.EnumJoinStatusFieldRefInput<$PrismaModel>
-  in?: $Enums.JoinStatus[] | Prisma.ListEnumJoinStatusFieldRefInput<$PrismaModel>
-  notIn?: $Enums.JoinStatus[] | Prisma.ListEnumJoinStatusFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumJoinStatusWithAggregatesFilter<$PrismaModel> | $Enums.JoinStatus
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumJoinStatusFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumJoinStatusFilter<$PrismaModel>
 }
 
 

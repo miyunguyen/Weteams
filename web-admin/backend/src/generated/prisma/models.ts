@@ -10,10 +10,6 @@
  */
 export type * from './models/Tenant.js'
 export type * from './models/User.js'
-export type * from './models/Role.js'
-export type * from './models/UserRole.js'
 export type * from './models/Team.js'
 export type * from './models/TeamMember.js'
-export type * from './models/TeamChannel.js'
-export type * from './models/JoinCodeLog.js'
 export type * from './commonInputTypes.js'

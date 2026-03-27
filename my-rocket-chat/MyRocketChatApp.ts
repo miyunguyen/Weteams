@@ -10,6 +10,14 @@ import {
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
 import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
+import {
+    IPostRoomCreate,
+    IRoom,
+} from "@rocket.chat/apps-engine/definition/rooms";
+import {
+    ISetting,
+    SettingType,
+} from "@rocket.chat/apps-engine/definition/settings";
 import { UIActionButtonContext } from "@rocket.chat/apps-engine/definition/ui";
 import {
     UIKitActionButtonInteractionContext,
@@ -18,7 +26,22 @@ import {
     IUIKitInteractionHandler,
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
-export class MyRocketChatApp extends App implements IUIKitInteractionHandler {
+
+const settings: Array<ISetting> = [
+    {
+        id: "tenantId",
+        type: SettingType.STRING,
+        packageValue: "",
+        required: false,
+        public: false,
+        i18nLabel: "",
+        i18nDescription: "",
+    },
+];
+export class MyRocketChatApp
+    extends App
+    implements IUIKitInteractionHandler, IPostRoomCreate
+{
     private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
     private readonly JOIN_MODAL_INPUT = "join_team_code_input";
 
@@ -35,6 +58,46 @@ export class MyRocketChatApp extends App implements IUIKitInteractionHandler {
             labelI18n: "Join team",
             context: UIActionButtonContext.USER_DROPDOWN_ACTION,
         });
+
+        await Promise.all(
+            settings.map((setting) =>
+                configuration.settings.provideSetting(setting),
+            ),
+        );
+    }
+
+    public async executePostRoomCreate(
+        room: IRoom,
+        read: IRead,
+        http: IHttp,
+        persistence: IPersistence,
+        modify: IModify,
+    ): Promise<void> {
+        this.getLogger().log(room);
+        const tenantId = (await read
+            .getEnvironmentReader()
+            .getSettings()
+            .getValueById("tenantId")) as string;
+
+        const body = {
+            tenantId: tenantId,
+            roomId: room.id,
+            roomName: room.displayName,
+        };
+
+        try {
+            const response = await http.post(
+                "https://scalelike-nondevotionally-helaine.ngrok-free.dev/team/from-room",
+                {
+                    headers: { "Content-Type": "application/json" },
+                    data: body,
+                },
+            );
+
+            this.getLogger().log(response, body);
+        } catch (error) {
+            this.getLogger().log("failed: ", error);
+        }
     }
 
     public async executeActionButtonHandler(

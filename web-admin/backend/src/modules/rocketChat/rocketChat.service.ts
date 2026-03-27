@@ -9,7 +9,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import 'dotenv/config';
 
 @Injectable()
-export class RocketService {
+export class RocketChatService {
   constructor(private prisma: PrismaService) {}
 
   async getTenant(tenantId: string) {
@@ -61,6 +61,28 @@ export class RocketService {
   }
 
   // ===== BUSINESS API =====
+
+  async isTeam(tenantId: string, roomId: string): Promise<boolean> {
+    const res = await this.callApi(tenantId, (headers, tenant) =>
+      axios.get(`${tenant.rocketUrl}/api/v1/rooms.info?roomId=${roomId}`, {
+        headers,
+      }),
+    );
+
+    const data = res.data;
+
+    return !!data?.team; // key logic
+  }
+
+  async createTeam(tenantId: string, name: string, type: number) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/teams.create`,
+        { name, type },
+        { headers },
+      ),
+    );
+  }
 
   async createChannel(tenantId: string, name: string) {
     return this.callApi(tenantId, (headers, tenant) =>

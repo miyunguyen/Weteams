@@ -28,16 +28,6 @@ export type Tenant = Prisma.TenantModel
  */
 export type User = Prisma.UserModel
 /**
- * Model Role
- * 
- */
-export type Role = Prisma.RoleModel
-/**
- * Model UserRole
- * 
- */
-export type UserRole = Prisma.UserRoleModel
-/**
  * Model Team
  * 
  */
@@ -47,13 +37,3 @@ export type Team = Prisma.TeamModel
  * 
  */
 export type TeamMember = Prisma.TeamMemberModel
-/**
- * Model TeamChannel
- * 
- */
-export type TeamChannel = Prisma.TeamChannelModel
-/**
- * Model JoinCodeLog
- * 
- */
-export type JoinCodeLog = Prisma.JoinCodeLogModel

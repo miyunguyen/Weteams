@@ -53,12 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   Tenant: 'Tenant',
   User: 'User',
-  Role: 'Role',
-  UserRole: 'UserRole',
   Team: 'Team',
-  TeamMember: 'TeamMember',
-  TeamChannel: 'TeamChannel',
-  JoinCodeLog: 'JoinCodeLog'
+  TeamMember: 'TeamMember'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -97,30 +93,10 @@ export const UserScalarFieldEnum = {
   rocketUserId: 'rocketUserId',
   username: 'username',
   email: 'email',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  createdAt: 'createdAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
-
-
-export const RoleScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  description: 'description'
-} as const
-
-export type RoleScalarFieldEnum = (typeof RoleScalarFieldEnum)[keyof typeof RoleScalarFieldEnum]
-
-
-export const UserRoleScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  roleId: 'roleId',
-  tenantId: 'tenantId'
-} as const
-
-export type UserRoleScalarFieldEnum = (typeof UserRoleScalarFieldEnum)[keyof typeof UserRoleScalarFieldEnum]
 
 
 export const TeamScalarFieldEnum = {
@@ -128,11 +104,8 @@ export const TeamScalarFieldEnum = {
   tenantId: 'tenantId',
   roomId: 'roomId',
   name: 'name',
-  ownerId: 'ownerId',
   joinCode: 'joinCode',
-  createdBy: 'createdBy',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  createdAt: 'createdAt'
 } as const
 
 export type TeamScalarFieldEnum = (typeof TeamScalarFieldEnum)[keyof typeof TeamScalarFieldEnum]
@@ -147,31 +120,6 @@ export const TeamMemberScalarFieldEnum = {
 } as const
 
 export type TeamMemberScalarFieldEnum = (typeof TeamMemberScalarFieldEnum)[keyof typeof TeamMemberScalarFieldEnum]
-
-
-export const TeamChannelScalarFieldEnum = {
-  id: 'id',
-  teamId: 'teamId',
-  roomId: 'roomId',
-  name: 'name',
-  isDefault: 'isDefault',
-  createdAt: 'createdAt'
-} as const
-
-export type TeamChannelScalarFieldEnum = (typeof TeamChannelScalarFieldEnum)[keyof typeof TeamChannelScalarFieldEnum]
-
-
-export const JoinCodeLogScalarFieldEnum = {
-  id: 'id',
-  tenantId: 'tenantId',
-  teamId: 'teamId',
-  userId: 'userId',
-  joinCode: 'joinCode',
-  status: 'status',
-  createdAt: 'createdAt'
-} as const
-
-export type JoinCodeLogScalarFieldEnum = (typeof JoinCodeLogScalarFieldEnum)[keyof typeof JoinCodeLogScalarFieldEnum]
 
 
 export const SortOrder = {

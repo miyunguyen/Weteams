@@ -386,12 +386,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   Tenant: 'Tenant',
   User: 'User',
-  Role: 'Role',
-  UserRole: 'UserRole',
   Team: 'Team',
-  TeamMember: 'TeamMember',
-  TeamChannel: 'TeamChannel',
-  JoinCodeLog: 'JoinCodeLog'
+  TeamMember: 'TeamMember'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -407,7 +403,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "tenant" | "user" | "role" | "userRole" | "team" | "teamMember" | "teamChannel" | "joinCodeLog"
+    modelProps: "tenant" | "user" | "team" | "teamMember"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -559,154 +555,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    Role: {
-      payload: Prisma.$RolePayload<ExtArgs>
-      fields: Prisma.RoleFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.RoleFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.RoleFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>
-        }
-        findFirst: {
-          args: Prisma.RoleFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.RoleFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>
-        }
-        findMany: {
-          args: Prisma.RoleFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>[]
-        }
-        create: {
-          args: Prisma.RoleCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>
-        }
-        createMany: {
-          args: Prisma.RoleCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.RoleCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>[]
-        }
-        delete: {
-          args: Prisma.RoleDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>
-        }
-        update: {
-          args: Prisma.RoleUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>
-        }
-        deleteMany: {
-          args: Prisma.RoleDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.RoleUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.RoleUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>[]
-        }
-        upsert: {
-          args: Prisma.RoleUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$RolePayload>
-        }
-        aggregate: {
-          args: Prisma.RoleAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateRole>
-        }
-        groupBy: {
-          args: Prisma.RoleGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.RoleGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.RoleCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.RoleCountAggregateOutputType> | number
-        }
-      }
-    }
-    UserRole: {
-      payload: Prisma.$UserRolePayload<ExtArgs>
-      fields: Prisma.UserRoleFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.UserRoleFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.UserRoleFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>
-        }
-        findFirst: {
-          args: Prisma.UserRoleFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.UserRoleFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>
-        }
-        findMany: {
-          args: Prisma.UserRoleFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>[]
-        }
-        create: {
-          args: Prisma.UserRoleCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>
-        }
-        createMany: {
-          args: Prisma.UserRoleCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.UserRoleCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>[]
-        }
-        delete: {
-          args: Prisma.UserRoleDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>
-        }
-        update: {
-          args: Prisma.UserRoleUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>
-        }
-        deleteMany: {
-          args: Prisma.UserRoleDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.UserRoleUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.UserRoleUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>[]
-        }
-        upsert: {
-          args: Prisma.UserRoleUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserRolePayload>
-        }
-        aggregate: {
-          args: Prisma.UserRoleAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateUserRole>
-        }
-        groupBy: {
-          args: Prisma.UserRoleGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.UserRoleGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.UserRoleCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.UserRoleCountAggregateOutputType> | number
-        }
-      }
-    }
     Team: {
       payload: Prisma.$TeamPayload<ExtArgs>
       fields: Prisma.TeamFieldRefs
@@ -855,154 +703,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    TeamChannel: {
-      payload: Prisma.$TeamChannelPayload<ExtArgs>
-      fields: Prisma.TeamChannelFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.TeamChannelFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.TeamChannelFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>
-        }
-        findFirst: {
-          args: Prisma.TeamChannelFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.TeamChannelFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>
-        }
-        findMany: {
-          args: Prisma.TeamChannelFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>[]
-        }
-        create: {
-          args: Prisma.TeamChannelCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>
-        }
-        createMany: {
-          args: Prisma.TeamChannelCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.TeamChannelCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>[]
-        }
-        delete: {
-          args: Prisma.TeamChannelDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>
-        }
-        update: {
-          args: Prisma.TeamChannelUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>
-        }
-        deleteMany: {
-          args: Prisma.TeamChannelDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.TeamChannelUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.TeamChannelUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>[]
-        }
-        upsert: {
-          args: Prisma.TeamChannelUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TeamChannelPayload>
-        }
-        aggregate: {
-          args: Prisma.TeamChannelAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateTeamChannel>
-        }
-        groupBy: {
-          args: Prisma.TeamChannelGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.TeamChannelGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.TeamChannelCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.TeamChannelCountAggregateOutputType> | number
-        }
-      }
-    }
-    JoinCodeLog: {
-      payload: Prisma.$JoinCodeLogPayload<ExtArgs>
-      fields: Prisma.JoinCodeLogFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.JoinCodeLogFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.JoinCodeLogFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>
-        }
-        findFirst: {
-          args: Prisma.JoinCodeLogFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.JoinCodeLogFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>
-        }
-        findMany: {
-          args: Prisma.JoinCodeLogFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>[]
-        }
-        create: {
-          args: Prisma.JoinCodeLogCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>
-        }
-        createMany: {
-          args: Prisma.JoinCodeLogCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.JoinCodeLogCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>[]
-        }
-        delete: {
-          args: Prisma.JoinCodeLogDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>
-        }
-        update: {
-          args: Prisma.JoinCodeLogUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>
-        }
-        deleteMany: {
-          args: Prisma.JoinCodeLogDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.JoinCodeLogUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.JoinCodeLogUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>[]
-        }
-        upsert: {
-          args: Prisma.JoinCodeLogUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$JoinCodeLogPayload>
-        }
-        aggregate: {
-          args: Prisma.JoinCodeLogAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateJoinCodeLog>
-        }
-        groupBy: {
-          args: Prisma.JoinCodeLogGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.JoinCodeLogGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.JoinCodeLogCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.JoinCodeLogCountAggregateOutputType> | number
-        }
-      }
-    }
   }
 } & {
   other: {
@@ -1062,30 +762,10 @@ export const UserScalarFieldEnum = {
   rocketUserId: 'rocketUserId',
   username: 'username',
   email: 'email',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  createdAt: 'createdAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
-
-
-export const RoleScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  description: 'description'
-} as const
-
-export type RoleScalarFieldEnum = (typeof RoleScalarFieldEnum)[keyof typeof RoleScalarFieldEnum]
-
-
-export const UserRoleScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  roleId: 'roleId',
-  tenantId: 'tenantId'
-} as const
-
-export type UserRoleScalarFieldEnum = (typeof UserRoleScalarFieldEnum)[keyof typeof UserRoleScalarFieldEnum]
 
 
 export const TeamScalarFieldEnum = {
@@ -1093,11 +773,8 @@ export const TeamScalarFieldEnum = {
   tenantId: 'tenantId',
   roomId: 'roomId',
   name: 'name',
-  ownerId: 'ownerId',
   joinCode: 'joinCode',
-  createdBy: 'createdBy',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  createdAt: 'createdAt'
 } as const
 
 export type TeamScalarFieldEnum = (typeof TeamScalarFieldEnum)[keyof typeof TeamScalarFieldEnum]
@@ -1112,31 +789,6 @@ export const TeamMemberScalarFieldEnum = {
 } as const
 
 export type TeamMemberScalarFieldEnum = (typeof TeamMemberScalarFieldEnum)[keyof typeof TeamMemberScalarFieldEnum]
-
-
-export const TeamChannelScalarFieldEnum = {
-  id: 'id',
-  teamId: 'teamId',
-  roomId: 'roomId',
-  name: 'name',
-  isDefault: 'isDefault',
-  createdAt: 'createdAt'
-} as const
-
-export type TeamChannelScalarFieldEnum = (typeof TeamChannelScalarFieldEnum)[keyof typeof TeamChannelScalarFieldEnum]
-
-
-export const JoinCodeLogScalarFieldEnum = {
-  id: 'id',
-  tenantId: 'tenantId',
-  teamId: 'teamId',
-  userId: 'userId',
-  joinCode: 'joinCode',
-  status: 'status',
-  createdAt: 'createdAt'
-} as const
-
-export type JoinCodeLogScalarFieldEnum = (typeof JoinCodeLogScalarFieldEnum)[keyof typeof JoinCodeLogScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1208,27 +860,6 @@ export type EnumTeamRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
  * Reference to a field of type 'TeamRole[]'
  */
 export type ListEnumTeamRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TeamRole[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-/**
- * Reference to a field of type 'JoinStatus'
- */
-export type EnumJoinStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JoinStatus'>
-    
-
-
-/**
- * Reference to a field of type 'JoinStatus[]'
- */
-export type ListEnumJoinStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'JoinStatus[]'>
     
 
 
@@ -1342,12 +973,8 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   tenant?: Prisma.TenantOmit
   user?: Prisma.UserOmit
-  role?: Prisma.RoleOmit
-  userRole?: Prisma.UserRoleOmit
   team?: Prisma.TeamOmit
   teamMember?: Prisma.TeamMemberOmit
-  teamChannel?: Prisma.TeamChannelOmit
-  joinCodeLog?: Prisma.JoinCodeLogOmit
 }
 
 /* Types for Logging */
