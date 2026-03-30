@@ -62,7 +62,7 @@ export class RocketChatService {
 
   // ===== BUSINESS API =====
 
-  async isTeam(tenantId: string, roomId: string): Promise<boolean> {
+  async isTeam(tenantId: string, roomId: string): Promise<any> {
     const res = await this.callApi(tenantId, (headers, tenant) =>
       axios.get(`${tenant.rocketUrl}/api/v1/rooms.info?roomId=${roomId}`, {
         headers,
@@ -71,7 +71,7 @@ export class RocketChatService {
 
     const data = res.data;
 
-    return !!data?.team; // key logic
+    return data?.team;
   }
 
   async createTeam(tenantId: string, name: string, type: number) {
@@ -99,6 +99,27 @@ export class RocketChatService {
       axios.post(
         `${tenant.rocketUrl}/api/v1/channels.invite`,
         { roomId, userId },
+        { headers },
+      ),
+    );
+  }
+
+  async addMemberToTeam(
+    tenantId: string,
+    teamId: string,
+    userId: string,
+    role?: string,
+  ) {
+    const members = [
+      {
+        userId: userId,
+        roles: [role ?? 'member'],
+      },
+    ];
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/teams.addMembers`,
+        { teamId, members },
         { headers },
       ),
     );

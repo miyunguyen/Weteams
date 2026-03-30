@@ -44,9 +44,10 @@ model User {
 model Team {
   id        String   @id @default(uuid())
   tenantId  String
-  roomId    String // Rocket roomId (quan trọng)
+  roomId    String // Rocket roomId
   name      String?
   joinCode  String
+  teamId    String // Rocket teamId
   createdAt DateTime @default(now())
 
   tenant  Tenant       @relation(fields: [tenantId], references: [id])

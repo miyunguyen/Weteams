@@ -30,6 +30,7 @@ export type TeamMinAggregateOutputType = {
   roomId: string | null
   name: string | null
   joinCode: string | null
+  teamId: string | null
   createdAt: Date | null
 }
 
@@ -39,6 +40,7 @@ export type TeamMaxAggregateOutputType = {
   roomId: string | null
   name: string | null
   joinCode: string | null
+  teamId: string | null
   createdAt: Date | null
 }
 
@@ -48,6 +50,7 @@ export type TeamCountAggregateOutputType = {
   roomId: number
   name: number
   joinCode: number
+  teamId: number
   createdAt: number
   _all: number
 }
@@ -59,6 +62,7 @@ export type TeamMinAggregateInputType = {
   roomId?: true
   name?: true
   joinCode?: true
+  teamId?: true
   createdAt?: true
 }
 
@@ -68,6 +72,7 @@ export type TeamMaxAggregateInputType = {
   roomId?: true
   name?: true
   joinCode?: true
+  teamId?: true
   createdAt?: true
 }
 
@@ -77,6 +82,7 @@ export type TeamCountAggregateInputType = {
   roomId?: true
   name?: true
   joinCode?: true
+  teamId?: true
   createdAt?: true
   _all?: true
 }
@@ -159,6 +165,7 @@ export type TeamGroupByOutputType = {
   roomId: string
   name: string | null
   joinCode: string
+  teamId: string
   createdAt: Date
   _count: TeamCountAggregateOutputType | null
   _min: TeamMinAggregateOutputType | null
@@ -189,6 +196,7 @@ export type TeamWhereInput = {
   roomId?: Prisma.StringFilter<"Team"> | string
   name?: Prisma.StringNullableFilter<"Team"> | string | null
   joinCode?: Prisma.StringFilter<"Team"> | string
+  teamId?: Prisma.StringFilter<"Team"> | string
   createdAt?: Prisma.DateTimeFilter<"Team"> | Date | string
   tenant?: Prisma.XOR<Prisma.TenantScalarRelationFilter, Prisma.TenantWhereInput>
   members?: Prisma.TeamMemberListRelationFilter
@@ -200,6 +208,7 @@ export type TeamOrderByWithRelationInput = {
   roomId?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   joinCode?: Prisma.SortOrder
+  teamId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   tenant?: Prisma.TenantOrderByWithRelationInput
   members?: Prisma.TeamMemberOrderByRelationAggregateInput
@@ -216,6 +225,7 @@ export type TeamWhereUniqueInput = Prisma.AtLeast<{
   roomId?: Prisma.StringFilter<"Team"> | string
   name?: Prisma.StringNullableFilter<"Team"> | string | null
   joinCode?: Prisma.StringFilter<"Team"> | string
+  teamId?: Prisma.StringFilter<"Team"> | string
   createdAt?: Prisma.DateTimeFilter<"Team"> | Date | string
   tenant?: Prisma.XOR<Prisma.TenantScalarRelationFilter, Prisma.TenantWhereInput>
   members?: Prisma.TeamMemberListRelationFilter
@@ -227,6 +237,7 @@ export type TeamOrderByWithAggregationInput = {
   roomId?: Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   joinCode?: Prisma.SortOrder
+  teamId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.TeamCountOrderByAggregateInput
   _max?: Prisma.TeamMaxOrderByAggregateInput
@@ -242,6 +253,7 @@ export type TeamScalarWhereWithAggregatesInput = {
   roomId?: Prisma.StringWithAggregatesFilter<"Team"> | string
   name?: Prisma.StringNullableWithAggregatesFilter<"Team"> | string | null
   joinCode?: Prisma.StringWithAggregatesFilter<"Team"> | string
+  teamId?: Prisma.StringWithAggregatesFilter<"Team"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Team"> | Date | string
 }
 
@@ -250,6 +262,7 @@ export type TeamCreateInput = {
   roomId: string
   name?: string | null
   joinCode: string
+  teamId: string
   createdAt?: Date | string
   tenant: Prisma.TenantCreateNestedOneWithoutTeamsInput
   members?: Prisma.TeamMemberCreateNestedManyWithoutTeamInput
@@ -261,6 +274,7 @@ export type TeamUncheckedCreateInput = {
   roomId: string
   name?: string | null
   joinCode: string
+  teamId: string
   createdAt?: Date | string
   members?: Prisma.TeamMemberUncheckedCreateNestedManyWithoutTeamInput
 }
@@ -270,6 +284,7 @@ export type TeamUpdateInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tenant?: Prisma.TenantUpdateOneRequiredWithoutTeamsNestedInput
   members?: Prisma.TeamMemberUpdateManyWithoutTeamNestedInput
@@ -281,6 +296,7 @@ export type TeamUncheckedUpdateInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.TeamMemberUncheckedUpdateManyWithoutTeamNestedInput
 }
@@ -291,6 +307,7 @@ export type TeamCreateManyInput = {
   roomId: string
   name?: string | null
   joinCode: string
+  teamId: string
   createdAt?: Date | string
 }
 
@@ -299,6 +316,7 @@ export type TeamUpdateManyMutationInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -308,6 +326,7 @@ export type TeamUncheckedUpdateManyInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -337,6 +356,7 @@ export type TeamCountOrderByAggregateInput = {
   roomId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   joinCode?: Prisma.SortOrder
+  teamId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -346,6 +366,7 @@ export type TeamMaxOrderByAggregateInput = {
   roomId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   joinCode?: Prisma.SortOrder
+  teamId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -355,6 +376,7 @@ export type TeamMinOrderByAggregateInput = {
   roomId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   joinCode?: Prisma.SortOrder
+  teamId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -424,6 +446,7 @@ export type TeamCreateWithoutTenantInput = {
   roomId: string
   name?: string | null
   joinCode: string
+  teamId: string
   createdAt?: Date | string
   members?: Prisma.TeamMemberCreateNestedManyWithoutTeamInput
 }
@@ -433,6 +456,7 @@ export type TeamUncheckedCreateWithoutTenantInput = {
   roomId: string
   name?: string | null
   joinCode: string
+  teamId: string
   createdAt?: Date | string
   members?: Prisma.TeamMemberUncheckedCreateNestedManyWithoutTeamInput
 }
@@ -472,6 +496,7 @@ export type TeamScalarWhereInput = {
   roomId?: Prisma.StringFilter<"Team"> | string
   name?: Prisma.StringNullableFilter<"Team"> | string | null
   joinCode?: Prisma.StringFilter<"Team"> | string
+  teamId?: Prisma.StringFilter<"Team"> | string
   createdAt?: Prisma.DateTimeFilter<"Team"> | Date | string
 }
 
@@ -480,6 +505,7 @@ export type TeamCreateWithoutMembersInput = {
   roomId: string
   name?: string | null
   joinCode: string
+  teamId: string
   createdAt?: Date | string
   tenant: Prisma.TenantCreateNestedOneWithoutTeamsInput
 }
@@ -490,6 +516,7 @@ export type TeamUncheckedCreateWithoutMembersInput = {
   roomId: string
   name?: string | null
   joinCode: string
+  teamId: string
   createdAt?: Date | string
 }
 
@@ -514,6 +541,7 @@ export type TeamUpdateWithoutMembersInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   tenant?: Prisma.TenantUpdateOneRequiredWithoutTeamsNestedInput
 }
@@ -524,6 +552,7 @@ export type TeamUncheckedUpdateWithoutMembersInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -532,6 +561,7 @@ export type TeamCreateManyTenantInput = {
   roomId: string
   name?: string | null
   joinCode: string
+  teamId: string
   createdAt?: Date | string
 }
 
@@ -540,6 +570,7 @@ export type TeamUpdateWithoutTenantInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.TeamMemberUpdateManyWithoutTeamNestedInput
 }
@@ -549,6 +580,7 @@ export type TeamUncheckedUpdateWithoutTenantInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   members?: Prisma.TeamMemberUncheckedUpdateManyWithoutTeamNestedInput
 }
@@ -558,6 +590,7 @@ export type TeamUncheckedUpdateManyWithoutTenantInput = {
   roomId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   joinCode?: Prisma.StringFieldUpdateOperationsInput | string
+  teamId?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -598,6 +631,7 @@ export type TeamSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   roomId?: boolean
   name?: boolean
   joinCode?: boolean
+  teamId?: boolean
   createdAt?: boolean
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
   members?: boolean | Prisma.Team$membersArgs<ExtArgs>
@@ -610,6 +644,7 @@ export type TeamSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   roomId?: boolean
   name?: boolean
   joinCode?: boolean
+  teamId?: boolean
   createdAt?: boolean
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["team"]>
@@ -620,6 +655,7 @@ export type TeamSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   roomId?: boolean
   name?: boolean
   joinCode?: boolean
+  teamId?: boolean
   createdAt?: boolean
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["team"]>
@@ -630,10 +666,11 @@ export type TeamSelectScalar = {
   roomId?: boolean
   name?: boolean
   joinCode?: boolean
+  teamId?: boolean
   createdAt?: boolean
 }
 
-export type TeamOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tenantId" | "roomId" | "name" | "joinCode" | "createdAt", ExtArgs["result"]["team"]>
+export type TeamOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tenantId" | "roomId" | "name" | "joinCode" | "teamId" | "createdAt", ExtArgs["result"]["team"]>
 export type TeamInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   tenant?: boolean | Prisma.TenantDefaultArgs<ExtArgs>
   members?: boolean | Prisma.Team$membersArgs<ExtArgs>
@@ -658,6 +695,7 @@ export type $TeamPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     roomId: string
     name: string | null
     joinCode: string
+    teamId: string
     createdAt: Date
   }, ExtArgs["result"]["team"]>
   composites: {}
@@ -1089,6 +1127,7 @@ export interface TeamFieldRefs {
   readonly roomId: Prisma.FieldRef<"Team", 'String'>
   readonly name: Prisma.FieldRef<"Team", 'String'>
   readonly joinCode: Prisma.FieldRef<"Team", 'String'>
+  readonly teamId: Prisma.FieldRef<"Team", 'String'>
   readonly createdAt: Prisma.FieldRef<"Team", 'DateTime'>
 }
     

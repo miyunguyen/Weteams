@@ -25,6 +25,18 @@
         },
         {
             "name": "networking"
+        },
+        {
+            "name": "room.write"
+        },
+        {
+            "name": "room.read"
+        },
+        {
+            "name": "server-setting.read"
+        },
+        {
+            "name": "user.read"
         }
     ]
 }

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
 import { randomBytes } from 'crypto';
@@ -24,8 +24,9 @@ export class TeamService {
     const { tenantId, roomId, roomName } = dto;
 
     // 1. check có phải team
-    const isTeam = await this.rocketChat.isTeam(tenantId, roomId);
-    if (!isTeam) {
+    const team = await this.rocketChat.isTeam(tenantId, roomId);
+
+    if (!team) {
       return { skipped: true, reason: 'NOT_A_TEAM' };
     }
 
@@ -48,6 +49,7 @@ export class TeamService {
             roomId,
             name: roomName,
             joinCode,
+            teamId: team._id,
           },
         });
       } catch (err) {
@@ -60,5 +62,84 @@ export class TeamService {
     }
 
     throw new Error('JOIN_CODE_GENERATION_FAILED');
+  }
+
+  async joinByCode(dto: any) {
+    const { tenantId, joinCode, rocketUserId, rocketUsername } = dto;
+
+    // 1. tìm team
+    const team = await this.prisma.team.findFirst({
+      where: {
+        tenantId,
+        joinCode,
+      },
+    });
+
+    if (!team) {
+      throw new BadRequestException({
+        message: 'Join code không hợp lệ',
+        errorCode: 'INVALID_CODE',
+        data: null,
+      });
+    }
+
+    // 2. find or create user
+    let user = await this.prisma.user.findFirst({
+      where: {
+        tenantId,
+        rocketUserId,
+      },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          tenantId,
+          rocketUserId,
+          username: rocketUsername,
+          email: `${rocketUserId}@local.dev`,
+        },
+      });
+    }
+
+    // 3. check đã join chưa
+    const existing = await this.prisma.teamMember.findFirst({
+      where: {
+        teamId: team.id,
+        userId: user.id,
+      },
+    });
+
+    if (existing) {
+      return {
+        message: 'Người dùng đã tham gia team',
+        data: {
+          alreadyJoined: true,
+          teamId: team.id,
+          userId: user.id,
+        },
+      };
+    }
+
+    // 4. add vào Rocket chat team
+    await this.rocketChat.addMemberToTeam(tenantId, team.teamId, rocketUserId);
+
+    // 5. insert DB
+    await this.prisma.teamMember.create({
+      data: {
+        teamId: team.id,
+        userId: user.id,
+        role: 'STUDENT',
+      },
+    });
+
+    return {
+      message: 'Join team thành công',
+      data: {
+        teamId: team.id,
+        userId: user.id,
+        role: 'STUDENT',
+      },
+    };
   }
 }

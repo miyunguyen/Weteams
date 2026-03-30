@@ -26,6 +26,7 @@ import {
     IUIKitInteractionHandler,
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
+import { IUser } from "@rocket.chat/apps-engine/definition/users";
 
 const settings: Array<ISetting> = [
     {
@@ -34,7 +35,17 @@ const settings: Array<ISetting> = [
         packageValue: "",
         required: false,
         public: false,
-        i18nLabel: "",
+        i18nLabel: "Tenant Id",
+        i18nDescription: "",
+    },
+    {
+        id: "apiUrl",
+        type: SettingType.STRING,
+        packageValue:
+            "https://scalelike-nondevotionally-helaine.ngrok-free.dev",
+        required: false,
+        public: false,
+        i18nLabel: "API URL",
         i18nDescription: "",
     },
 ];
@@ -44,6 +55,8 @@ export class MyRocketChatApp
 {
     private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
     private readonly JOIN_MODAL_INPUT = "join_team_code_input";
+    private tenantId: Promise<string>;
+    private apiUrl: Promise<string>;
 
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
         super(info, logger, accessors);
@@ -64,6 +77,15 @@ export class MyRocketChatApp
                 configuration.settings.provideSetting(setting),
             ),
         );
+
+        const settingsReader = _environmentRead.getSettings();
+
+        this.tenantId = settingsReader
+            .getValueById("tenantId")
+            .then((value) => (value as string) || "");
+        this.apiUrl = settingsReader
+            .getValueById("apiUrl")
+            .then((value) => (value as string) || "");
     }
 
     public async executePostRoomCreate(
@@ -74,10 +96,13 @@ export class MyRocketChatApp
         modify: IModify,
     ): Promise<void> {
         this.getLogger().log(room);
-        const tenantId = (await read
-            .getEnvironmentReader()
-            .getSettings()
-            .getValueById("tenantId")) as string;
+
+        await this.addAdminAsMember(room, read, modify);
+
+        const [tenantId, apiUrl] = await Promise.all([
+            this.tenantId,
+            this.apiUrl,
+        ]);
 
         const body = {
             tenantId: tenantId,
@@ -86,17 +111,38 @@ export class MyRocketChatApp
         };
 
         try {
-            const response = await http.post(
-                "https://scalelike-nondevotionally-helaine.ngrok-free.dev/team/from-room",
-                {
-                    headers: { "Content-Type": "application/json" },
-                    data: body,
-                },
-            );
+            const response = await http.post(`${apiUrl}/team/from-room`, {
+                headers: { "Content-Type": "application/json" },
+                data: body,
+            });
 
-            this.getLogger().log(response, body);
+            this.getLogger().log(response, body, room.teamId);
         } catch (error) {
             this.getLogger().log("failed: ", error);
+        }
+    }
+
+    private async addAdminAsMember(
+        room: IRoom,
+        read: IRead,
+        modify: IModify,
+    ): Promise<void> {
+        try {
+            const updater = (await read
+                .getUserReader()
+                .getAppUser(this.getID())) as IUser;
+
+            const roomUpdater = await modify
+                .getUpdater()
+                .room(room.id, updater);
+
+            roomUpdater.addMemberToBeAddedByUsername("admin");
+
+            await modify.getUpdater().finish(roomUpdater);
+        } catch (error) {
+            this.getLogger().warn(
+                `Unable to add admin to room ${room.id}: ${String(error)}`,
+            );
         }
     }
 
@@ -178,45 +224,60 @@ export class MyRocketChatApp
     ): Promise<IUIKitResponse> {
         const data = context.getInteractionData();
         const user = data.user;
-        const rawCode = this.readInputValue(
+        const joinCode = await this.readInputValue(
             data.view && data.view.state ? data.view.state : undefined,
             this.JOIN_MODAL_BLOCK,
             this.JOIN_MODAL_INPUT,
         );
 
-        // if (!result.ok) {
-        //     this.getLogger().log(
-        //         "Join by code failed for user " +
-        //             user.username +
-        //             ", reason=" +
-        //             result.reason,
-        //     );
-        //     return context.getInteractionResponder().successResponse();
-        // }
+        const [tenantId, apiUrl] = await Promise.all([
+            this.tenantId,
+            this.apiUrl,
+        ]);
 
-        // this.getLogger().log(
-        //     "User " +
-        //         user.username +
-        //         " joined room " +
-        //         result.roomId +
-        //         " by code " +
-        //         joinCode,
-        // );
-        return context.getInteractionResponder().successResponse();
+        try {
+            const res = await _http.post(`${apiUrl}/team/join`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                data: {
+                    tenantId,
+                    joinCode,
+                    rocketUserId: user.id,
+                    rocketUsername: user.username,
+                },
+            });
+
+            const body = res.data;
+
+            if (!body.success) {
+                return context.getInteractionResponder().errorResponse();
+            }
+
+            return context.getInteractionResponder().successResponse();
+        } catch (e) {
+            return context.getInteractionResponder().errorResponse();
+        }
     }
 
-    private readInputValue(
+    private async readInputValue(
         state: any,
         blockId: string,
         actionId: string,
-    ): string {
-        if (!state || !state[blockId] || !state[blockId][actionId]) {
+    ): Promise<string> {
+        if (!state || !state[blockId]) {
             return "";
         }
 
-        const input = state[blockId][actionId];
-        if (typeof input.value === "string") {
-            return input.value;
+        const blockState = state[blockId];
+        const actionState = blockState[actionId];
+
+        if (typeof actionState === "string") {
+            return actionState;
+        }
+
+        if (actionState && typeof actionState.value === "string") {
+            return actionState.value;
         }
 
         return "";
