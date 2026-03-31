@@ -118,10 +118,46 @@ export class MyRocketChatApp
                 data: body,
             });
 
-            this.getLogger().log(response, body, room.teamId);
+            const responseBody = response?.data;
+            const responseData = responseBody?.data;
+            const joinCode =
+                responseBody?.success &&
+                responseData &&
+                !responseData.skipped &&
+                typeof responseData.joinCode === "string"
+                    ? responseData.joinCode
+                    : "";
+
+            this.getLogger().log(response, body, joinCode);
+            if (joinCode) {
+                await this.sendJoinCodeMessage(room, joinCode, read, modify);
+            }
         } catch (error) {
             this.getLogger().log("failed: ", error);
         }
+    }
+
+    private async sendJoinCodeMessage(
+        room: IRoom,
+        joinCode: string,
+        read: IRead,
+        modify: IModify,
+    ): Promise<void> {
+        const appUser = await read.getUserReader().getAppUser(this.getID());
+
+        if (!appUser) {
+            this.getLogger().warn(
+                "Unable to send join code message: app user not found",
+            );
+            return;
+        }
+
+        const messageBuilder = modify.getCreator().startMessage();
+        messageBuilder.setSender(appUser);
+        messageBuilder.setRoom(room);
+        messageBuilder.setText(`Mã tham gia team: ${joinCode}`);
+
+        await modify.getCreator().finish(messageBuilder);
     }
 
     private async addAdminAsMember(

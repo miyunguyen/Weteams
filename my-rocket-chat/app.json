@@ -38,6 +38,12 @@
         },
         {
             "name": "user.read"
+        },
+        {
+            "name": "message.read"
+        },
+        {
+            "name": "message.write"
         }
     ]
 }
