@@ -8,6 +8,7 @@ import { LeaveTeamDto } from './dto/leave-team.dto';
 import { JoinTeamDto } from './dto/join-team.dto';
 import { CreateFromRoomDto } from './dto/create-from-room.dto';
 import { AppException } from 'src/common/exceptions/app.exception';
+import { DeleteTeamDto } from './dto/delete-team.dto';
 
 @Injectable()
 export class TeamService {
@@ -155,6 +156,41 @@ export class TeamService {
         teamId: team.id,
         userId: user.id,
         role: 'STUDENT',
+      },
+    };
+  }
+
+  async handleDeleteTeam(dto: DeleteTeamDto) {
+    const { tenantId, roomId } = dto;
+
+    // 1. Tìm team
+    const team = await this.prisma.team.findFirst({
+      where: {
+        tenantId,
+        roomId,
+      },
+    });
+
+    if (!team) {
+      return {
+        message: 'Team không tồn tại',
+        data: { removed: false, reason: 'TEAM_NOT_FOUND' },
+      };
+    }
+
+    const deletedTeam = await this.prisma.team.deleteMany({
+      where: {
+        teamId: team.id,
+        tenantId: tenantId,
+      },
+    });
+
+    return {
+      message: 'Xoá team thành công',
+      data: {
+        removed: deletedTeam.count > 0,
+        deletedCount: deletedTeam.count,
+        teamId: team.id,
       },
     };
   }

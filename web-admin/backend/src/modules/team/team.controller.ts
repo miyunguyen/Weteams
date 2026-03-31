@@ -1,8 +1,9 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, Post } from '@nestjs/common';
 import { TeamService } from './team.service';
 import { CreateFromRoomDto } from './dto/create-from-room.dto';
 import { JoinTeamDto } from './dto/join-team.dto';
 import { LeaveTeamDto } from './dto/leave-team.dto';
+import { DeleteTeamDto } from './dto/delete-team.dto';
 
 @Controller('team')
 export class TeamController {
@@ -24,5 +25,11 @@ export class TeamController {
   @Post('leave')
   leaveTeam(@Body() dto: LeaveTeamDto) {
     return this.teamService.handleUserLeave(dto);
+  }
+
+  @HttpCode(200)
+  @Delete('/')
+  deleteTeam(@Body() dto: DeleteTeamDto) {
+    return this.teamService.handleDeleteTeam(dto);
   }
 }

@@ -134,4 +134,14 @@ export class RocketChatService {
       ),
     );
   }
+
+  async pinMessage(tenantId: string, messageId: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/chat.pinMessage`,
+        { messageId },
+        { headers },
+      ),
+    );
+  }
 }
