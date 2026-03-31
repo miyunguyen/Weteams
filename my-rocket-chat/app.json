@@ -14,7 +14,8 @@
     "description": "My Rocket Chat",
     "implements": [
         "IUIKitInteractionHandler",
-        "IPostRoomCreate"
+        "IPostRoomCreate",
+        "IPostRoomUserLeave"
     ],
     "permissions": [
         {

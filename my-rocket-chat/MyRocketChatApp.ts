@@ -12,7 +12,9 @@ import { App } from "@rocket.chat/apps-engine/definition/App";
 import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
 import {
     IPostRoomCreate,
+    IPostRoomUserLeave,
     IRoom,
+    IRoomUserLeaveContext,
 } from "@rocket.chat/apps-engine/definition/rooms";
 import {
     ISetting,
@@ -51,7 +53,7 @@ const settings: Array<ISetting> = [
 ];
 export class MyRocketChatApp
     extends App
-    implements IUIKitInteractionHandler, IPostRoomCreate
+    implements IUIKitInteractionHandler, IPostRoomCreate, IPostRoomUserLeave
 {
     private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
     private readonly JOIN_MODAL_INPUT = "join_team_code_input";
@@ -68,7 +70,7 @@ export class MyRocketChatApp
     ): Promise<void> {
         configuration.ui.registerButton({
             actionId: "join-team-btn",
-            labelI18n: "Join team",
+            labelI18n: "join-team-btn",
             context: UIActionButtonContext.USER_DROPDOWN_ACTION,
         });
 
@@ -248,6 +250,7 @@ export class MyRocketChatApp
                 },
             });
 
+            this.getLogger().log(res);
             const body = res.data;
 
             if (!body.success) {
@@ -257,6 +260,42 @@ export class MyRocketChatApp
             return context.getInteractionResponder().successResponse();
         } catch (e) {
             return context.getInteractionResponder().errorResponse();
+        }
+    }
+
+    public async executePostRoomUserLeave(
+        context: IRoomUserLeaveContext,
+        read: IRead,
+        http: IHttp,
+        persistence: IPersistence,
+        modify?: IModify,
+    ): Promise<void> {
+        const room = context.room;
+        const user = context.leavingUser;
+
+        const roomId = room.id;
+        const rocketUserId = user.id;
+
+        const [tenantId, apiUrl] = await Promise.all([
+            this.tenantId,
+            this.apiUrl,
+        ]);
+
+        try {
+            const res = await http.post(`${apiUrl}/team/leave`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                data: {
+                    tenantId,
+                    roomId,
+                    rocketUserId,
+                },
+            });
+
+            this.getLogger().log(res);
+        } catch (e) {
+            this.getLogger().error("Leave sync failed", e);
         }
     }
 
