@@ -6,8 +6,8 @@ export class CatService {
 
   getMeow(): any {
     return {
+      message: 'Cat says meow',
       data: 'meow',
-      success: true,
     };
   }
 }

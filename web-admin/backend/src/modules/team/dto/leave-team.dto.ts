@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 
-export class CreateFromRoomDto {
+export class LeaveTeamDto {
   @ApiProperty({
-    description: 'Id of tenant.',
+    description: 'Tenant Id',
   })
   @IsString()
   tenantId: string;
@@ -15,8 +15,8 @@ export class CreateFromRoomDto {
   roomId: string;
 
   @ApiProperty({
-    description: 'Room name',
+    description: 'Rocket chat user id',
   })
   @IsString()
-  roomName: string;
+  rocketUserId: string;
 }
