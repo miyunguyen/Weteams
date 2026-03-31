@@ -37,7 +37,7 @@ export class TeamService {
 
     // 2. check đã tồn tại
     const existing = await this.prisma.team.findFirst({
-      where: { tenantId, roomId },
+      where: { tenantId, teamId: team._id },
     });
 
     if (existing) {
