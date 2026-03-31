@@ -12,6 +12,7 @@ import { App } from "@rocket.chat/apps-engine/definition/App";
 import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
 import {
     IPostRoomCreate,
+    IPostRoomDeleted,
     IPostRoomUserLeave,
     IRoom,
     IRoomUserLeaveContext,
@@ -53,7 +54,11 @@ const settings: Array<ISetting> = [
 ];
 export class MyRocketChatApp
     extends App
-    implements IUIKitInteractionHandler, IPostRoomCreate, IPostRoomUserLeave
+    implements
+        IUIKitInteractionHandler,
+        IPostRoomCreate,
+        IPostRoomUserLeave,
+        IPostRoomDeleted
 {
     private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
     private readonly JOIN_MODAL_INPUT = "join_team_code_input";
@@ -130,8 +135,44 @@ export class MyRocketChatApp
 
             this.getLogger().log(response, body, joinCode);
             if (joinCode) {
-                await this.sendJoinCodeMessage(room, joinCode, read, modify);
+                await this.sendJoinCodeMessage(
+                    room,
+                    joinCode,
+                    read,
+                    http,
+                    modify,
+                    tenantId,
+                    apiUrl,
+                );
             }
+        } catch (error) {
+            this.getLogger().log("failed: ", error);
+        }
+    }
+
+    public async executePostRoomDeleted(
+        room: IRoom,
+        read: IRead,
+        http: IHttp,
+        persistence: IPersistence,
+    ): Promise<void> {
+        const [tenantId, apiUrl] = await Promise.all([
+            this.tenantId,
+            this.apiUrl,
+        ]);
+
+        const body = {
+            tenantId: tenantId,
+            roomId: room.id,
+        };
+
+        try {
+            const response = await http.del(`${apiUrl}/team`, {
+                headers: { "Content-Type": "application/json" },
+                data: body,
+            });
+
+            this.getLogger().log(response, body);
         } catch (error) {
             this.getLogger().log("failed: ", error);
         }
@@ -141,7 +182,10 @@ export class MyRocketChatApp
         room: IRoom,
         joinCode: string,
         read: IRead,
+        http: IHttp,
         modify: IModify,
+        tenantId: string,
+        apiUrl: string,
     ): Promise<void> {
         const appUser = await read.getUserReader().getAppUser(this.getID());
 
@@ -157,7 +201,32 @@ export class MyRocketChatApp
         messageBuilder.setRoom(room);
         messageBuilder.setText(`Mã tham gia team: ${joinCode}`);
 
-        await modify.getCreator().finish(messageBuilder);
+        const messageId = await modify.getCreator().finish(messageBuilder);
+
+        await this.pinMessage(http, apiUrl, tenantId, messageId);
+    }
+
+    private async pinMessage(
+        http: IHttp,
+        apiUrl: string,
+        tenantId: string,
+        messageId: string,
+    ): Promise<void> {
+        try {
+            const response = await http.post(`${apiUrl}/message/pin`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                data: {
+                    tenantId,
+                    messageId,
+                },
+            });
+
+            this.getLogger().log("Pinned by backend", response?.data);
+        } catch (error) {
+            this.getLogger().warn("Pin by backend failed", error);
+        }
     }
 
     private async addAdminAsMember(
