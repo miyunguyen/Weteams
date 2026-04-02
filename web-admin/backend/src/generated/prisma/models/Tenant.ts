@@ -20,17 +20,83 @@ export type TenantModel = runtime.Types.Result.DefaultSelection<Prisma.$TenantPa
 
 export type AggregateTenant = {
   _count: TenantCountAggregateOutputType | null
+  _avg: TenantAvgAggregateOutputType | null
+  _sum: TenantSumAggregateOutputType | null
   _min: TenantMinAggregateOutputType | null
   _max: TenantMaxAggregateOutputType | null
+}
+
+export type TenantAvgAggregateOutputType = {
+  hostPort: number | null
+  port: number | null
+  metricsPort: number | null
+  prometheusPort: number | null
+  grafanaHostPort: number | null
+  traefikHttpPort: number | null
+  traefikDashboardPort: number | null
+  traefikHttpsPort: number | null
+  mongodbPortNumber: number | null
+  mongodbHostPortNumber: number | null
+  natsPortNumber: number | null
+}
+
+export type TenantSumAggregateOutputType = {
+  hostPort: number | null
+  port: number | null
+  metricsPort: number | null
+  prometheusPort: number | null
+  grafanaHostPort: number | null
+  traefikHttpPort: number | null
+  traefikDashboardPort: number | null
+  traefikHttpsPort: number | null
+  mongodbPortNumber: number | null
+  mongodbHostPortNumber: number | null
+  natsPortNumber: number | null
 }
 
 export type TenantMinAggregateOutputType = {
   id: string | null
   name: string | null
+  composeProjectName: string | null
+  domain: string | null
+  rootUrl: string | null
   rocketUrl: string | null
+  release: string | null
+  regToken: string | null
+  letsencryptEnabled: boolean | null
+  letsencryptEmail: string | null
+  traefikProtocol: string | null
+  hostPort: number | null
+  port: number | null
+  metricsPort: number | null
+  bindIp: string | null
+  adminUsername: string | null
+  adminPass: string | null
   adminUserId: string | null
   adminAuthToken: string | null
   adminTokenExpireAt: Date | null
+  prometheusRetentionSize: string | null
+  prometheusRetentionTime: string | null
+  prometheusPort: number | null
+  grafanaDomain: string | null
+  grafanaPath: string | null
+  grafanaAdminPassword: string | null
+  grafanaHostPort: number | null
+  grafanaBindIp: string | null
+  traefikHttpPort: number | null
+  traefikDashboardPort: number | null
+  traefikHttpsPort: number | null
+  mongodbBindIp: string | null
+  mongodbPortNumber: number | null
+  mongodbHostPortNumber: number | null
+  mongodbHostPath: string | null
+  natsPortNumber: number | null
+  natsBindIp: string | null
+  isDeleted: boolean | null
+  deletedAt: Date | null
+  deployStatus: $Enums.DeployStatus | null
+  deployError: string | null
+  lastProvisionedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -38,10 +104,46 @@ export type TenantMinAggregateOutputType = {
 export type TenantMaxAggregateOutputType = {
   id: string | null
   name: string | null
+  composeProjectName: string | null
+  domain: string | null
+  rootUrl: string | null
   rocketUrl: string | null
+  release: string | null
+  regToken: string | null
+  letsencryptEnabled: boolean | null
+  letsencryptEmail: string | null
+  traefikProtocol: string | null
+  hostPort: number | null
+  port: number | null
+  metricsPort: number | null
+  bindIp: string | null
+  adminUsername: string | null
+  adminPass: string | null
   adminUserId: string | null
   adminAuthToken: string | null
   adminTokenExpireAt: Date | null
+  prometheusRetentionSize: string | null
+  prometheusRetentionTime: string | null
+  prometheusPort: number | null
+  grafanaDomain: string | null
+  grafanaPath: string | null
+  grafanaAdminPassword: string | null
+  grafanaHostPort: number | null
+  grafanaBindIp: string | null
+  traefikHttpPort: number | null
+  traefikDashboardPort: number | null
+  traefikHttpsPort: number | null
+  mongodbBindIp: string | null
+  mongodbPortNumber: number | null
+  mongodbHostPortNumber: number | null
+  mongodbHostPath: string | null
+  natsPortNumber: number | null
+  natsBindIp: string | null
+  isDeleted: boolean | null
+  deletedAt: Date | null
+  deployStatus: $Enums.DeployStatus | null
+  deployError: string | null
+  lastProvisionedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -49,23 +151,124 @@ export type TenantMaxAggregateOutputType = {
 export type TenantCountAggregateOutputType = {
   id: number
   name: number
+  composeProjectName: number
+  domain: number
+  rootUrl: number
   rocketUrl: number
+  release: number
+  regToken: number
+  letsencryptEnabled: number
+  letsencryptEmail: number
+  traefikProtocol: number
+  hostPort: number
+  port: number
+  metricsPort: number
+  bindIp: number
+  adminUsername: number
+  adminPass: number
   adminUserId: number
   adminAuthToken: number
   adminTokenExpireAt: number
+  prometheusRetentionSize: number
+  prometheusRetentionTime: number
+  prometheusPort: number
+  grafanaDomain: number
+  grafanaPath: number
+  grafanaAdminPassword: number
+  grafanaHostPort: number
+  grafanaBindIp: number
+  traefikHttpPort: number
+  traefikDashboardPort: number
+  traefikHttpsPort: number
+  mongodbBindIp: number
+  mongodbPortNumber: number
+  mongodbHostPortNumber: number
+  mongodbHostPath: number
+  natsPortNumber: number
+  natsBindIp: number
+  envRaw: number
+  isDeleted: number
+  deletedAt: number
+  deployStatus: number
+  deployError: number
+  lastProvisionedAt: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
 
+export type TenantAvgAggregateInputType = {
+  hostPort?: true
+  port?: true
+  metricsPort?: true
+  prometheusPort?: true
+  grafanaHostPort?: true
+  traefikHttpPort?: true
+  traefikDashboardPort?: true
+  traefikHttpsPort?: true
+  mongodbPortNumber?: true
+  mongodbHostPortNumber?: true
+  natsPortNumber?: true
+}
+
+export type TenantSumAggregateInputType = {
+  hostPort?: true
+  port?: true
+  metricsPort?: true
+  prometheusPort?: true
+  grafanaHostPort?: true
+  traefikHttpPort?: true
+  traefikDashboardPort?: true
+  traefikHttpsPort?: true
+  mongodbPortNumber?: true
+  mongodbHostPortNumber?: true
+  natsPortNumber?: true
+}
+
 export type TenantMinAggregateInputType = {
   id?: true
   name?: true
+  composeProjectName?: true
+  domain?: true
+  rootUrl?: true
   rocketUrl?: true
+  release?: true
+  regToken?: true
+  letsencryptEnabled?: true
+  letsencryptEmail?: true
+  traefikProtocol?: true
+  hostPort?: true
+  port?: true
+  metricsPort?: true
+  bindIp?: true
+  adminUsername?: true
+  adminPass?: true
   adminUserId?: true
   adminAuthToken?: true
   adminTokenExpireAt?: true
+  prometheusRetentionSize?: true
+  prometheusRetentionTime?: true
+  prometheusPort?: true
+  grafanaDomain?: true
+  grafanaPath?: true
+  grafanaAdminPassword?: true
+  grafanaHostPort?: true
+  grafanaBindIp?: true
+  traefikHttpPort?: true
+  traefikDashboardPort?: true
+  traefikHttpsPort?: true
+  mongodbBindIp?: true
+  mongodbPortNumber?: true
+  mongodbHostPortNumber?: true
+  mongodbHostPath?: true
+  natsPortNumber?: true
+  natsBindIp?: true
+  isDeleted?: true
+  deletedAt?: true
+  deployStatus?: true
+  deployError?: true
+  lastProvisionedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -73,10 +276,46 @@ export type TenantMinAggregateInputType = {
 export type TenantMaxAggregateInputType = {
   id?: true
   name?: true
+  composeProjectName?: true
+  domain?: true
+  rootUrl?: true
   rocketUrl?: true
+  release?: true
+  regToken?: true
+  letsencryptEnabled?: true
+  letsencryptEmail?: true
+  traefikProtocol?: true
+  hostPort?: true
+  port?: true
+  metricsPort?: true
+  bindIp?: true
+  adminUsername?: true
+  adminPass?: true
   adminUserId?: true
   adminAuthToken?: true
   adminTokenExpireAt?: true
+  prometheusRetentionSize?: true
+  prometheusRetentionTime?: true
+  prometheusPort?: true
+  grafanaDomain?: true
+  grafanaPath?: true
+  grafanaAdminPassword?: true
+  grafanaHostPort?: true
+  grafanaBindIp?: true
+  traefikHttpPort?: true
+  traefikDashboardPort?: true
+  traefikHttpsPort?: true
+  mongodbBindIp?: true
+  mongodbPortNumber?: true
+  mongodbHostPortNumber?: true
+  mongodbHostPath?: true
+  natsPortNumber?: true
+  natsBindIp?: true
+  isDeleted?: true
+  deletedAt?: true
+  deployStatus?: true
+  deployError?: true
+  lastProvisionedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -84,10 +323,47 @@ export type TenantMaxAggregateInputType = {
 export type TenantCountAggregateInputType = {
   id?: true
   name?: true
+  composeProjectName?: true
+  domain?: true
+  rootUrl?: true
   rocketUrl?: true
+  release?: true
+  regToken?: true
+  letsencryptEnabled?: true
+  letsencryptEmail?: true
+  traefikProtocol?: true
+  hostPort?: true
+  port?: true
+  metricsPort?: true
+  bindIp?: true
+  adminUsername?: true
+  adminPass?: true
   adminUserId?: true
   adminAuthToken?: true
   adminTokenExpireAt?: true
+  prometheusRetentionSize?: true
+  prometheusRetentionTime?: true
+  prometheusPort?: true
+  grafanaDomain?: true
+  grafanaPath?: true
+  grafanaAdminPassword?: true
+  grafanaHostPort?: true
+  grafanaBindIp?: true
+  traefikHttpPort?: true
+  traefikDashboardPort?: true
+  traefikHttpsPort?: true
+  mongodbBindIp?: true
+  mongodbPortNumber?: true
+  mongodbHostPortNumber?: true
+  mongodbHostPath?: true
+  natsPortNumber?: true
+  natsBindIp?: true
+  envRaw?: true
+  isDeleted?: true
+  deletedAt?: true
+  deployStatus?: true
+  deployError?: true
+  lastProvisionedAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -131,6 +407,18 @@ export type TenantAggregateArgs<ExtArgs extends runtime.Types.Extensions.Interna
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: TenantAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: TenantSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: TenantMinAggregateInputType
@@ -161,6 +449,8 @@ export type TenantGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   _count?: TenantCountAggregateInputType | true
+  _avg?: TenantAvgAggregateInputType
+  _sum?: TenantSumAggregateInputType
   _min?: TenantMinAggregateInputType
   _max?: TenantMaxAggregateInputType
 }
@@ -168,13 +458,52 @@ export type TenantGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 export type TenantGroupByOutputType = {
   id: string
   name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
   rocketUrl: string
-  adminUserId: string
+  release: string
+  regToken: string | null
+  letsencryptEnabled: boolean
+  letsencryptEmail: string | null
+  traefikProtocol: string
+  hostPort: number
+  port: number
+  metricsPort: number
+  bindIp: string
+  adminUsername: string
+  adminPass: string
+  adminUserId: string | null
   adminAuthToken: string | null
   adminTokenExpireAt: Date | null
+  prometheusRetentionSize: string
+  prometheusRetentionTime: string
+  prometheusPort: number
+  grafanaDomain: string | null
+  grafanaPath: string
+  grafanaAdminPassword: string
+  grafanaHostPort: number
+  grafanaBindIp: string
+  traefikHttpPort: number
+  traefikDashboardPort: number
+  traefikHttpsPort: number
+  mongodbBindIp: string
+  mongodbPortNumber: number
+  mongodbHostPortNumber: number | null
+  mongodbHostPath: string | null
+  natsPortNumber: number
+  natsBindIp: string
+  envRaw: runtime.JsonValue | null
+  isDeleted: boolean
+  deletedAt: Date | null
+  deployStatus: $Enums.DeployStatus
+  deployError: string | null
+  lastProvisionedAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: TenantCountAggregateOutputType | null
+  _avg: TenantAvgAggregateOutputType | null
+  _sum: TenantSumAggregateOutputType | null
   _min: TenantMinAggregateOutputType | null
   _max: TenantMaxAggregateOutputType | null
 }
@@ -200,10 +529,47 @@ export type TenantWhereInput = {
   NOT?: Prisma.TenantWhereInput | Prisma.TenantWhereInput[]
   id?: Prisma.StringFilter<"Tenant"> | string
   name?: Prisma.StringFilter<"Tenant"> | string
+  composeProjectName?: Prisma.StringFilter<"Tenant"> | string
+  domain?: Prisma.StringFilter<"Tenant"> | string
+  rootUrl?: Prisma.StringFilter<"Tenant"> | string
   rocketUrl?: Prisma.StringFilter<"Tenant"> | string
-  adminUserId?: Prisma.StringFilter<"Tenant"> | string
+  release?: Prisma.StringFilter<"Tenant"> | string
+  regToken?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  letsencryptEnabled?: Prisma.BoolFilter<"Tenant"> | boolean
+  letsencryptEmail?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  traefikProtocol?: Prisma.StringFilter<"Tenant"> | string
+  hostPort?: Prisma.IntFilter<"Tenant"> | number
+  port?: Prisma.IntFilter<"Tenant"> | number
+  metricsPort?: Prisma.IntFilter<"Tenant"> | number
+  bindIp?: Prisma.StringFilter<"Tenant"> | string
+  adminUsername?: Prisma.StringFilter<"Tenant"> | string
+  adminPass?: Prisma.StringFilter<"Tenant"> | string
+  adminUserId?: Prisma.StringNullableFilter<"Tenant"> | string | null
   adminAuthToken?: Prisma.StringNullableFilter<"Tenant"> | string | null
   adminTokenExpireAt?: Prisma.DateTimeNullableFilter<"Tenant"> | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFilter<"Tenant"> | string
+  prometheusRetentionTime?: Prisma.StringFilter<"Tenant"> | string
+  prometheusPort?: Prisma.IntFilter<"Tenant"> | number
+  grafanaDomain?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  grafanaPath?: Prisma.StringFilter<"Tenant"> | string
+  grafanaAdminPassword?: Prisma.StringFilter<"Tenant"> | string
+  grafanaHostPort?: Prisma.IntFilter<"Tenant"> | number
+  grafanaBindIp?: Prisma.StringFilter<"Tenant"> | string
+  traefikHttpPort?: Prisma.IntFilter<"Tenant"> | number
+  traefikDashboardPort?: Prisma.IntFilter<"Tenant"> | number
+  traefikHttpsPort?: Prisma.IntFilter<"Tenant"> | number
+  mongodbBindIp?: Prisma.StringFilter<"Tenant"> | string
+  mongodbPortNumber?: Prisma.IntFilter<"Tenant"> | number
+  mongodbHostPortNumber?: Prisma.IntNullableFilter<"Tenant"> | number | null
+  mongodbHostPath?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  natsPortNumber?: Prisma.IntFilter<"Tenant"> | number
+  natsBindIp?: Prisma.StringFilter<"Tenant"> | string
+  envRaw?: Prisma.JsonNullableFilter<"Tenant">
+  isDeleted?: Prisma.BoolFilter<"Tenant"> | boolean
+  deletedAt?: Prisma.DateTimeNullableFilter<"Tenant"> | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFilter<"Tenant"> | $Enums.DeployStatus
+  deployError?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  lastProvisionedAt?: Prisma.DateTimeNullableFilter<"Tenant"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Tenant"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Tenant"> | Date | string
   users?: Prisma.UserListRelationFilter
@@ -213,10 +579,47 @@ export type TenantWhereInput = {
 export type TenantOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  composeProjectName?: Prisma.SortOrder
+  domain?: Prisma.SortOrder
+  rootUrl?: Prisma.SortOrder
   rocketUrl?: Prisma.SortOrder
-  adminUserId?: Prisma.SortOrder
+  release?: Prisma.SortOrder
+  regToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  letsencryptEnabled?: Prisma.SortOrder
+  letsencryptEmail?: Prisma.SortOrderInput | Prisma.SortOrder
+  traefikProtocol?: Prisma.SortOrder
+  hostPort?: Prisma.SortOrder
+  port?: Prisma.SortOrder
+  metricsPort?: Prisma.SortOrder
+  bindIp?: Prisma.SortOrder
+  adminUsername?: Prisma.SortOrder
+  adminPass?: Prisma.SortOrder
+  adminUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   adminAuthToken?: Prisma.SortOrderInput | Prisma.SortOrder
   adminTokenExpireAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  prometheusRetentionSize?: Prisma.SortOrder
+  prometheusRetentionTime?: Prisma.SortOrder
+  prometheusPort?: Prisma.SortOrder
+  grafanaDomain?: Prisma.SortOrderInput | Prisma.SortOrder
+  grafanaPath?: Prisma.SortOrder
+  grafanaAdminPassword?: Prisma.SortOrder
+  grafanaHostPort?: Prisma.SortOrder
+  grafanaBindIp?: Prisma.SortOrder
+  traefikHttpPort?: Prisma.SortOrder
+  traefikDashboardPort?: Prisma.SortOrder
+  traefikHttpsPort?: Prisma.SortOrder
+  mongodbBindIp?: Prisma.SortOrder
+  mongodbPortNumber?: Prisma.SortOrder
+  mongodbHostPortNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  mongodbHostPath?: Prisma.SortOrderInput | Prisma.SortOrder
+  natsPortNumber?: Prisma.SortOrder
+  natsBindIp?: Prisma.SortOrder
+  envRaw?: Prisma.SortOrderInput | Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deployStatus?: Prisma.SortOrder
+  deployError?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastProvisionedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   users?: Prisma.UserOrderByRelationAggregateInput
@@ -225,32 +628,108 @@ export type TenantOrderByWithRelationInput = {
 
 export type TenantWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  composeProjectName?: string
+  domain?: string
+  rootUrl?: string
   AND?: Prisma.TenantWhereInput | Prisma.TenantWhereInput[]
   OR?: Prisma.TenantWhereInput[]
   NOT?: Prisma.TenantWhereInput | Prisma.TenantWhereInput[]
   name?: Prisma.StringFilter<"Tenant"> | string
   rocketUrl?: Prisma.StringFilter<"Tenant"> | string
-  adminUserId?: Prisma.StringFilter<"Tenant"> | string
+  release?: Prisma.StringFilter<"Tenant"> | string
+  regToken?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  letsencryptEnabled?: Prisma.BoolFilter<"Tenant"> | boolean
+  letsencryptEmail?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  traefikProtocol?: Prisma.StringFilter<"Tenant"> | string
+  hostPort?: Prisma.IntFilter<"Tenant"> | number
+  port?: Prisma.IntFilter<"Tenant"> | number
+  metricsPort?: Prisma.IntFilter<"Tenant"> | number
+  bindIp?: Prisma.StringFilter<"Tenant"> | string
+  adminUsername?: Prisma.StringFilter<"Tenant"> | string
+  adminPass?: Prisma.StringFilter<"Tenant"> | string
+  adminUserId?: Prisma.StringNullableFilter<"Tenant"> | string | null
   adminAuthToken?: Prisma.StringNullableFilter<"Tenant"> | string | null
   adminTokenExpireAt?: Prisma.DateTimeNullableFilter<"Tenant"> | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFilter<"Tenant"> | string
+  prometheusRetentionTime?: Prisma.StringFilter<"Tenant"> | string
+  prometheusPort?: Prisma.IntFilter<"Tenant"> | number
+  grafanaDomain?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  grafanaPath?: Prisma.StringFilter<"Tenant"> | string
+  grafanaAdminPassword?: Prisma.StringFilter<"Tenant"> | string
+  grafanaHostPort?: Prisma.IntFilter<"Tenant"> | number
+  grafanaBindIp?: Prisma.StringFilter<"Tenant"> | string
+  traefikHttpPort?: Prisma.IntFilter<"Tenant"> | number
+  traefikDashboardPort?: Prisma.IntFilter<"Tenant"> | number
+  traefikHttpsPort?: Prisma.IntFilter<"Tenant"> | number
+  mongodbBindIp?: Prisma.StringFilter<"Tenant"> | string
+  mongodbPortNumber?: Prisma.IntFilter<"Tenant"> | number
+  mongodbHostPortNumber?: Prisma.IntNullableFilter<"Tenant"> | number | null
+  mongodbHostPath?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  natsPortNumber?: Prisma.IntFilter<"Tenant"> | number
+  natsBindIp?: Prisma.StringFilter<"Tenant"> | string
+  envRaw?: Prisma.JsonNullableFilter<"Tenant">
+  isDeleted?: Prisma.BoolFilter<"Tenant"> | boolean
+  deletedAt?: Prisma.DateTimeNullableFilter<"Tenant"> | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFilter<"Tenant"> | $Enums.DeployStatus
+  deployError?: Prisma.StringNullableFilter<"Tenant"> | string | null
+  lastProvisionedAt?: Prisma.DateTimeNullableFilter<"Tenant"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Tenant"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Tenant"> | Date | string
   users?: Prisma.UserListRelationFilter
   teams?: Prisma.TeamListRelationFilter
-}, "id">
+}, "id" | "composeProjectName" | "domain" | "rootUrl">
 
 export type TenantOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  composeProjectName?: Prisma.SortOrder
+  domain?: Prisma.SortOrder
+  rootUrl?: Prisma.SortOrder
   rocketUrl?: Prisma.SortOrder
-  adminUserId?: Prisma.SortOrder
+  release?: Prisma.SortOrder
+  regToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  letsencryptEnabled?: Prisma.SortOrder
+  letsencryptEmail?: Prisma.SortOrderInput | Prisma.SortOrder
+  traefikProtocol?: Prisma.SortOrder
+  hostPort?: Prisma.SortOrder
+  port?: Prisma.SortOrder
+  metricsPort?: Prisma.SortOrder
+  bindIp?: Prisma.SortOrder
+  adminUsername?: Prisma.SortOrder
+  adminPass?: Prisma.SortOrder
+  adminUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   adminAuthToken?: Prisma.SortOrderInput | Prisma.SortOrder
   adminTokenExpireAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  prometheusRetentionSize?: Prisma.SortOrder
+  prometheusRetentionTime?: Prisma.SortOrder
+  prometheusPort?: Prisma.SortOrder
+  grafanaDomain?: Prisma.SortOrderInput | Prisma.SortOrder
+  grafanaPath?: Prisma.SortOrder
+  grafanaAdminPassword?: Prisma.SortOrder
+  grafanaHostPort?: Prisma.SortOrder
+  grafanaBindIp?: Prisma.SortOrder
+  traefikHttpPort?: Prisma.SortOrder
+  traefikDashboardPort?: Prisma.SortOrder
+  traefikHttpsPort?: Prisma.SortOrder
+  mongodbBindIp?: Prisma.SortOrder
+  mongodbPortNumber?: Prisma.SortOrder
+  mongodbHostPortNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  mongodbHostPath?: Prisma.SortOrderInput | Prisma.SortOrder
+  natsPortNumber?: Prisma.SortOrder
+  natsBindIp?: Prisma.SortOrder
+  envRaw?: Prisma.SortOrderInput | Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deployStatus?: Prisma.SortOrder
+  deployError?: Prisma.SortOrderInput | Prisma.SortOrder
+  lastProvisionedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.TenantCountOrderByAggregateInput
+  _avg?: Prisma.TenantAvgOrderByAggregateInput
   _max?: Prisma.TenantMaxOrderByAggregateInput
   _min?: Prisma.TenantMinOrderByAggregateInput
+  _sum?: Prisma.TenantSumOrderByAggregateInput
 }
 
 export type TenantScalarWhereWithAggregatesInput = {
@@ -259,10 +738,47 @@ export type TenantScalarWhereWithAggregatesInput = {
   NOT?: Prisma.TenantScalarWhereWithAggregatesInput | Prisma.TenantScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
   name?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  composeProjectName?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  domain?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  rootUrl?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
   rocketUrl?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
-  adminUserId?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  release?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  regToken?: Prisma.StringNullableWithAggregatesFilter<"Tenant"> | string | null
+  letsencryptEnabled?: Prisma.BoolWithAggregatesFilter<"Tenant"> | boolean
+  letsencryptEmail?: Prisma.StringNullableWithAggregatesFilter<"Tenant"> | string | null
+  traefikProtocol?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  hostPort?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  port?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  metricsPort?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  bindIp?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  adminUsername?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  adminPass?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  adminUserId?: Prisma.StringNullableWithAggregatesFilter<"Tenant"> | string | null
   adminAuthToken?: Prisma.StringNullableWithAggregatesFilter<"Tenant"> | string | null
   adminTokenExpireAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Tenant"> | Date | string | null
+  prometheusRetentionSize?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  prometheusRetentionTime?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  prometheusPort?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  grafanaDomain?: Prisma.StringNullableWithAggregatesFilter<"Tenant"> | string | null
+  grafanaPath?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  grafanaAdminPassword?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  grafanaHostPort?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  grafanaBindIp?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  traefikHttpPort?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  traefikDashboardPort?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  traefikHttpsPort?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  mongodbBindIp?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  mongodbPortNumber?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  mongodbHostPortNumber?: Prisma.IntNullableWithAggregatesFilter<"Tenant"> | number | null
+  mongodbHostPath?: Prisma.StringNullableWithAggregatesFilter<"Tenant"> | string | null
+  natsPortNumber?: Prisma.IntWithAggregatesFilter<"Tenant"> | number
+  natsBindIp?: Prisma.StringWithAggregatesFilter<"Tenant"> | string
+  envRaw?: Prisma.JsonNullableWithAggregatesFilter<"Tenant">
+  isDeleted?: Prisma.BoolWithAggregatesFilter<"Tenant"> | boolean
+  deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Tenant"> | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusWithAggregatesFilter<"Tenant"> | $Enums.DeployStatus
+  deployError?: Prisma.StringNullableWithAggregatesFilter<"Tenant"> | string | null
+  lastProvisionedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Tenant"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Tenant"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Tenant"> | Date | string
 }
@@ -270,10 +786,47 @@ export type TenantScalarWhereWithAggregatesInput = {
 export type TenantCreateInput = {
   id?: string
   name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
   rocketUrl: string
-  adminUserId: string
+  release?: string
+  regToken?: string | null
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: string | null
+  traefikProtocol?: string
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
   adminAuthToken?: string | null
   adminTokenExpireAt?: Date | string | null
+  prometheusRetentionSize?: string
+  prometheusRetentionTime?: string
+  prometheusPort?: number
+  grafanaDomain?: string | null
+  grafanaPath?: string
+  grafanaAdminPassword?: string
+  grafanaHostPort?: number
+  grafanaBindIp?: string
+  traefikHttpPort?: number
+  traefikDashboardPort?: number
+  traefikHttpsPort?: number
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  mongodbHostPath?: string | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutTenantInput
@@ -283,10 +836,47 @@ export type TenantCreateInput = {
 export type TenantUncheckedCreateInput = {
   id?: string
   name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
   rocketUrl: string
-  adminUserId: string
+  release?: string
+  regToken?: string | null
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: string | null
+  traefikProtocol?: string
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
   adminAuthToken?: string | null
   adminTokenExpireAt?: Date | string | null
+  prometheusRetentionSize?: string
+  prometheusRetentionTime?: string
+  prometheusPort?: number
+  grafanaDomain?: string | null
+  grafanaPath?: string
+  grafanaAdminPassword?: string
+  grafanaHostPort?: number
+  grafanaBindIp?: string
+  traefikHttpPort?: number
+  traefikDashboardPort?: number
+  traefikHttpsPort?: number
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  mongodbHostPath?: string | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutTenantInput
@@ -296,10 +886,47 @@ export type TenantUncheckedCreateInput = {
 export type TenantUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
   rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  adminUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letsencryptEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  letsencryptEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traefikProtocol?: Prisma.StringFieldUpdateOperationsInput | string
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusRetentionTime?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaDomain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grafanaPath?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaAdminPassword?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaHostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  traefikHttpPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikDashboardPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikHttpsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mongodbHostPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutTenantNestedInput
@@ -309,10 +936,47 @@ export type TenantUpdateInput = {
 export type TenantUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
   rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  adminUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letsencryptEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  letsencryptEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traefikProtocol?: Prisma.StringFieldUpdateOperationsInput | string
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusRetentionTime?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaDomain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grafanaPath?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaAdminPassword?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaHostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  traefikHttpPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikDashboardPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikHttpsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mongodbHostPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutTenantNestedInput
@@ -322,10 +986,47 @@ export type TenantUncheckedUpdateInput = {
 export type TenantCreateManyInput = {
   id?: string
   name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
   rocketUrl: string
-  adminUserId: string
+  release?: string
+  regToken?: string | null
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: string | null
+  traefikProtocol?: string
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
   adminAuthToken?: string | null
   adminTokenExpireAt?: Date | string | null
+  prometheusRetentionSize?: string
+  prometheusRetentionTime?: string
+  prometheusPort?: number
+  grafanaDomain?: string | null
+  grafanaPath?: string
+  grafanaAdminPassword?: string
+  grafanaHostPort?: number
+  grafanaBindIp?: string
+  traefikHttpPort?: number
+  traefikDashboardPort?: number
+  traefikHttpsPort?: number
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  mongodbHostPath?: string | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -333,10 +1034,47 @@ export type TenantCreateManyInput = {
 export type TenantUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
   rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  adminUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letsencryptEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  letsencryptEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traefikProtocol?: Prisma.StringFieldUpdateOperationsInput | string
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusRetentionTime?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaDomain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grafanaPath?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaAdminPassword?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaHostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  traefikHttpPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikDashboardPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikHttpsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mongodbHostPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -344,10 +1082,47 @@ export type TenantUpdateManyMutationInput = {
 export type TenantUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
   rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  adminUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letsencryptEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  letsencryptEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traefikProtocol?: Prisma.StringFieldUpdateOperationsInput | string
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusRetentionTime?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaDomain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grafanaPath?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaAdminPassword?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaHostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  traefikHttpPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikDashboardPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikHttpsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mongodbHostPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -355,21 +1130,108 @@ export type TenantUncheckedUpdateManyInput = {
 export type TenantCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  composeProjectName?: Prisma.SortOrder
+  domain?: Prisma.SortOrder
+  rootUrl?: Prisma.SortOrder
   rocketUrl?: Prisma.SortOrder
+  release?: Prisma.SortOrder
+  regToken?: Prisma.SortOrder
+  letsencryptEnabled?: Prisma.SortOrder
+  letsencryptEmail?: Prisma.SortOrder
+  traefikProtocol?: Prisma.SortOrder
+  hostPort?: Prisma.SortOrder
+  port?: Prisma.SortOrder
+  metricsPort?: Prisma.SortOrder
+  bindIp?: Prisma.SortOrder
+  adminUsername?: Prisma.SortOrder
+  adminPass?: Prisma.SortOrder
   adminUserId?: Prisma.SortOrder
   adminAuthToken?: Prisma.SortOrder
   adminTokenExpireAt?: Prisma.SortOrder
+  prometheusRetentionSize?: Prisma.SortOrder
+  prometheusRetentionTime?: Prisma.SortOrder
+  prometheusPort?: Prisma.SortOrder
+  grafanaDomain?: Prisma.SortOrder
+  grafanaPath?: Prisma.SortOrder
+  grafanaAdminPassword?: Prisma.SortOrder
+  grafanaHostPort?: Prisma.SortOrder
+  grafanaBindIp?: Prisma.SortOrder
+  traefikHttpPort?: Prisma.SortOrder
+  traefikDashboardPort?: Prisma.SortOrder
+  traefikHttpsPort?: Prisma.SortOrder
+  mongodbBindIp?: Prisma.SortOrder
+  mongodbPortNumber?: Prisma.SortOrder
+  mongodbHostPortNumber?: Prisma.SortOrder
+  mongodbHostPath?: Prisma.SortOrder
+  natsPortNumber?: Prisma.SortOrder
+  natsBindIp?: Prisma.SortOrder
+  envRaw?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deployStatus?: Prisma.SortOrder
+  deployError?: Prisma.SortOrder
+  lastProvisionedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type TenantAvgOrderByAggregateInput = {
+  hostPort?: Prisma.SortOrder
+  port?: Prisma.SortOrder
+  metricsPort?: Prisma.SortOrder
+  prometheusPort?: Prisma.SortOrder
+  grafanaHostPort?: Prisma.SortOrder
+  traefikHttpPort?: Prisma.SortOrder
+  traefikDashboardPort?: Prisma.SortOrder
+  traefikHttpsPort?: Prisma.SortOrder
+  mongodbPortNumber?: Prisma.SortOrder
+  mongodbHostPortNumber?: Prisma.SortOrder
+  natsPortNumber?: Prisma.SortOrder
 }
 
 export type TenantMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  composeProjectName?: Prisma.SortOrder
+  domain?: Prisma.SortOrder
+  rootUrl?: Prisma.SortOrder
   rocketUrl?: Prisma.SortOrder
+  release?: Prisma.SortOrder
+  regToken?: Prisma.SortOrder
+  letsencryptEnabled?: Prisma.SortOrder
+  letsencryptEmail?: Prisma.SortOrder
+  traefikProtocol?: Prisma.SortOrder
+  hostPort?: Prisma.SortOrder
+  port?: Prisma.SortOrder
+  metricsPort?: Prisma.SortOrder
+  bindIp?: Prisma.SortOrder
+  adminUsername?: Prisma.SortOrder
+  adminPass?: Prisma.SortOrder
   adminUserId?: Prisma.SortOrder
   adminAuthToken?: Prisma.SortOrder
   adminTokenExpireAt?: Prisma.SortOrder
+  prometheusRetentionSize?: Prisma.SortOrder
+  prometheusRetentionTime?: Prisma.SortOrder
+  prometheusPort?: Prisma.SortOrder
+  grafanaDomain?: Prisma.SortOrder
+  grafanaPath?: Prisma.SortOrder
+  grafanaAdminPassword?: Prisma.SortOrder
+  grafanaHostPort?: Prisma.SortOrder
+  grafanaBindIp?: Prisma.SortOrder
+  traefikHttpPort?: Prisma.SortOrder
+  traefikDashboardPort?: Prisma.SortOrder
+  traefikHttpsPort?: Prisma.SortOrder
+  mongodbBindIp?: Prisma.SortOrder
+  mongodbPortNumber?: Prisma.SortOrder
+  mongodbHostPortNumber?: Prisma.SortOrder
+  mongodbHostPath?: Prisma.SortOrder
+  natsPortNumber?: Prisma.SortOrder
+  natsBindIp?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deployStatus?: Prisma.SortOrder
+  deployError?: Prisma.SortOrder
+  lastProvisionedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -377,12 +1239,62 @@ export type TenantMaxOrderByAggregateInput = {
 export type TenantMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  composeProjectName?: Prisma.SortOrder
+  domain?: Prisma.SortOrder
+  rootUrl?: Prisma.SortOrder
   rocketUrl?: Prisma.SortOrder
+  release?: Prisma.SortOrder
+  regToken?: Prisma.SortOrder
+  letsencryptEnabled?: Prisma.SortOrder
+  letsencryptEmail?: Prisma.SortOrder
+  traefikProtocol?: Prisma.SortOrder
+  hostPort?: Prisma.SortOrder
+  port?: Prisma.SortOrder
+  metricsPort?: Prisma.SortOrder
+  bindIp?: Prisma.SortOrder
+  adminUsername?: Prisma.SortOrder
+  adminPass?: Prisma.SortOrder
   adminUserId?: Prisma.SortOrder
   adminAuthToken?: Prisma.SortOrder
   adminTokenExpireAt?: Prisma.SortOrder
+  prometheusRetentionSize?: Prisma.SortOrder
+  prometheusRetentionTime?: Prisma.SortOrder
+  prometheusPort?: Prisma.SortOrder
+  grafanaDomain?: Prisma.SortOrder
+  grafanaPath?: Prisma.SortOrder
+  grafanaAdminPassword?: Prisma.SortOrder
+  grafanaHostPort?: Prisma.SortOrder
+  grafanaBindIp?: Prisma.SortOrder
+  traefikHttpPort?: Prisma.SortOrder
+  traefikDashboardPort?: Prisma.SortOrder
+  traefikHttpsPort?: Prisma.SortOrder
+  mongodbBindIp?: Prisma.SortOrder
+  mongodbPortNumber?: Prisma.SortOrder
+  mongodbHostPortNumber?: Prisma.SortOrder
+  mongodbHostPath?: Prisma.SortOrder
+  natsPortNumber?: Prisma.SortOrder
+  natsBindIp?: Prisma.SortOrder
+  isDeleted?: Prisma.SortOrder
+  deletedAt?: Prisma.SortOrder
+  deployStatus?: Prisma.SortOrder
+  deployError?: Prisma.SortOrder
+  lastProvisionedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type TenantSumOrderByAggregateInput = {
+  hostPort?: Prisma.SortOrder
+  port?: Prisma.SortOrder
+  metricsPort?: Prisma.SortOrder
+  prometheusPort?: Prisma.SortOrder
+  grafanaHostPort?: Prisma.SortOrder
+  traefikHttpPort?: Prisma.SortOrder
+  traefikDashboardPort?: Prisma.SortOrder
+  traefikHttpsPort?: Prisma.SortOrder
+  mongodbPortNumber?: Prisma.SortOrder
+  mongodbHostPortNumber?: Prisma.SortOrder
+  natsPortNumber?: Prisma.SortOrder
 }
 
 export type TenantScalarRelationFilter = {
@@ -398,8 +1310,32 @@ export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }
 
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
+}
+
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
+export type EnumDeployStatusFieldUpdateOperationsInput = {
+  set?: $Enums.DeployStatus
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -437,10 +1373,47 @@ export type TenantUpdateOneRequiredWithoutTeamsNestedInput = {
 export type TenantCreateWithoutUsersInput = {
   id?: string
   name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
   rocketUrl: string
-  adminUserId: string
+  release?: string
+  regToken?: string | null
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: string | null
+  traefikProtocol?: string
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
   adminAuthToken?: string | null
   adminTokenExpireAt?: Date | string | null
+  prometheusRetentionSize?: string
+  prometheusRetentionTime?: string
+  prometheusPort?: number
+  grafanaDomain?: string | null
+  grafanaPath?: string
+  grafanaAdminPassword?: string
+  grafanaHostPort?: number
+  grafanaBindIp?: string
+  traefikHttpPort?: number
+  traefikDashboardPort?: number
+  traefikHttpsPort?: number
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  mongodbHostPath?: string | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamCreateNestedManyWithoutTenantInput
@@ -449,10 +1422,47 @@ export type TenantCreateWithoutUsersInput = {
 export type TenantUncheckedCreateWithoutUsersInput = {
   id?: string
   name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
   rocketUrl: string
-  adminUserId: string
+  release?: string
+  regToken?: string | null
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: string | null
+  traefikProtocol?: string
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
   adminAuthToken?: string | null
   adminTokenExpireAt?: Date | string | null
+  prometheusRetentionSize?: string
+  prometheusRetentionTime?: string
+  prometheusPort?: number
+  grafanaDomain?: string | null
+  grafanaPath?: string
+  grafanaAdminPassword?: string
+  grafanaHostPort?: number
+  grafanaBindIp?: string
+  traefikHttpPort?: number
+  traefikDashboardPort?: number
+  traefikHttpsPort?: number
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  mongodbHostPath?: string | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTenantInput
@@ -477,10 +1487,47 @@ export type TenantUpdateToOneWithWhereWithoutUsersInput = {
 export type TenantUpdateWithoutUsersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
   rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  adminUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letsencryptEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  letsencryptEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traefikProtocol?: Prisma.StringFieldUpdateOperationsInput | string
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusRetentionTime?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaDomain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grafanaPath?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaAdminPassword?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaHostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  traefikHttpPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikDashboardPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikHttpsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mongodbHostPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUpdateManyWithoutTenantNestedInput
@@ -489,10 +1536,47 @@ export type TenantUpdateWithoutUsersInput = {
 export type TenantUncheckedUpdateWithoutUsersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
   rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  adminUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letsencryptEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  letsencryptEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traefikProtocol?: Prisma.StringFieldUpdateOperationsInput | string
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusRetentionTime?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaDomain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grafanaPath?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaAdminPassword?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaHostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  traefikHttpPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikDashboardPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikHttpsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mongodbHostPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUncheckedUpdateManyWithoutTenantNestedInput
@@ -501,10 +1585,47 @@ export type TenantUncheckedUpdateWithoutUsersInput = {
 export type TenantCreateWithoutTeamsInput = {
   id?: string
   name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
   rocketUrl: string
-  adminUserId: string
+  release?: string
+  regToken?: string | null
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: string | null
+  traefikProtocol?: string
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
   adminAuthToken?: string | null
   adminTokenExpireAt?: Date | string | null
+  prometheusRetentionSize?: string
+  prometheusRetentionTime?: string
+  prometheusPort?: number
+  grafanaDomain?: string | null
+  grafanaPath?: string
+  grafanaAdminPassword?: string
+  grafanaHostPort?: number
+  grafanaBindIp?: string
+  traefikHttpPort?: number
+  traefikDashboardPort?: number
+  traefikHttpsPort?: number
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  mongodbHostPath?: string | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutTenantInput
@@ -513,10 +1634,47 @@ export type TenantCreateWithoutTeamsInput = {
 export type TenantUncheckedCreateWithoutTeamsInput = {
   id?: string
   name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
   rocketUrl: string
-  adminUserId: string
+  release?: string
+  regToken?: string | null
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: string | null
+  traefikProtocol?: string
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
   adminAuthToken?: string | null
   adminTokenExpireAt?: Date | string | null
+  prometheusRetentionSize?: string
+  prometheusRetentionTime?: string
+  prometheusPort?: number
+  grafanaDomain?: string | null
+  grafanaPath?: string
+  grafanaAdminPassword?: string
+  grafanaHostPort?: number
+  grafanaBindIp?: string
+  traefikHttpPort?: number
+  traefikDashboardPort?: number
+  traefikHttpsPort?: number
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  mongodbHostPath?: string | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutTenantInput
@@ -541,10 +1699,47 @@ export type TenantUpdateToOneWithWhereWithoutTeamsInput = {
 export type TenantUpdateWithoutTeamsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
   rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  adminUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letsencryptEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  letsencryptEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traefikProtocol?: Prisma.StringFieldUpdateOperationsInput | string
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusRetentionTime?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaDomain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grafanaPath?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaAdminPassword?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaHostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  traefikHttpPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikDashboardPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikHttpsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mongodbHostPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutTenantNestedInput
@@ -553,10 +1748,47 @@ export type TenantUpdateWithoutTeamsInput = {
 export type TenantUncheckedUpdateWithoutTeamsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
   rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  adminUserId?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  letsencryptEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  letsencryptEmail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traefikProtocol?: Prisma.StringFieldUpdateOperationsInput | string
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  prometheusRetentionSize?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusRetentionTime?: Prisma.StringFieldUpdateOperationsInput | string
+  prometheusPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaDomain?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  grafanaPath?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaAdminPassword?: Prisma.StringFieldUpdateOperationsInput | string
+  grafanaHostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  grafanaBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  traefikHttpPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikDashboardPort?: Prisma.IntFieldUpdateOperationsInput | number
+  traefikHttpsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mongodbHostPath?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutTenantNestedInput
@@ -605,10 +1837,47 @@ export type TenantCountOutputTypeCountTeamsArgs<ExtArgs extends runtime.Types.Ex
 export type TenantSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  composeProjectName?: boolean
+  domain?: boolean
+  rootUrl?: boolean
   rocketUrl?: boolean
+  release?: boolean
+  regToken?: boolean
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: boolean
+  traefikProtocol?: boolean
+  hostPort?: boolean
+  port?: boolean
+  metricsPort?: boolean
+  bindIp?: boolean
+  adminUsername?: boolean
+  adminPass?: boolean
   adminUserId?: boolean
   adminAuthToken?: boolean
   adminTokenExpireAt?: boolean
+  prometheusRetentionSize?: boolean
+  prometheusRetentionTime?: boolean
+  prometheusPort?: boolean
+  grafanaDomain?: boolean
+  grafanaPath?: boolean
+  grafanaAdminPassword?: boolean
+  grafanaHostPort?: boolean
+  grafanaBindIp?: boolean
+  traefikHttpPort?: boolean
+  traefikDashboardPort?: boolean
+  traefikHttpsPort?: boolean
+  mongodbBindIp?: boolean
+  mongodbPortNumber?: boolean
+  mongodbHostPortNumber?: boolean
+  mongodbHostPath?: boolean
+  natsPortNumber?: boolean
+  natsBindIp?: boolean
+  envRaw?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deployStatus?: boolean
+  deployError?: boolean
+  lastProvisionedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   users?: boolean | Prisma.Tenant$usersArgs<ExtArgs>
@@ -619,10 +1888,47 @@ export type TenantSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
 export type TenantSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  composeProjectName?: boolean
+  domain?: boolean
+  rootUrl?: boolean
   rocketUrl?: boolean
+  release?: boolean
+  regToken?: boolean
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: boolean
+  traefikProtocol?: boolean
+  hostPort?: boolean
+  port?: boolean
+  metricsPort?: boolean
+  bindIp?: boolean
+  adminUsername?: boolean
+  adminPass?: boolean
   adminUserId?: boolean
   adminAuthToken?: boolean
   adminTokenExpireAt?: boolean
+  prometheusRetentionSize?: boolean
+  prometheusRetentionTime?: boolean
+  prometheusPort?: boolean
+  grafanaDomain?: boolean
+  grafanaPath?: boolean
+  grafanaAdminPassword?: boolean
+  grafanaHostPort?: boolean
+  grafanaBindIp?: boolean
+  traefikHttpPort?: boolean
+  traefikDashboardPort?: boolean
+  traefikHttpsPort?: boolean
+  mongodbBindIp?: boolean
+  mongodbPortNumber?: boolean
+  mongodbHostPortNumber?: boolean
+  mongodbHostPath?: boolean
+  natsPortNumber?: boolean
+  natsBindIp?: boolean
+  envRaw?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deployStatus?: boolean
+  deployError?: boolean
+  lastProvisionedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["tenant"]>
@@ -630,10 +1936,47 @@ export type TenantSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
 export type TenantSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  composeProjectName?: boolean
+  domain?: boolean
+  rootUrl?: boolean
   rocketUrl?: boolean
+  release?: boolean
+  regToken?: boolean
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: boolean
+  traefikProtocol?: boolean
+  hostPort?: boolean
+  port?: boolean
+  metricsPort?: boolean
+  bindIp?: boolean
+  adminUsername?: boolean
+  adminPass?: boolean
   adminUserId?: boolean
   adminAuthToken?: boolean
   adminTokenExpireAt?: boolean
+  prometheusRetentionSize?: boolean
+  prometheusRetentionTime?: boolean
+  prometheusPort?: boolean
+  grafanaDomain?: boolean
+  grafanaPath?: boolean
+  grafanaAdminPassword?: boolean
+  grafanaHostPort?: boolean
+  grafanaBindIp?: boolean
+  traefikHttpPort?: boolean
+  traefikDashboardPort?: boolean
+  traefikHttpsPort?: boolean
+  mongodbBindIp?: boolean
+  mongodbPortNumber?: boolean
+  mongodbHostPortNumber?: boolean
+  mongodbHostPath?: boolean
+  natsPortNumber?: boolean
+  natsBindIp?: boolean
+  envRaw?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deployStatus?: boolean
+  deployError?: boolean
+  lastProvisionedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["tenant"]>
@@ -641,15 +1984,52 @@ export type TenantSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
 export type TenantSelectScalar = {
   id?: boolean
   name?: boolean
+  composeProjectName?: boolean
+  domain?: boolean
+  rootUrl?: boolean
   rocketUrl?: boolean
+  release?: boolean
+  regToken?: boolean
+  letsencryptEnabled?: boolean
+  letsencryptEmail?: boolean
+  traefikProtocol?: boolean
+  hostPort?: boolean
+  port?: boolean
+  metricsPort?: boolean
+  bindIp?: boolean
+  adminUsername?: boolean
+  adminPass?: boolean
   adminUserId?: boolean
   adminAuthToken?: boolean
   adminTokenExpireAt?: boolean
+  prometheusRetentionSize?: boolean
+  prometheusRetentionTime?: boolean
+  prometheusPort?: boolean
+  grafanaDomain?: boolean
+  grafanaPath?: boolean
+  grafanaAdminPassword?: boolean
+  grafanaHostPort?: boolean
+  grafanaBindIp?: boolean
+  traefikHttpPort?: boolean
+  traefikDashboardPort?: boolean
+  traefikHttpsPort?: boolean
+  mongodbBindIp?: boolean
+  mongodbPortNumber?: boolean
+  mongodbHostPortNumber?: boolean
+  mongodbHostPath?: boolean
+  natsPortNumber?: boolean
+  natsBindIp?: boolean
+  envRaw?: boolean
+  isDeleted?: boolean
+  deletedAt?: boolean
+  deployStatus?: boolean
+  deployError?: boolean
+  lastProvisionedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type TenantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "rocketUrl" | "adminUserId" | "adminAuthToken" | "adminTokenExpireAt" | "createdAt" | "updatedAt", ExtArgs["result"]["tenant"]>
+export type TenantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "composeProjectName" | "domain" | "rootUrl" | "rocketUrl" | "release" | "regToken" | "letsencryptEnabled" | "letsencryptEmail" | "traefikProtocol" | "hostPort" | "port" | "metricsPort" | "bindIp" | "adminUsername" | "adminPass" | "adminUserId" | "adminAuthToken" | "adminTokenExpireAt" | "prometheusRetentionSize" | "prometheusRetentionTime" | "prometheusPort" | "grafanaDomain" | "grafanaPath" | "grafanaAdminPassword" | "grafanaHostPort" | "grafanaBindIp" | "traefikHttpPort" | "traefikDashboardPort" | "traefikHttpsPort" | "mongodbBindIp" | "mongodbPortNumber" | "mongodbHostPortNumber" | "mongodbHostPath" | "natsPortNumber" | "natsBindIp" | "envRaw" | "isDeleted" | "deletedAt" | "deployStatus" | "deployError" | "lastProvisionedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["tenant"]>
 export type TenantInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | Prisma.Tenant$usersArgs<ExtArgs>
   teams?: boolean | Prisma.Tenant$teamsArgs<ExtArgs>
@@ -667,10 +2047,47 @@ export type $TenantPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
+    composeProjectName: string
+    domain: string
+    rootUrl: string
     rocketUrl: string
-    adminUserId: string
+    release: string
+    regToken: string | null
+    letsencryptEnabled: boolean
+    letsencryptEmail: string | null
+    traefikProtocol: string
+    hostPort: number
+    port: number
+    metricsPort: number
+    bindIp: string
+    adminUsername: string
+    adminPass: string
+    adminUserId: string | null
     adminAuthToken: string | null
     adminTokenExpireAt: Date | null
+    prometheusRetentionSize: string
+    prometheusRetentionTime: string
+    prometheusPort: number
+    grafanaDomain: string | null
+    grafanaPath: string
+    grafanaAdminPassword: string
+    grafanaHostPort: number
+    grafanaBindIp: string
+    traefikHttpPort: number
+    traefikDashboardPort: number
+    traefikHttpsPort: number
+    mongodbBindIp: string
+    mongodbPortNumber: number
+    mongodbHostPortNumber: number | null
+    mongodbHostPath: string | null
+    natsPortNumber: number
+    natsBindIp: string
+    envRaw: runtime.JsonValue | null
+    isDeleted: boolean
+    deletedAt: Date | null
+    deployStatus: $Enums.DeployStatus
+    deployError: string | null
+    lastProvisionedAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["tenant"]>
@@ -1100,10 +2517,47 @@ export interface Prisma__TenantClient<T, Null = never, ExtArgs extends runtime.T
 export interface TenantFieldRefs {
   readonly id: Prisma.FieldRef<"Tenant", 'String'>
   readonly name: Prisma.FieldRef<"Tenant", 'String'>
+  readonly composeProjectName: Prisma.FieldRef<"Tenant", 'String'>
+  readonly domain: Prisma.FieldRef<"Tenant", 'String'>
+  readonly rootUrl: Prisma.FieldRef<"Tenant", 'String'>
   readonly rocketUrl: Prisma.FieldRef<"Tenant", 'String'>
+  readonly release: Prisma.FieldRef<"Tenant", 'String'>
+  readonly regToken: Prisma.FieldRef<"Tenant", 'String'>
+  readonly letsencryptEnabled: Prisma.FieldRef<"Tenant", 'Boolean'>
+  readonly letsencryptEmail: Prisma.FieldRef<"Tenant", 'String'>
+  readonly traefikProtocol: Prisma.FieldRef<"Tenant", 'String'>
+  readonly hostPort: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly port: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly metricsPort: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly bindIp: Prisma.FieldRef<"Tenant", 'String'>
+  readonly adminUsername: Prisma.FieldRef<"Tenant", 'String'>
+  readonly adminPass: Prisma.FieldRef<"Tenant", 'String'>
   readonly adminUserId: Prisma.FieldRef<"Tenant", 'String'>
   readonly adminAuthToken: Prisma.FieldRef<"Tenant", 'String'>
   readonly adminTokenExpireAt: Prisma.FieldRef<"Tenant", 'DateTime'>
+  readonly prometheusRetentionSize: Prisma.FieldRef<"Tenant", 'String'>
+  readonly prometheusRetentionTime: Prisma.FieldRef<"Tenant", 'String'>
+  readonly prometheusPort: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly grafanaDomain: Prisma.FieldRef<"Tenant", 'String'>
+  readonly grafanaPath: Prisma.FieldRef<"Tenant", 'String'>
+  readonly grafanaAdminPassword: Prisma.FieldRef<"Tenant", 'String'>
+  readonly grafanaHostPort: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly grafanaBindIp: Prisma.FieldRef<"Tenant", 'String'>
+  readonly traefikHttpPort: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly traefikDashboardPort: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly traefikHttpsPort: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly mongodbBindIp: Prisma.FieldRef<"Tenant", 'String'>
+  readonly mongodbPortNumber: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly mongodbHostPortNumber: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly mongodbHostPath: Prisma.FieldRef<"Tenant", 'String'>
+  readonly natsPortNumber: Prisma.FieldRef<"Tenant", 'Int'>
+  readonly natsBindIp: Prisma.FieldRef<"Tenant", 'String'>
+  readonly envRaw: Prisma.FieldRef<"Tenant", 'Json'>
+  readonly isDeleted: Prisma.FieldRef<"Tenant", 'Boolean'>
+  readonly deletedAt: Prisma.FieldRef<"Tenant", 'DateTime'>
+  readonly deployStatus: Prisma.FieldRef<"Tenant", 'DeployStatus'>
+  readonly deployError: Prisma.FieldRef<"Tenant", 'String'>
+  readonly lastProvisionedAt: Prisma.FieldRef<"Tenant", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Tenant", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Tenant", 'DateTime'>
 }

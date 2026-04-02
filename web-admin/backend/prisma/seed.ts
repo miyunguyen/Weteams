@@ -15,6 +15,9 @@ async function main() {
   const rocketUrl: string = process.env.ROCKET_URL!;
   const username: string = process.env.ROCKET_ADMIN_USERNAME!;
   const password: string = process.env.ROCKET_ADMIN_PASSWORD!;
+  const normalizedUrl = new URL(rocketUrl);
+  const domain = normalizedUrl.hostname;
+  const composeProjectName = process.env.COMPOSE_PROJECT_NAME ?? 'default';
 
   const res = await axios.post(`${rocketUrl}/api/v1/login`, {
     user: username,
@@ -24,16 +27,30 @@ async function main() {
   await prisma.tenant.upsert({
     where: { id: 'default-tenant' },
     update: {
+      domain,
+      rootUrl: rocketUrl,
+      composeProjectName,
       rocketUrl,
+      adminUsername: username,
+      adminPass: password,
       adminAuthToken: authToken,
       adminUserId: userId,
+      deployStatus: 'RUNNING',
+      lastProvisionedAt: new Date(),
     },
     create: {
       id: 'default-tenant',
       name: 'Local Rocket',
+      domain,
+      rootUrl: rocketUrl,
+      composeProjectName,
       rocketUrl,
+      adminUsername: username,
+      adminPass: password,
       adminAuthToken: authToken,
       adminUserId: userId,
+      deployStatus: 'RUNNING',
+      lastProvisionedAt: new Date(),
     },
   });
 

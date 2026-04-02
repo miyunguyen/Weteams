@@ -16,3 +16,13 @@ export const TeamRole = {
 } as const
 
 export type TeamRole = (typeof TeamRole)[keyof typeof TeamRole]
+
+
+export const DeployStatus = {
+  PENDING: 'PENDING',
+  DEPLOYING: 'DEPLOYING',
+  RUNNING: 'RUNNING',
+  FAILED: 'FAILED'
+} as const
+
+export type DeployStatus = (typeof DeployStatus)[keyof typeof DeployStatus]

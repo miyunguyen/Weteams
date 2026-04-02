@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
 import 'dotenv/config';
+import { AppException } from '../../common/exceptions/app.exception';
 
 @Injectable()
 export class RocketChatService {
@@ -25,15 +24,62 @@ export class RocketChatService {
     };
   }
 
+  async loginWithCredentials(
+    rocketUrl: string,
+    username: string,
+    password: string,
+  ): Promise<{ authToken: string; userId: string }> {
+    const res = await axios.post(`${rocketUrl}/api/v1/login`, {
+      user: username,
+      password,
+    });
+
+    const authToken = res?.data?.data?.authToken;
+    const userId = res?.data?.data?.userId;
+
+    if (!authToken || !userId) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Rocket.Chat login response không hợp lệ',
+        errorCode: 'ROCKET_LOGIN_INVALID_RESPONSE',
+        data: res?.data ?? null,
+      });
+    }
+
+    return { authToken, userId };
+  }
+
   async refreshToken(tenantId: string) {
     const tenant = await this.getTenant(tenantId);
 
-    const res = await axios.post(`${tenant!.rocketUrl}/api/v1/login`, {
-      user: process.env.ROCKET_ADMIN_USERNAME,
-      password: process.env.ROCKET_ADMIN_PASSWORD,
-    });
+    if (!tenant) {
+      throw new AppException(HttpStatus.NOT_FOUND, {
+        message: 'Không tìm thấy tenant',
+        errorCode: 'TENANT_NOT_FOUND',
+        data: { tenantId },
+      });
+    }
 
-    const { authToken, userId } = res.data.data;
+    if (!tenant.adminUsername || !tenant.adminPass) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Tenant chưa có admin credential',
+        errorCode: 'TENANT_ADMIN_CREDENTIAL_MISSING',
+        data: { tenantId },
+      });
+    }
+
+    if ((tenant as { isDeleted?: boolean }).isDeleted) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Tenant đã bị xoá',
+        errorCode: 'TENANT_DELETED',
+        data: { tenantId },
+      });
+    }
+
+    const { authToken, userId } = await this.loginWithCredentials(
+      tenant.rocketUrl,
+      String(tenant.adminUsername),
+      String(tenant.adminPass),
+    );
 
     await this.prisma.tenant.update({
       where: { id: tenantId },
@@ -48,6 +94,22 @@ export class RocketChatService {
 
   async callApi(tenantId: string, fn: (headers, tenant) => Promise<any>) {
     const tenant = await this.getTenant(tenantId);
+
+    if (!tenant) {
+      throw new AppException(HttpStatus.NOT_FOUND, {
+        message: 'Không tìm thấy tenant',
+        errorCode: 'TENANT_NOT_FOUND',
+        data: { tenantId },
+      });
+    }
+
+    if ((tenant as { isDeleted?: boolean }).isDeleted) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Tenant đã bị xoá',
+        errorCode: 'TENANT_DELETED',
+        data: { tenantId },
+      });
+    }
 
     try {
       return await fn(this.getHeaders(tenant), tenant);

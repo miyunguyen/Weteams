@@ -76,10 +76,47 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const TenantScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  composeProjectName: 'composeProjectName',
+  domain: 'domain',
+  rootUrl: 'rootUrl',
   rocketUrl: 'rocketUrl',
+  release: 'release',
+  regToken: 'regToken',
+  letsencryptEnabled: 'letsencryptEnabled',
+  letsencryptEmail: 'letsencryptEmail',
+  traefikProtocol: 'traefikProtocol',
+  hostPort: 'hostPort',
+  port: 'port',
+  metricsPort: 'metricsPort',
+  bindIp: 'bindIp',
+  adminUsername: 'adminUsername',
+  adminPass: 'adminPass',
   adminUserId: 'adminUserId',
   adminAuthToken: 'adminAuthToken',
   adminTokenExpireAt: 'adminTokenExpireAt',
+  prometheusRetentionSize: 'prometheusRetentionSize',
+  prometheusRetentionTime: 'prometheusRetentionTime',
+  prometheusPort: 'prometheusPort',
+  grafanaDomain: 'grafanaDomain',
+  grafanaPath: 'grafanaPath',
+  grafanaAdminPassword: 'grafanaAdminPassword',
+  grafanaHostPort: 'grafanaHostPort',
+  grafanaBindIp: 'grafanaBindIp',
+  traefikHttpPort: 'traefikHttpPort',
+  traefikDashboardPort: 'traefikDashboardPort',
+  traefikHttpsPort: 'traefikHttpsPort',
+  mongodbBindIp: 'mongodbBindIp',
+  mongodbPortNumber: 'mongodbPortNumber',
+  mongodbHostPortNumber: 'mongodbHostPortNumber',
+  mongodbHostPath: 'mongodbHostPath',
+  natsPortNumber: 'natsPortNumber',
+  natsBindIp: 'natsBindIp',
+  envRaw: 'envRaw',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
+  deployStatus: 'deployStatus',
+  deployError: 'deployError',
+  lastProvisionedAt: 'lastProvisionedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -131,12 +168,29 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 export const NullsOrder = {

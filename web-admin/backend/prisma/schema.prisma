@@ -14,14 +14,60 @@ datasource db {
 }
 
 model Tenant {
-  id                 String    @id @default(uuid())
+  id                 String  @id @default(uuid())
   name               String
+  composeProjectName String  @unique
+  domain             String  @unique
+  rootUrl            String  @unique
   rocketUrl          String
-  adminUserId        String
+  release            String  @default("8.2.1")
+  regToken           String?
+
+  letsencryptEnabled Boolean @default(false)
+  letsencryptEmail   String? @default("demo@email.com")
+  traefikProtocol    String  @default("http")
+
+  hostPort    Int    @default(3000)
+  port        Int    @default(3000)
+  metricsPort Int    @default(9458)
+  bindIp      String @default("0.0.0.0")
+
+  adminUsername      String    @default("admin")
+  adminPass          String    @default("admin123")
+  adminUserId        String?
   adminAuthToken     String?
   adminTokenExpireAt DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+
+  prometheusRetentionSize String @default("15GB")
+  prometheusRetentionTime String @default("15d")
+  prometheusPort          Int    @default(9000)
+
+  grafanaDomain        String?
+  grafanaPath          String  @default("/grafana")
+  grafanaAdminPassword String  @default("rc-admin")
+  grafanaHostPort      Int     @default(5050)
+  grafanaBindIp        String  @default("127.0.0.1")
+
+  traefikHttpPort      Int @default(80)
+  traefikDashboardPort Int @default(8080)
+  traefikHttpsPort     Int @default(443)
+
+  mongodbBindIp         String  @default("127.0.0.1")
+  mongodbPortNumber     Int     @default(27017)
+  mongodbHostPortNumber Int?    @default(27017)
+  mongodbHostPath       String?
+
+  natsPortNumber Int    @default(4222)
+  natsBindIp     String @default("127.0.0.1")
+
+  envRaw            Json?
+  isDeleted         Boolean      @default(false)
+  deletedAt         DateTime?
+  deployStatus      DeployStatus @default(PENDING)
+  deployError       String?
+  lastProvisionedAt DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   users User[]
   teams Team[]
@@ -74,4 +120,11 @@ enum TeamRole {
   TEACHER
   STUDENT
   PARENT
+}
+
+enum DeployStatus {
+  PENDING
+  DEPLOYING
+  RUNNING
+  FAILED
 }
