@@ -38,6 +38,9 @@
             "name": "server-setting.read"
         },
         {
+            "name": "server-setting.write"
+        },
+        {
             "name": "user.read"
         },
         {
