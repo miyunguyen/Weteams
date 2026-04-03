@@ -17,8 +17,8 @@ export class TeamController {
   }
 
   @HttpCode(201)
-  @Post('with-channels')
-  createTeamWithChannels(@Body() dto: CreateTeamWithChannelsDto) {
+  @Post()
+  createTeam(@Body() dto: CreateTeamWithChannelsDto) {
     return this.teamService.createTeamWithChannels(dto);
   }
 

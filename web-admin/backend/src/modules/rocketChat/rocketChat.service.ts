@@ -207,6 +207,19 @@ export class RocketChatService {
     );
   }
 
+  async postMessage(tenantId: string, roomId: string, text: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/chat.postMessage`,
+        {
+          roomId,
+          text,
+        },
+        { headers },
+      ),
+    );
+  }
+
   async listTeamRooms(tenantId: string, teamId: string) {
     return this.callApi(tenantId, (headers, tenant) =>
       axios.get(`${tenant.rocketUrl}/api/v1/teams.listRooms?teamId=${teamId}`, {
