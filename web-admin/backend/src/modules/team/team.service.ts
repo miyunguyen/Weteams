@@ -1,32 +1,119 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { randomBytes } from 'crypto';
+import { AppException } from 'src/common/exceptions/app.exception';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
-import { randomBytes } from 'crypto';
-import { LeaveTeamDto } from './dto/leave-team.dto';
-import { JoinTeamDto } from './dto/join-team.dto';
 import { CreateFromRoomDto } from './dto/create-from-room.dto';
-import { AppException } from 'src/common/exceptions/app.exception';
+import { CreateTeamWithChannelsDto } from './dto/create-team-with-channels.dto';
 import { DeleteTeamDto } from './dto/delete-team.dto';
+import { JoinTeamDto } from './dto/join-team.dto';
+import { LeaveTeamDto } from './dto/leave-team.dto';
 
 @Injectable()
 export class TeamService {
   private static readonly MAX_RETRY = 5;
 
   constructor(
-    private prisma: PrismaService,
-    private rocketChat: RocketChatService,
+    private readonly prisma: PrismaService,
+    private readonly rocketChat: RocketChatService,
   ) {}
 
   generateJoinCode() {
     return randomBytes(3).toString('hex').toUpperCase();
   }
 
+  async createTeamWithChannels(dto: CreateTeamWithChannelsDto) {
+    const tenantId = dto.tenantId;
+    const roomName = dto.roomName.trim();
+    const channelsName = dto.channelsName ?? [];
+
+    if (!roomName) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'roomName không hợp lệ',
+        errorCode: 'TEAM_NAME_REQUIRED',
+        data: null,
+      });
+    }
+
+    const teamResponse = await this.rocketChat.createTeam(
+      tenantId,
+      roomName,
+      1,
+    );
+    const teamData = teamResponse?.data;
+    const rocketTeamId = teamData?.team?._id ?? teamData?.team?.id;
+
+    if (!teamData?.success || !rocketTeamId) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Tạo team trên Rocket.Chat thất bại',
+        errorCode: 'ROCKET_CREATE_TEAM_FAILED',
+        data: teamData ?? null,
+      });
+    }
+
+    const createdTeam = await this.prisma.team.create({
+      data: {
+        tenantId,
+        roomId: String(teamData?.team?.roomId ?? rocketTeamId),
+        name: roomName,
+        joinCode: this.generateJoinCode(),
+        teamId: String(rocketTeamId),
+      },
+    });
+
+    const createGroup = async (channelName: string): Promise<any> => {
+      return this.rocketChat.createGroup(
+        tenantId,
+        channelName,
+        String(rocketTeamId),
+      );
+    };
+
+    const createdChannels: Array<{
+      inputName: string;
+      name: string;
+      rocketResponse: unknown;
+    }> = [];
+
+    for (const rawChannelName of channelsName) {
+      const suffix = this.normalizeChannelSuffix(rawChannelName);
+      if (!suffix) {
+        continue;
+      }
+
+      const childName = this.buildChildChannelName(roomName, suffix);
+      const groupResponse = await createGroup(childName);
+      const groupData = groupResponse?.data;
+
+      if (!groupData?.success) {
+        throw new AppException(HttpStatus.BAD_REQUEST, {
+          message: `Tạo group ${childName} thất bại`,
+          errorCode: 'ROCKET_CREATE_GROUP_FAILED',
+          data: groupData ?? null,
+        });
+      }
+
+      createdChannels.push({
+        inputName: rawChannelName,
+        name: childName,
+        rocketResponse: groupData,
+      });
+    }
+
+    return {
+      message: 'Tạo team kèm channels thành công',
+      data: {
+        team: createdTeam,
+        channels: createdChannels,
+      },
+    };
+  }
+
   async createFromRoom(dto: CreateFromRoomDto) {
     const { tenantId, roomId, roomName } = dto;
 
-    // 1. check có phải team
     const team = await this.rocketChat.isTeam(tenantId, roomId);
 
     if (!team) {
@@ -36,7 +123,6 @@ export class TeamService {
       };
     }
 
-    // 2. check đã tồn tại
     const existing = await this.prisma.team.findFirst({
       where: { tenantId, teamId: team._id },
     });
@@ -67,9 +153,8 @@ export class TeamService {
           data: createdTeam,
         };
       } catch (err) {
-        // Prisma unique constraint error
         if (err.code === 'P2002') {
-          continue; // retry
+          continue;
         }
         throw err;
       }
@@ -85,7 +170,6 @@ export class TeamService {
   async joinByCode(dto: JoinTeamDto) {
     const { tenantId, joinCode, rocketUserId, rocketUsername } = dto;
 
-    // 1. tìm team
     const team = await this.prisma.team.findFirst({
       where: {
         tenantId,
@@ -101,7 +185,6 @@ export class TeamService {
       });
     }
 
-    // 2. find or create user
     let user = await this.prisma.user.findFirst({
       where: {
         tenantId,
@@ -119,7 +202,6 @@ export class TeamService {
       });
     }
 
-    // 3. check đã join chưa
     const existing = await this.prisma.teamMember.findFirst({
       where: {
         teamId: team.id,
@@ -138,15 +220,12 @@ export class TeamService {
       };
     }
 
-    // 4. add vào Rocket chat team
     await this.rocketChat.addMemberToTeam(tenantId, team.teamId, rocketUserId);
 
-    // 5. insert DB
     await this.prisma.teamMember.create({
       data: {
         teamId: team.id,
         userId: user.id,
-        role: 'STUDENT', // tạm thời mặc định student
       },
     });
 
@@ -155,7 +234,6 @@ export class TeamService {
       data: {
         teamId: team.id,
         userId: user.id,
-        role: 'STUDENT',
       },
     };
   }
@@ -163,7 +241,6 @@ export class TeamService {
   async handleDeleteTeam(dto: DeleteTeamDto) {
     const { tenantId, roomId } = dto;
 
-    // 1. Tìm team
     const team = await this.prisma.team.findFirst({
       where: {
         tenantId,
@@ -198,7 +275,6 @@ export class TeamService {
   async handleUserLeave(dto: LeaveTeamDto) {
     const { tenantId, roomId, rocketUserId } = dto;
 
-    // 1. tìm team theo roomId
     const team = await this.prisma.team.findFirst({
       where: {
         tenantId,
@@ -213,7 +289,6 @@ export class TeamService {
       };
     }
 
-    // 2. tìm user
     const user = await this.prisma.user.findFirst({
       where: {
         tenantId,
@@ -228,7 +303,6 @@ export class TeamService {
       };
     }
 
-    // 3. xoá membership
     const deletedMembership = await this.prisma.teamMember.deleteMany({
       where: {
         teamId: team.id,
@@ -245,5 +319,29 @@ export class TeamService {
         userId: user.id,
       },
     };
+  }
+
+  private normalizeChannelSuffix(value: string): string {
+    return value
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+
+  private buildChildChannelName(
+    parentName: string,
+    childSuffix: string,
+  ): string {
+    const normalizedParent = parentName
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/_+/g, '_');
+
+    if (childSuffix.startsWith(`${normalizedParent}_`)) {
+      return childSuffix;
+    }
+
+    return `${normalizedParent}_${childSuffix}`;
   }
 }

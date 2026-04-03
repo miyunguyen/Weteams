@@ -206,4 +206,48 @@ export class RocketChatService {
       ),
     );
   }
+
+  async createUser(
+    tenantId: string,
+    payload: {
+      name: string;
+      email: string;
+      password: string;
+      username: string;
+    },
+  ) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(`${tenant.rocketUrl}/api/v1/users.create`, payload, {
+        headers,
+      }),
+    );
+  }
+
+  async createGroup(tenantId: string, name: string, teamId: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/groups.create`,
+        {
+          name,
+          extraData: {
+            teamId,
+          },
+        },
+        { headers },
+      ),
+    );
+  }
+
+  async deleteUser(tenantId: string, rocketUserId: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/users.delete`,
+        {
+          userId: rocketUserId,
+          confirmRelinquish: true,
+        },
+        { headers },
+      ),
+    );
+  }
 }

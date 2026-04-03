@@ -5,6 +5,7 @@ import { RocketChatModule } from './modules/rocketChat/rocketChat.module';
 import { CatModule } from './modules/cat/cat.module';
 import { MessageModule } from './modules/message/message.module';
 import { TenantModule } from './modules/tenant/tenant.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TenantModule } from './modules/tenant/tenant.module';
     CatModule,
     MessageModule,
     TenantModule,
+    UserModule,
   ],
 })
 export class AppModule {}

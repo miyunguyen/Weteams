@@ -1,11 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { CatService } from './cat.service';
 
-@Controller('cat')
+@Controller('cats')
 export class CatController {
   constructor(private catService: CatService) {}
 
-  @Get('/')
+  @Get()
   getMeow(): any {
     return this.catService.getMeow();
   }

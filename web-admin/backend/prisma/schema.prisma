@@ -74,17 +74,28 @@ model Tenant {
 }
 
 model User {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   tenantId     String
   rocketUserId String
   username     String
+  name         String?
   email        String?
-  createdAt    DateTime @default(now())
+  role         UserRole?
+  dateOfBirth  DateTime?
+  address      String?
+  citizenId    String?
+  phoneNumber  String?
+  avatarUrl    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   tenant      Tenant       @relation(fields: [tenantId], references: [id])
   teamMembers TeamMember[]
 
   @@unique([tenantId, rocketUserId])
+  @@unique([tenantId, username])
+  @@index([tenantId, name])
+  @@index([tenantId, email])
 }
 
 model Team {
@@ -107,7 +118,6 @@ model TeamMember {
   id       String   @id @default(uuid())
   teamId   String
   userId   String
-  role     TeamRole
   joinedAt DateTime @default(now())
 
   team Team @relation(fields: [teamId], references: [id])
@@ -116,7 +126,7 @@ model TeamMember {
   @@unique([teamId, userId])
 }
 
-enum TeamRole {
+enum UserRole {
   TEACHER
   STUDENT
   PARENT

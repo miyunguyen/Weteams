@@ -1,14 +1,17 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Param, Post } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { PinMessageDto } from './dto/pin-message.dto';
 
-@Controller('message')
+@Controller('messages')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @HttpCode(200)
-  @Post('pin')
-  pinMessage(@Body() dto: PinMessageDto) {
-    return this.messageService.pinMessage(dto);
+  @Post(':messageId/pins')
+  pinMessage(
+    @Param('messageId') messageId: string,
+    @Body() dto: PinMessageDto,
+  ) {
+    return this.messageService.pinMessage({ ...dto, messageId });
   }
 }
