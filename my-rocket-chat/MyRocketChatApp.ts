@@ -118,7 +118,7 @@ export class MyRocketChatApp
                 : undefined;
 
         try {
-            const response = await http.post(`${apiUrl}/user/from-app`, {
+            const response = await http.post(`${apiUrl}/v1/users/app-context`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -157,7 +157,7 @@ export class MyRocketChatApp
         };
 
         try {
-            const response = await http.post(`${apiUrl}/team/from-room`, {
+            const response = await http.post(`${apiUrl}/v1/teams/room-syncs`, {
                 headers: { "Content-Type": "application/json" },
                 data: body,
             });
@@ -203,7 +203,7 @@ export class MyRocketChatApp
         };
 
         try {
-            const response = await http.del(`${apiUrl}/team`, {
+            const response = await http.post(`${apiUrl}/v1/teams/room-syncs`, {
                 headers: { "Content-Type": "application/json" },
                 data: body,
             });
@@ -249,15 +249,17 @@ export class MyRocketChatApp
         messageId: string,
     ): Promise<void> {
         try {
-            const response = await http.post(`${apiUrl}/message/pin`, {
-                headers: {
-                    "Content-Type": "application/json",
+            const response = await http.post(
+                `${apiUrl}/v1/messages/${messageId}/pin`,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    data: {
+                        tenantId,
+                    },
                 },
-                data: {
-                    tenantId,
-                    messageId,
-                },
-            });
+            );
 
             this.getLogger().log("Pinned by backend", response?.data);
         } catch (error) {
@@ -376,7 +378,7 @@ export class MyRocketChatApp
         const { tenantId, apiUrl } = await this.getRuntimeSettings();
 
         try {
-            const res = await _http.post(`${apiUrl}/team/join`, {
+            const res = await _http.post(`${apiUrl}/v1/teams/memberships`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -417,7 +419,7 @@ export class MyRocketChatApp
         const { tenantId, apiUrl } = await this.getRuntimeSettings();
 
         try {
-            const res = await http.post(`${apiUrl}/team/leave`, {
+            const res = await http.del(`${apiUrl}/v1/teams/memberships`, {
                 headers: {
                     "Content-Type": "application/json",
                 },
