@@ -303,6 +303,40 @@ export class TeamService {
       };
     }
 
+    const roomsResponse = await this.rocketChat.listTeamRooms(
+      tenantId,
+      team.teamId,
+    );
+    const roomsData = roomsResponse?.data;
+    const rooms = Array.isArray(roomsData?.rooms) ? roomsData.rooms : [];
+
+    for (const roomItem of rooms) {
+      if (roomItem.t !== 'p') {
+        continue;
+      }
+
+      const roomIdToKick = String(roomItem?._id ?? '').trim();
+
+      if (!roomIdToKick) {
+        continue;
+      }
+
+      const kickResponse = await this.rocketChat.kickFromGroup(
+        tenantId,
+        roomIdToKick,
+        rocketUserId,
+      );
+      const kickData = kickResponse?.data;
+
+      if (!kickData?.success) {
+        throw new AppException(HttpStatus.BAD_REQUEST, {
+          message: `Không thể kick user khỏi room ${roomIdToKick}`,
+          errorCode: 'ROCKET_GROUP_KICK_FAILED',
+          data: kickData ?? null,
+        });
+      }
+    }
+
     const deletedMembership = await this.prisma.teamMember.deleteMany({
       where: {
         teamId: team.id,

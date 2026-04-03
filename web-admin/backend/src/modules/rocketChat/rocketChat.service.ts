@@ -207,6 +207,27 @@ export class RocketChatService {
     );
   }
 
+  async listTeamRooms(tenantId: string, teamId: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.get(`${tenant.rocketUrl}/api/v1/teams.listRooms?teamId=${teamId}`, {
+        headers,
+      }),
+    );
+  }
+
+  async kickFromGroup(tenantId: string, roomId: string, userId: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/groups.kick`,
+        {
+          roomId,
+          userId,
+        },
+        { headers },
+      ),
+    );
+  }
+
   async createUser(
     tenantId: string,
     payload: {
