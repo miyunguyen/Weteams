@@ -9,7 +9,10 @@ import {
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
-import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
+import {
+    AppMethod,
+    IAppInfo,
+} from "@rocket.chat/apps-engine/definition/metadata";
 import {
     IPostRoomCreate,
     IPostRoomDeleted,
@@ -29,13 +32,20 @@ import {
     IUIKitInteractionHandler,
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
-import { IUser } from "@rocket.chat/apps-engine/definition/users";
+import {
+    IPostUserCreated,
+    IPostUserLoggedIn,
+    IPostUserLoggedOut,
+    IUser,
+    IUserContext,
+} from "@rocket.chat/apps-engine/definition/users";
 
 const settings: Array<ISetting> = [
     {
         id: "tenantId",
         type: SettingType.STRING,
         packageValue: "",
+        value: "",
         required: false,
         public: false,
         i18nLabel: "Tenant Id",
@@ -58,12 +68,11 @@ export class MyRocketChatApp
         IUIKitInteractionHandler,
         IPostRoomCreate,
         IPostRoomUserLeave,
-        IPostRoomDeleted
+        IPostRoomDeleted,
+        IPostUserLoggedIn
 {
     private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
     private readonly JOIN_MODAL_INPUT = "join_team_code_input";
-    private tenantId: Promise<string>;
-    private apiUrl: Promise<string>;
 
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
         super(info, logger, accessors);
@@ -75,8 +84,9 @@ export class MyRocketChatApp
     ): Promise<void> {
         configuration.ui.registerButton({
             actionId: "join-team-btn",
-            labelI18n: "join-team-btn",
+            labelI18n: "Join team",
             context: UIActionButtonContext.USER_DROPDOWN_ACTION,
+            category: "ai",
         });
 
         await Promise.all(
@@ -84,15 +94,47 @@ export class MyRocketChatApp
                 configuration.settings.provideSetting(setting),
             ),
         );
+    }
 
-        const settingsReader = _environmentRead.getSettings();
+    public async executePostUserLoggedIn(
+        user: IUser,
+        read: IRead,
+        http: IHttp,
+        persis: IPersistence,
+        modify: IModify,
+    ): Promise<void> {
+        const { tenantId, apiUrl } = await this.getRuntimeSettings();
 
-        this.tenantId = settingsReader
-            .getValueById("tenantId")
-            .then((value) => (value as string) || "");
-        this.apiUrl = settingsReader
-            .getValueById("apiUrl")
-            .then((value) => (value as string) || "");
+        if (!tenantId || !apiUrl) {
+            this.getLogger().warn(
+                "Skip sync user on login: tenantId/apiUrl setting is missing",
+            );
+            return;
+        }
+
+        const email =
+            user.emails && user.emails.length > 0
+                ? user.emails[0].address
+                : undefined;
+
+        try {
+            const response = await http.post(`${apiUrl}/user/from-app`, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                data: {
+                    tenantId,
+                    userId: user.id,
+                    username: user.username,
+                    email,
+                    name: user.name,
+                },
+            });
+
+            this.getLogger().log("Synced user from login", response?.data);
+        } catch (error) {
+            this.getLogger().warn("Sync user from login failed", error);
+        }
     }
 
     public async executePostRoomCreate(
@@ -106,10 +148,7 @@ export class MyRocketChatApp
 
         await this.addAdminAsMember(room, read, modify);
 
-        const [tenantId, apiUrl] = await Promise.all([
-            this.tenantId,
-            this.apiUrl,
-        ]);
+        const { tenantId, apiUrl } = await this.getRuntimeSettings();
 
         const body = {
             tenantId: tenantId,
@@ -156,10 +195,7 @@ export class MyRocketChatApp
         http: IHttp,
         persistence: IPersistence,
     ): Promise<void> {
-        const [tenantId, apiUrl] = await Promise.all([
-            this.tenantId,
-            this.apiUrl,
-        ]);
+        const { tenantId, apiUrl } = await this.getRuntimeSettings();
 
         const body = {
             tenantId: tenantId,
@@ -337,10 +373,7 @@ export class MyRocketChatApp
             this.JOIN_MODAL_INPUT,
         );
 
-        const [tenantId, apiUrl] = await Promise.all([
-            this.tenantId,
-            this.apiUrl,
-        ]);
+        const { tenantId, apiUrl } = await this.getRuntimeSettings();
 
         try {
             const res = await _http.post(`${apiUrl}/team/join`, {
@@ -381,10 +414,7 @@ export class MyRocketChatApp
         const roomId = room.id;
         const rocketUserId = user.id;
 
-        const [tenantId, apiUrl] = await Promise.all([
-            this.tenantId,
-            this.apiUrl,
-        ]);
+        const { tenantId, apiUrl } = await this.getRuntimeSettings();
 
         try {
             const res = await http.post(`${apiUrl}/team/leave`, {
@@ -425,5 +455,22 @@ export class MyRocketChatApp
         }
 
         return "";
+    }
+
+    private async getRuntimeSettings(): Promise<{
+        tenantId: string;
+        apiUrl: string;
+    }> {
+        const settingsReader =
+            this.getAccessors().environmentReader.getSettings();
+        const [tenantId, apiUrl] = await Promise.all([
+            settingsReader.getValueById("tenantId"),
+            settingsReader.getValueById("apiUrl"),
+        ]);
+
+        return {
+            tenantId: typeof tenantId === "string" ? tenantId : "",
+            apiUrl: typeof apiUrl === "string" ? apiUrl : "",
+        };
     }
 }
