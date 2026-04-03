@@ -32,7 +32,7 @@ export class ProvisionTenantDto {
   @IsUrl({ require_tld: false }, { message: 'rootUrl phải là URL hợp lệ' })
   rootUrl?: string;
 
-  @ApiPropertyOptional({ default: '8.2.1' })
+  @ApiPropertyOptional({ default: '8.0.1' })
   @IsOptional()
   @IsString()
   release?: string;

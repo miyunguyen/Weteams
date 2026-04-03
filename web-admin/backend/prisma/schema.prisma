@@ -20,7 +20,7 @@ model Tenant {
   domain             String  @unique
   rootUrl            String  @unique
   rocketUrl          String
-  release            String  @default("8.2.1")
+  release            String  @default("8.0.1")
   regToken           String?
 
   letsencryptEnabled Boolean @default(false)

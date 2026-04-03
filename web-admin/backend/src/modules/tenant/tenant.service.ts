@@ -608,7 +608,7 @@ export class TenantService {
     const hasPort80 = existingTenants.some((t) => t.traefikHttpPort === 80);
 
     return {
-      release: '8.2.1',
+      release: '8.0.1',
       regToken: '',
       letsencryptEnabled: false,
       letsencryptEmail: 'demo@email.com',
