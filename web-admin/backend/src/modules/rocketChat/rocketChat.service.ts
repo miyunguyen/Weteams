@@ -231,6 +231,7 @@ export class RocketChatService {
           name,
           extraData: {
             teamId,
+            teamDefault: true,
           },
         },
         { headers },
