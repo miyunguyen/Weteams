@@ -12,6 +12,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import * as path from 'node:path';
 import { promises as fs } from 'node:fs';
+import { existsSync } from 'node:fs';
 import type { Prisma } from 'src/generated/prisma/client';
 import axios from 'axios';
 
@@ -690,19 +691,54 @@ export class TenantService {
   }
 
   private resolveComposeDir(): string {
-    if (process.env.ROCKETCHAT_COMPOSE_DIR) {
-      return path.resolve(process.env.ROCKETCHAT_COMPOSE_DIR);
-    }
-
-    return path.resolve(process.cwd(), '../../rocketchat-compose');
+    return this.resolveExternalDirectory(
+      process.env.ROCKETCHAT_COMPOSE_DIR,
+      'rocketchat-compose',
+    );
   }
 
   private resolveAppEngineDir(): string {
-    if (process.env.ROCKETCHAT_APP_ENGINE_DIR) {
-      return path.resolve(process.env.ROCKETCHAT_APP_ENGINE_DIR);
+    return this.resolveExternalDirectory(
+      process.env.ROCKETCHAT_APP_ENGINE_DIR,
+      'my-rocket-chat',
+    );
+  }
+
+  private resolveExternalDirectory(
+    envValue: string | undefined,
+    folderName: string,
+  ): string {
+    const explicitPath = this.cleanString(envValue);
+    if (explicitPath) {
+      return path.resolve(explicitPath);
     }
 
-    return path.resolve(process.cwd(), '../../my-rocket-chat');
+    const candidates = [
+      path.resolve(process.cwd(), '../../', folderName),
+      path.resolve(process.cwd(), '../', folderName),
+      path.resolve(process.cwd(), folderName),
+      path.resolve(__dirname, '../../../../../', folderName),
+      path.resolve(__dirname, '../../../../', folderName),
+      path.resolve(__dirname, '../../../', folderName),
+    ];
+
+    const existingPath = candidates.find((candidate) => existsSync(candidate));
+    return existingPath ?? candidates[0];
+  }
+
+  private resolveComposeCommand(baseArgs: string[]): {
+    command: string;
+    args: string[];
+  } {
+    const engine = this.cleanString(process.env.PROVISION_COMPOSE_RUNTIME);
+    const command = engine || 'docker';
+    const isDockerComposeBinary = command.endsWith('docker-compose');
+
+    if (isDockerComposeBinary) {
+      return { command, args: baseArgs };
+    }
+
+    return { command, args: ['compose', ...baseArgs] };
   }
 
   private async runRcAppsDeploy(
@@ -760,10 +796,7 @@ export class TenantService {
     composeDir: string,
     envFileName: string,
   ): Promise<void> {
-    const engine = (process.env.PROVISION_COMPOSE_RUNTIME ?? 'docker').trim();
-
-    const args = [
-      'compose',
+    const baseArgs = [
       '--env-file',
       envFileName,
       '-f',
@@ -771,9 +804,10 @@ export class TenantService {
       'up',
       '-d',
     ];
+    const { command, args } = this.resolveComposeCommand(baseArgs);
 
     try {
-      await execFileAsync(engine, args, { cwd: composeDir });
+      await execFileAsync(command, args, { cwd: composeDir });
     } catch (error) {
       const stderr = (error as { stderr?: string })?.stderr;
       throw new AppException(HttpStatus.BAD_REQUEST, {
@@ -781,7 +815,7 @@ export class TenantService {
         errorCode: 'COMPOSE_UP_FAILED',
         data: {
           composeDir,
-          command: `${engine} ${args.join(' ')}`,
+          command: `${command} ${args.join(' ')}`,
           stderr: stderr ?? null,
         },
       });
@@ -792,11 +826,11 @@ export class TenantService {
     composeDir: string,
     composeProjectName: string,
   ): Promise<void> {
-    const engine = (process.env.PROVISION_COMPOSE_RUNTIME ?? 'docker').trim();
-    const args = ['compose', '-p', composeProjectName, 'down', '-v'];
+    const baseArgs = ['-p', composeProjectName, 'down', '-v'];
+    const { command, args } = this.resolveComposeCommand(baseArgs);
 
     try {
-      await execFileAsync(engine, args, { cwd: composeDir });
+      await execFileAsync(command, args, { cwd: composeDir });
     } catch (error) {
       const stderr = (error as { stderr?: string })?.stderr;
       throw new AppException(HttpStatus.BAD_REQUEST, {
@@ -804,7 +838,7 @@ export class TenantService {
         errorCode: 'COMPOSE_DOWN_FAILED',
         data: {
           composeDir,
-          command: `${engine} ${args.join(' ')}`,
+          command: `${command} ${args.join(' ')}`,
           stderr: stderr ?? null,
         },
       });

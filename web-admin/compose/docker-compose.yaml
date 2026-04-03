@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
-    container_name: my-postgres
+    container_name: web-admin-postgres
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -13,6 +11,32 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: web-admin-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./.env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    volumes:
+      - ../../rocketchat-compose:/workspace/rocketchat-compose
+      - ../../my-rocket-chat:/workspace/my-rocket-chat
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   postgres_data:
