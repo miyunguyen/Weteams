@@ -2,16 +2,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
-import { PinMessageDto } from './dto/pin-message.dto';
 import { AppException } from '../../common/exceptions/app.exception';
 
 @Injectable()
 export class MessageService {
   constructor(private readonly rocketChatService: RocketChatService) {}
 
-  async pinMessage(dto: PinMessageDto) {
-    const { tenantId, messageId } = dto;
-
+  async pinMessage(tenantId: string, messageId: string) {
     const response = await this.rocketChatService.pinMessage(
       tenantId,
       messageId,

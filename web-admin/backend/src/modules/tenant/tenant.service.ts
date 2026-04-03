@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
@@ -5,6 +6,7 @@ import { ProvisionTenantDto } from './dto/provision-tenant.dto';
 import { DeprovisionTenantDto } from './dto/deprovision-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
 import { DeployAppDto } from './dto/deploy-app.dto';
+import { QueryTenantsDto } from './dto/query-tenants.dto';
 import { AppException } from '../../common/exceptions/app.exception';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -923,6 +925,82 @@ export class TenantService {
       .replace(/^-+|-+$/g, '');
 
     return value || 'tenant';
+  }
+
+  async getTenantsList(query: QueryTenantsDto) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 10;
+    const skip = (page - 1) * pageSize;
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortOrder = query.sortOrder ?? 'desc';
+    const isDeleted = query.isDeleted ?? false;
+
+    // Build where clause
+    interface TenantWhere {
+      isDeleted: boolean;
+      OR?: any[];
+      deployStatus?: any;
+    }
+    const where: TenantWhere = {
+      isDeleted,
+    };
+
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { domain: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (query.deployStatus) {
+      where.deployStatus = query.deployStatus;
+    }
+
+    // Get total count
+    const total = await this.prisma.tenant.count({ where: where as any });
+
+    // Build orderBy
+    const validSortFields = ['createdAt', 'updatedAt', 'name', 'deployStatus'];
+    const orderByField = validSortFields.includes(sortBy)
+      ? sortBy
+      : 'createdAt';
+    const orderBy: Record<string, 'asc' | 'desc'> = {
+      [orderByField]: sortOrder,
+    };
+
+    // Get paginated data
+    const tenants = await this.prisma.tenant.findMany({
+      where: where as any,
+      select: {
+        id: true,
+        name: true,
+        domain: true,
+        rootUrl: true,
+        rocketUrl: true,
+        composeProjectName: true,
+        deployStatus: true,
+        deployError: true,
+        createdAt: true,
+        updatedAt: true,
+        lastProvisionedAt: true,
+      },
+      orderBy: orderBy as any,
+      skip,
+      take: pageSize,
+    });
+
+    return {
+      message: 'Lấy danh sách tenant thành công',
+      data: {
+        items: tenants,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      },
+    };
   }
 
   private buildRootUrl(

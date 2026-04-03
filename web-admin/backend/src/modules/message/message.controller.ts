@@ -7,11 +7,11 @@ export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @HttpCode(200)
-  @Post(':messageId/pins')
+  @Post(':messageId/pin')
   pinMessage(
     @Param('messageId') messageId: string,
     @Body() dto: PinMessageDto,
   ) {
-    return this.messageService.pinMessage({ ...dto, messageId });
+    return this.messageService.pinMessage(dto.tenantId, messageId);
   }
 }

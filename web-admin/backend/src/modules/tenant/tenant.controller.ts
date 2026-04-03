@@ -1,9 +1,18 @@
-import { Body, Controller, Delete, HttpCode, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { ProvisionTenantDto } from './dto/provision-tenant.dto';
 import { DeprovisionTenantDto } from './dto/deprovision-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
 import { DeployAppDto } from './dto/deploy-app.dto';
+import { QueryTenantsDto } from './dto/query-tenants.dto';
 
 @Controller('tenants')
 export class TenantController {
@@ -31,5 +40,11 @@ export class TenantController {
   @Post('deployments')
   deployApp(@Body() dto: DeployAppDto) {
     return this.tenantService.deployTenantApp(dto);
+  }
+
+  @HttpCode(200)
+  @Get()
+  getTenantsList(@Query() query: QueryTenantsDto) {
+    return this.tenantService.getTenantsList(query);
   }
 }

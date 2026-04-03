@@ -7,10 +7,4 @@ export class PinMessageDto {
   })
   @IsString()
   tenantId: string;
-
-  @ApiProperty({
-    description: 'Rocket.Chat message id.',
-  })
-  @IsString()
-  messageId: string;
 }
