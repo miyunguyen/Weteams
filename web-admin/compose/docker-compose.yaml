@@ -6,13 +6,13 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: mydb
+      POSTGRES_DB: web-admin-db
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d web-admin-db"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -32,7 +32,7 @@ services:
       NODE_ENV: production
       PORT: 3001
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
     volumes:
       - ../../rocketchat-compose:/workspace/rocketchat-compose
       - ../../my-rocket-chat:/workspace/my-rocket-chat
