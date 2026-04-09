@@ -18,6 +18,10 @@ services:
       MONGO_URL: ${MONGO_URL:-mongodb://mongodb:27017/rocketchat?replicaSet=rs0}
       TRANSPORTER: "${NATS_URL-monolith+nats://nats:4222}"
       INSTANCE_IP: "${INSTANCE_IP:-}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
+      ADMIN_PASS: "${ADMIN_PASS:-admin123}"
+      OVERWRITE_SETTING_Accounts_SystemBlockedUsernameList: "administrator,system,user"
+      OVERWRITE_SETTING_Show_Setup_Wizard: "completed"
     # depends_on:
     #   mongodb-init-container:
     #     condition: service_completed_successfully
