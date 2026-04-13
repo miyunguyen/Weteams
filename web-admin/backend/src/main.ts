@@ -12,8 +12,8 @@ async function bootstrap() {
   app.useGlobalFilters(new AppExceptionFilter());
 
   const config = new DocumentBuilder()
-    .setTitle('NextEdu Backend API')
-    .setDescription('REST API documentation for NextEdu backend')
+    .setTitle('WeTeams Backend API')
+    .setDescription('REST API documentation for WeTeams backend')
     .setVersion('1.0')
     .addTag('v1')
     .build();
