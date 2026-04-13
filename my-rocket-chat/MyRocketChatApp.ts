@@ -54,8 +54,7 @@ const settings: Array<ISetting> = [
     {
         id: "apiUrl",
         type: SettingType.STRING,
-        packageValue:
-            "https://scalelike-nondevotionally-helaine.ngrok-free.dev",
+        packageValue: "",
         required: false,
         public: false,
         i18nLabel: "API URL",
