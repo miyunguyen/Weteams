@@ -12,11 +12,11 @@ import {
 export class ProvisionTenantDto {
   @ApiProperty({ description: 'Tên tenant/app' })
   @IsString()
-  name: string;
+  name!: string;
 
   @ApiProperty({ description: 'Domain public của app tenant' })
   @IsString()
-  domain: string;
+  domain!: string;
 
   @ApiPropertyOptional({
     description: 'Project name cho docker compose (unique)',

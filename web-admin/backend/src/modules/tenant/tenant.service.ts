@@ -114,7 +114,20 @@ export class TenantService {
       const envFilePath = path.join(composeDir, envFileName);
 
       await fs.writeFile(envFilePath, this.toEnvFileContent(resolved), 'utf8');
-      await this.runCompose(composeDir, envFileName);
+      try {
+        await this.runCompose(
+          composeDir,
+          envFileName,
+          resolved.composeProjectName,
+        );
+      } catch (error) {
+        await this.cleanupFailedProvisionCompose(
+          composeDir,
+          resolved.composeProjectName,
+          envFilePath,
+        );
+        throw error;
+      }
 
       await this.safeDeleteFile(envFilePath);
 
@@ -795,8 +808,11 @@ export class TenantService {
   private async runCompose(
     composeDir: string,
     envFileName: string,
+    composeProjectName: string,
   ): Promise<void> {
     const baseArgs = [
+      '-p',
+      composeProjectName,
       '--env-file',
       envFileName,
       '-f',
@@ -820,6 +836,20 @@ export class TenantService {
         },
       });
     }
+  }
+
+  private async cleanupFailedProvisionCompose(
+    composeDir: string,
+    composeProjectName: string,
+    envFilePath: string,
+  ): Promise<void> {
+    try {
+      await this.runComposeDown(composeDir, composeProjectName);
+    } catch {
+      // ignore cleanup errors so the original compose failure is preserved
+    }
+
+    await this.safeDeleteFile(envFilePath);
   }
 
   private async runComposeDown(
