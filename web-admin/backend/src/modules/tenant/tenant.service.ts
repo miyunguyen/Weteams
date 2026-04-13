@@ -800,7 +800,7 @@ export class TenantService {
       '--env-file',
       envFileName,
       '-f',
-      'generated/docker-compose.yml',
+      'generated/docker-compose-no-traefik.yml',
       'up',
       '-d',
     ];
