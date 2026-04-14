@@ -16,7 +16,7 @@ RUN apt-get update \
 
 COPY package*.json ./
 
-RUN npm ci
+RUN npm ci && npm install -g @rocket.chat/apps-cli
 
 COPY prisma ./prisma
 COPY prisma.config.ts ./prisma.config.ts
