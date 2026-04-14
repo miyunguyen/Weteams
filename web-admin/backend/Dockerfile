@@ -24,7 +24,7 @@ COPY --from=build /app/dist ./dist
 COPY scripts/docker-start.sh ./scripts/docker-start.sh
 
 # Copy and install my-rocket-chat dependencies
-COPY ../my-rocket-chat /workspace/my-rocket-chat
+COPY ../../my-rocket-chat /workspace/my-rocket-chat
 WORKDIR /workspace/my-rocket-chat
 RUN npm ci
 WORKDIR /app
