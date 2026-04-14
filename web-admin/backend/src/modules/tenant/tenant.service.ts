@@ -727,9 +727,10 @@ export class TenantService {
     }
 
     const candidates = [
+      path.resolve(process.cwd(), folderName),
+      path.resolve('/', 'workspace', folderName),
       path.resolve(process.cwd(), '../../', folderName),
       path.resolve(process.cwd(), '../', folderName),
-      path.resolve(process.cwd(), folderName),
       path.resolve(__dirname, '../../../../../', folderName),
       path.resolve(__dirname, '../../../../', folderName),
       path.resolve(__dirname, '../../../', folderName),
@@ -764,34 +765,26 @@ export class TenantService {
     stdout: string;
     stderr: string;
   }> {
-    const rcAppsCmd =
+    const preferredCommand =
       this.cleanString(process.env.RC_APPS_COMMAND) ?? 'rc-apps';
+    const deployArgs = [
+      'deploy',
+      '--url',
+      serverUrl,
+      '-u',
+      username,
+      '-p',
+      password,
+    ];
 
     try {
-      // First ensure dependencies are installed
-      await execFileAsync('npm', ['install'], {
-        cwd: appEngineDir,
-        shell: true,
-      });
-
-      // Then run rc-apps deploy
-      const deployArgs = [
-        'deploy',
-        '--url',
-        serverUrl,
-        '-u',
-        username,
-        '-p',
-        password,
-      ];
-
-      const direct = await execFileAsync(rcAppsCmd, deployArgs, {
+      const direct = await execFileAsync(preferredCommand, deployArgs, {
         cwd: appEngineDir,
         shell: true,
       });
 
       return {
-        commandUsed: `${rcAppsCmd} ${deployArgs.join(' ')}`,
+        commandUsed: `${preferredCommand} ${deployArgs.join(' ')}`,
         stdout: direct.stdout,
         stderr: direct.stderr,
       };
@@ -805,7 +798,7 @@ export class TenantService {
         data: {
           appEngineDir,
           serverUrl,
-          command: `${rcAppsCmd} deploy --url "${serverUrl}" -u "${username}" -p ***`,
+          command: `${preferredCommand} ${deployArgs.join(' ')}`,
           stdout: directStdout ?? null,
           stderr: directStderr ?? null,
         },
