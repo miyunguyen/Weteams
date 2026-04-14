@@ -764,26 +764,34 @@ export class TenantService {
     stdout: string;
     stderr: string;
   }> {
-    const preferredCommand =
+    const rcAppsCmd =
       this.cleanString(process.env.RC_APPS_COMMAND) ?? 'rc-apps';
-    const deployArgs = [
-      'deploy',
-      '--url',
-      serverUrl,
-      '-u',
-      username,
-      '-p',
-      password,
-    ];
 
     try {
-      const direct = await execFileAsync(preferredCommand, deployArgs, {
+      // First ensure dependencies are installed
+      await execFileAsync('npm', ['install'], {
+        cwd: appEngineDir,
+        shell: true,
+      });
+
+      // Then run rc-apps deploy
+      const deployArgs = [
+        'deploy',
+        '--url',
+        serverUrl,
+        '-u',
+        username,
+        '-p',
+        password,
+      ];
+
+      const direct = await execFileAsync(rcAppsCmd, deployArgs, {
         cwd: appEngineDir,
         shell: true,
       });
 
       return {
-        commandUsed: `${preferredCommand} ${deployArgs.join(' ')}`,
+        commandUsed: `${rcAppsCmd} ${deployArgs.join(' ')}`,
         stdout: direct.stdout,
         stderr: direct.stderr,
       };
@@ -797,7 +805,7 @@ export class TenantService {
         data: {
           appEngineDir,
           serverUrl,
-          command: `${preferredCommand} ${deployArgs.join(' ')}`,
+          command: `${rcAppsCmd} deploy --url "${serverUrl}" -u "${username}" -p ***`,
           stdout: directStdout ?? null,
           stderr: directStderr ?? null,
         },
