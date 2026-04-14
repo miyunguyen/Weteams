@@ -54,7 +54,7 @@ const settings: Array<ISetting> = [
     {
         id: "apiUrl",
         type: SettingType.STRING,
-        packageValue: "",
+        packageValue: "https://api.weteams.net",
         required: false,
         public: false,
         i18nLabel: "API URL",
