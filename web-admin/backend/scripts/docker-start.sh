@@ -12,5 +12,15 @@ else
   npx prisma db push
 fi
 
+# Ensure my-rocket-chat dependencies are installed
+if [ -d "/workspace/my-rocket-chat" ]; then
+  if [ ! -d "/workspace/my-rocket-chat/node_modules" ]; then
+    echo "[backend] installing my-rocket-chat dependencies"
+    cd /workspace/my-rocket-chat
+    npm ci
+    cd /app
+  fi
+fi
+
 echo "[backend] start app"
 node dist/src/main.js
