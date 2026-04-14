@@ -30,7 +30,7 @@ services:
       - -c
       - |
         echo "=====> Waiting for MongoDB (mongodb:27017) to be ready before starting Rocket.Chat...";
-        for i in $(seq 1 60); do
+        for i in $$(seq 1 60); do
           if nc -z mongodb 27017 >/dev/null 2>&1; then
             echo "=====> MongoDB is up - starting Rocket.Chat";
             exec node main.js;
@@ -94,7 +94,7 @@ services:
       MONGODB_USER_ID: ${MONGODB_USER_ID:-1001}
     entrypoint: |
       sh -xc '
-        owner="$(stat -c %u /data/db)";
+        owner="$$(stat -c %u /data/db)";
         # for fresh installs
         if [ "$$owner" != "$$MONGODB_USER_ID" ]; then
           echo "=====> Fixing directory ownership to uid $$MONGODB_USER_ID"
@@ -145,8 +145,8 @@ services:
       - -ec
       - |
         echo "=====> Waiting for /data/db to be owned by uid=$$MONGODB_USER_ID (mongodb user) ...";
-        for i in $(seq 1 60); do
-          owner="$(stat -c %u /data/db 2>/dev/null || true)";
+        for i in $$(seq 1 60); do
+          owner="$$(stat -c %u /data/db 2>/dev/null || true)";
           if [ "$$owner" = "$$MONGODB_USER_ID" ]; then
             echo "=====> /data/db ownership OK ($$owner) - starting MongoDB";
             exec mongod --replSet "$$MONGODB_REPLICA_SET_NAME" --bind_ip_all;
