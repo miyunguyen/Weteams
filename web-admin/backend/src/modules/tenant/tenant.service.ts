@@ -857,7 +857,14 @@ export class TenantService {
     composeDir: string,
     composeProjectName: string,
   ): Promise<void> {
-    const baseArgs = ['-p', composeProjectName, 'down', '-v'];
+    const baseArgs = [
+      '-p',
+      composeProjectName,
+      '-f',
+      'generated/docker-compose-no-traefik.yml',
+      'down',
+      '-v',
+    ];
     const { command, args } = this.resolveComposeCommand(baseArgs);
 
     try {

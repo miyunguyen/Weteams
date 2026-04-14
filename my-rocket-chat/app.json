@@ -8,10 +8,10 @@
         "homepage": "Minh Nguyen",
         "support": "Minh Nguyen"
     },
-    "name": "My Rocket Chat",
-    "nameSlug": "my-rocket-chat",
+    "name": "WeTeams",
+    "nameSlug": "we-teams-bot",
     "classFile": "MyRocketChatApp.ts",
-    "description": "My Rocket Chat",
+    "description": "WeTeams",
     "implements": [
         "IUIKitInteractionHandler",
         "IPostRoomCreate",
