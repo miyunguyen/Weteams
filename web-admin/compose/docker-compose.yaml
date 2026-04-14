@@ -19,8 +19,8 @@ services:
 
   backend:
     build:
-      context: ../backend
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: web-admin/backend/Dockerfile
     container_name: web-admin-backend
     restart: always
     depends_on:
