@@ -9,7 +9,7 @@ if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; t
   npx prisma migrate deploy
 else
   echo "[backend] migrations not found, fallback to prisma db push"
-  npx prisma db push
+  npx prisma db push --accept-data-loss
 fi
 
 # Ensure my-rocket-chat dependencies are installed
