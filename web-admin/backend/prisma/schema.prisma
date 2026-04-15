@@ -34,10 +34,9 @@ model Tenant {
   adminAuthToken     String?
   adminTokenExpireAt DateTime?
 
-  mongodbBindIp         String  @default("127.0.0.1")
-  mongodbPortNumber     Int     @default(27017)
-  mongodbHostPortNumber Int?    @default(27017)
-  mongodbHostPath       String?
+  mongodbBindIp         String @default("127.0.0.1")
+  mongodbPortNumber     Int    @default(27017)
+  mongodbHostPortNumber Int?   @default(27017)
 
   natsPortNumber Int    @default(4222)
   natsBindIp     String @default("127.0.0.1")

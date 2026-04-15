@@ -30,7 +30,6 @@ type TenantDefaults = {
   mongodbBindIp: string;
   mongodbPortNumber: number;
   mongodbHostPortNumber: number;
-  mongodbHostPath: string;
   natsPortNumber: number;
   natsBindIp: string;
 };
@@ -268,7 +267,7 @@ export class TenantService {
     }
 
     const appEngineDir = this.resolveAppEngineDir();
-    const localRocketUrl = this.buildLocalRocketUrl(tenant.hostPort);
+    const localRocketUrl = await this.resolveLocalRocketUrl(tenant.hostPort);
     const deployResult = await this.runRcAppsDeploy(
       appEngineDir,
       localRocketUrl,
@@ -422,7 +421,7 @@ export class TenantService {
     }
 
     let lastError = 'Tenant chưa sẵn sàng';
-    const localRocketUrl = this.buildLocalRocketUrl(tenant.hostPort);
+    const localRocketUrl = await this.resolveLocalRocketUrl(tenant.hostPort);
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         const healthy = await this.checkRocketHealth(localRocketUrl);
@@ -478,6 +477,8 @@ export class TenantService {
     try {
       const res = await axios.get(`${baseUrl}/api/info`, {
         timeout: 4000,
+        maxRedirects: 0,
+        validateStatus: (status) => status >= 200 && status < 300,
       });
       return res.status >= 200 && res.status < 300;
     } catch {
@@ -534,8 +535,6 @@ export class TenantService {
         this.cleanString(dto.mongodbBindIp) ?? defaults.mongodbBindIp,
       mongodbPortNumber: dto.mongodbPortNumber ?? defaults.mongodbPortNumber,
       mongodbHostPortNumber,
-      mongodbHostPath:
-        this.cleanString(dto.mongodbHostPath) ?? defaults.mongodbHostPath,
       natsPortNumber,
       natsBindIp: this.cleanString(dto.natsBindIp) ?? defaults.natsBindIp,
       envRaw: JSON.parse(JSON.stringify(dto)) as Prisma.InputJsonValue,
@@ -555,7 +554,6 @@ export class TenantService {
       mongodbBindIp: '127.0.0.1',
       mongodbPortNumber: 27017,
       mongodbHostPortNumber: 27017,
-      mongodbHostPath: '',
       natsPortNumber: 4222,
       natsBindIp: '127.0.0.1',
     };
@@ -805,7 +803,6 @@ export class TenantService {
     mongodbBindIp: string;
     mongodbPortNumber: number;
     mongodbHostPortNumber: number;
-    mongodbHostPath: string;
     natsPortNumber: number;
     natsBindIp: string;
   }): string {
@@ -824,7 +821,6 @@ export class TenantService {
       `MONGODB_BIND_IP=${input.mongodbBindIp}`,
       `MONGODB_PORT_NUMBER=${input.mongodbPortNumber}`,
       `MONGODB_HOST_PORT_NUMBER=${input.mongodbHostPortNumber}`,
-      `MONGODB_HOST_PATH=${input.mongodbHostPath}`,
       `NATS_PORT_NUMBER=${input.natsPortNumber}`,
       `NATS_BIND_IP=${input.natsBindIp}`,
       '',
@@ -949,8 +945,50 @@ export class TenantService {
     return `http://${domain}:${appPort}`;
   }
 
-  private buildLocalRocketUrl(hostPort: number): string {
-    return `http://127.0.0.1:${hostPort}`;
+  private async resolveLocalRocketUrl(hostPort: number): Promise<string> {
+    const candidates = this.getLocalHostCandidates();
+
+    for (const host of candidates) {
+      const candidateUrl = this.buildLocalRocketUrl(host, hostPort);
+      const healthy = await this.checkRocketHealth(candidateUrl);
+      if (healthy) {
+        return candidateUrl;
+      }
+    }
+
+    return this.buildLocalRocketUrl(
+      candidates[0] ?? 'host.docker.internal',
+      hostPort,
+    );
+  }
+
+  private getLocalHostCandidates(): string[] {
+    const configuredHosts = this.cleanString(process.env.PROVISION_LOCAL_HOSTS)
+      ?.split(',')
+      .map((host) => host.trim())
+      .filter((host) => host.length > 0);
+
+    if (configuredHosts && configuredHosts.length > 0) {
+      return Array.from(new Set(configuredHosts));
+    }
+
+    const configuredHost = this.cleanString(process.env.PROVISION_LOCAL_HOST);
+    if (configuredHost) {
+      return Array.from(
+        new Set([
+          configuredHost,
+          'host.docker.internal',
+          '127.0.0.1',
+          'localhost',
+        ]),
+      );
+    }
+
+    return ['host.docker.internal', '127.0.0.1', 'localhost'];
+  }
+
+  private buildLocalRocketUrl(host: string, hostPort: number): string {
+    return `http://${host}:${hostPort}`;
   }
 
   private cleanString(value: string | undefined): string | undefined {

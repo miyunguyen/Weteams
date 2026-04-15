@@ -29,10 +29,17 @@ export class RocketChatService {
     username: string,
     password: string,
   ): Promise<{ authToken: string; userId: string }> {
-    const res = await axios.post(`${rocketUrl}/api/v1/login`, {
-      user: username,
-      password,
-    });
+    const res = await axios.post(
+      `${rocketUrl}/api/v1/login`,
+      {
+        user: username,
+        password,
+      },
+      {
+        maxRedirects: 0,
+        validateStatus: (status) => status >= 200 && status < 300,
+      },
+    );
 
     const authToken = res?.data?.data?.authToken;
     const userId = res?.data?.data?.userId;
@@ -114,7 +121,9 @@ export class RocketChatService {
     try {
       return await fn(this.getHeaders(tenant), tenant);
     } catch (err) {
-      if (err?.response?.status === 401) {
+      const status = (err as { response?: { status?: number } })?.response
+        ?.status;
+      if (status === 401) {
         const newTenant = await this.refreshToken(tenantId);
         return fn(this.getHeaders(newTenant), newTenant);
       }

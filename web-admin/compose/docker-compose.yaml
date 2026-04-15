@@ -31,12 +31,15 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
+      PROVISION_LOCAL_HOSTS: host.docker.internal,127.0.0.1,localhost
     ports:
       - "127.0.0.1:3001:3001"
     volumes:
       - ../../rocketchat-compose:/workspace/rocketchat-compose
       - ../../my-rocket-chat:/workspace/my-rocket-chat
       - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres_data:
