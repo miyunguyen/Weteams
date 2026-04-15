@@ -23,10 +23,6 @@ model Tenant {
   release            String  @default("8.0.1")
   regToken           String?
 
-  letsencryptEnabled Boolean @default(false)
-  letsencryptEmail   String? @default("demo@email.com")
-  traefikProtocol    String  @default("http")
-
   hostPort    Int    @default(3000)
   port        Int    @default(3000)
   metricsPort Int    @default(9458)
@@ -37,20 +33,6 @@ model Tenant {
   adminUserId        String?
   adminAuthToken     String?
   adminTokenExpireAt DateTime?
-
-  prometheusRetentionSize String @default("15GB")
-  prometheusRetentionTime String @default("15d")
-  prometheusPort          Int    @default(9000)
-
-  grafanaDomain        String?
-  grafanaPath          String  @default("/grafana")
-  grafanaAdminPassword String  @default("rc-admin")
-  grafanaHostPort      Int     @default(5050)
-  grafanaBindIp        String  @default("127.0.0.1")
-
-  traefikHttpPort      Int @default(80)
-  traefikDashboardPort Int @default(8080)
-  traefikHttpsPort     Int @default(443)
 
   mongodbBindIp         String  @default("127.0.0.1")
   mongodbPortNumber     Int     @default(27017)

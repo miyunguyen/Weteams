@@ -1,13 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsInt,
-  IsOptional,
-  IsString,
-  IsUrl,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsInt, IsOptional, IsString, IsUrl, Max, Min } from 'class-validator';
 
 export class ProvisionTenantDto {
   @ApiProperty({ description: 'Tên tenant/app' })
@@ -26,7 +18,7 @@ export class ProvisionTenantDto {
   composeProjectName?: string;
 
   @ApiPropertyOptional({
-    description: 'ROOT_URL, để trống sẽ tự build theo domain + protocol + port',
+    description: 'ROOT_URL, để trống sẽ tự build theo domain + hostPort',
   })
   @IsOptional()
   @IsUrl({ require_tld: false }, { message: 'rootUrl phải là URL hợp lệ' })
@@ -41,21 +33,6 @@ export class ProvisionTenantDto {
   @IsOptional()
   @IsString()
   regToken?: string;
-
-  @ApiPropertyOptional({ default: false })
-  @IsOptional()
-  @IsBoolean()
-  letsencryptEnabled?: boolean;
-
-  @ApiPropertyOptional({ default: 'demo@email.com' })
-  @IsOptional()
-  @IsString()
-  letsencryptEmail?: string;
-
-  @ApiPropertyOptional({ default: 'http' })
-  @IsOptional()
-  @IsString()
-  traefikProtocol?: string;
 
   @ApiPropertyOptional({ default: 3000 })
   @IsOptional()
@@ -92,71 +69,6 @@ export class ProvisionTenantDto {
   @IsOptional()
   @IsString()
   adminPass?: string;
-
-  @ApiPropertyOptional({ default: '15GB' })
-  @IsOptional()
-  @IsString()
-  prometheusRetentionSize?: string;
-
-  @ApiPropertyOptional({ default: '15d' })
-  @IsOptional()
-  @IsString()
-  prometheusRetentionTime?: string;
-
-  @ApiPropertyOptional({ default: 9000 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  prometheusPort?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  grafanaDomain?: string;
-
-  @ApiPropertyOptional({ default: '/grafana' })
-  @IsOptional()
-  @IsString()
-  grafanaPath?: string;
-
-  @ApiPropertyOptional({ default: 'rc-admin' })
-  @IsOptional()
-  @IsString()
-  grafanaAdminPassword?: string;
-
-  @ApiPropertyOptional({ default: 5050 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  grafanaHostPort?: number;
-
-  @ApiPropertyOptional({ default: '127.0.0.1' })
-  @IsOptional()
-  @IsString()
-  grafanaBindIp?: string;
-
-  @ApiPropertyOptional({ default: 80 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  traefikHttpPort?: number;
-
-  @ApiPropertyOptional({ default: 8080 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  traefikDashboardPort?: number;
-
-  @ApiPropertyOptional({ default: 443 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  traefikHttpsPort?: number;
 
   @ApiPropertyOptional({ default: '127.0.0.1' })
   @IsOptional()
