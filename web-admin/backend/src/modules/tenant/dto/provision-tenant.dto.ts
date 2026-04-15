@@ -89,11 +89,6 @@ export class ProvisionTenantDto {
   @Max(65535)
   mongodbHostPortNumber?: number;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  mongodbHostPath?: string;
-
   @ApiPropertyOptional({ default: 4222 })
   @IsOptional()
   @IsInt()
