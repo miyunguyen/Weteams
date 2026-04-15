@@ -21,26 +21,12 @@ const execFileAsync = promisify(execFile);
 type TenantDefaults = {
   release: string;
   regToken: string;
-  letsencryptEnabled: boolean;
-  letsencryptEmail: string;
-  traefikProtocol: string;
   hostPort: number;
   port: number;
   metricsPort: number;
   bindIp: string;
   adminUsername: string;
   adminPass: string;
-  prometheusRetentionSize: string;
-  prometheusRetentionTime: string;
-  prometheusPort: number;
-  grafanaDomain: string;
-  grafanaPath: string;
-  grafanaAdminPassword: string;
-  grafanaHostPort: number;
-  grafanaBindIp: string;
-  traefikHttpPort: number;
-  traefikDashboardPort: number;
-  traefikHttpsPort: number;
   mongodbBindIp: string;
   mongodbPortNumber: number;
   mongodbHostPortNumber: number;
@@ -71,7 +57,7 @@ export class TenantService {
       domain,
     );
 
-    const defaults = await this.buildDefaults();
+    const defaults = this.buildDefaults();
     const resolved = await this.resolveProvisionInput(
       dto,
       defaults,
@@ -229,6 +215,7 @@ export class TenantService {
         id: true,
         composeProjectName: true,
         rocketUrl: true,
+        hostPort: true,
         adminUsername: true,
         adminPass: true,
         isDeleted: true,
@@ -281,9 +268,10 @@ export class TenantService {
     }
 
     const appEngineDir = this.resolveAppEngineDir();
+    const localRocketUrl = this.buildLocalRocketUrl(tenant.hostPort);
     const deployResult = await this.runRcAppsDeploy(
       appEngineDir,
-      tenant.rocketUrl,
+      localRocketUrl,
       String(tenant.adminUsername),
       String(tenant.adminPass),
     );
@@ -402,6 +390,7 @@ export class TenantService {
       select: {
         id: true,
         rocketUrl: true,
+        hostPort: true,
         adminUsername: true,
         adminPass: true,
         isDeleted: true,
@@ -433,15 +422,16 @@ export class TenantService {
     }
 
     let lastError = 'Tenant chưa sẵn sàng';
+    const localRocketUrl = this.buildLocalRocketUrl(tenant.hostPort);
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        const healthy = await this.checkRocketHealth(tenant.rocketUrl);
+        const healthy = await this.checkRocketHealth(localRocketUrl);
         if (!healthy) {
           throw new Error('Rocket.Chat health check chưa pass');
         }
 
         const login = await this.rocketChatService.loginWithCredentials(
-          tenant.rocketUrl,
+          localRocketUrl,
           String(tenant.adminUsername),
           String(tenant.adminPass),
         );
@@ -484,9 +474,9 @@ export class TenantService {
     };
   }
 
-  private async checkRocketHealth(rocketUrl: string): Promise<boolean> {
+  private async checkRocketHealth(baseUrl: string): Promise<boolean> {
     try {
-      const res = await axios.get(`${rocketUrl}/api/info`, {
+      const res = await axios.get(`${baseUrl}/api/info`, {
         timeout: 4000,
       });
       return res.status >= 200 && res.status < 300;
@@ -501,54 +491,15 @@ export class TenantService {
     domain: string,
     composeProjectName: string,
   ) {
-    const traefikProtocol =
-      this.cleanString(dto.traefikProtocol) ?? defaults.traefikProtocol;
-    const traefikHttpPort =
-      dto.traefikHttpPort ??
-      (await this.allocatePort(
-        'traefikHttpPort',
-        defaults.traefikHttpPort,
-        8082,
-      ));
-    const traefikDashboardPort =
-      dto.traefikDashboardPort ??
-      (await this.allocatePort(
-        'traefikDashboardPort',
-        defaults.traefikDashboardPort,
-        8081,
-      ));
-    const traefikHttpsPort =
-      dto.traefikHttpsPort ??
-      (await this.allocatePort(
-        'traefikHttpsPort',
-        defaults.traefikHttpsPort,
-        8443,
-      ));
-
-    const rootUrl =
-      this.cleanString(dto.rootUrl) ??
-      this.buildRootUrl(domain, traefikProtocol, traefikHttpPort);
-
     const hostPort =
       dto.hostPort ??
       (await this.allocatePort('hostPort', defaults.hostPort, 3000));
+
+    const rootUrl =
+      this.cleanString(dto.rootUrl) ?? this.buildRootUrl(domain, hostPort);
     const metricsPort =
       dto.metricsPort ??
       (await this.allocatePort('metricsPort', defaults.metricsPort, 9458));
-    const prometheusPort =
-      dto.prometheusPort ??
-      (await this.allocatePort(
-        'prometheusPort',
-        defaults.prometheusPort,
-        9000,
-      ));
-    const grafanaHostPort =
-      dto.grafanaHostPort ??
-      (await this.allocatePort(
-        'grafanaHostPort',
-        defaults.grafanaHostPort,
-        5050,
-      ));
     const mongodbHostPortNumber =
       dto.mongodbHostPortNumber ??
       (await this.allocatePort(
@@ -572,10 +523,6 @@ export class TenantService {
       rocketUrl: rootUrl,
       release: this.cleanString(dto.release) ?? defaults.release,
       regToken: this.cleanString(dto.regToken) ?? defaults.regToken,
-      letsencryptEnabled: dto.letsencryptEnabled ?? defaults.letsencryptEnabled,
-      letsencryptEmail:
-        this.cleanString(dto.letsencryptEmail) ?? defaults.letsencryptEmail,
-      traefikProtocol,
       hostPort,
       port: dto.port ?? defaults.port,
       metricsPort,
@@ -583,25 +530,6 @@ export class TenantService {
       adminUsername:
         this.cleanString(dto.adminUsername) ?? defaults.adminUsername,
       adminPass: this.cleanString(dto.adminPass) ?? defaults.adminPass,
-      prometheusRetentionSize:
-        this.cleanString(dto.prometheusRetentionSize) ??
-        defaults.prometheusRetentionSize,
-      prometheusRetentionTime:
-        this.cleanString(dto.prometheusRetentionTime) ??
-        defaults.prometheusRetentionTime,
-      prometheusPort,
-      grafanaDomain:
-        this.cleanString(dto.grafanaDomain) ?? defaults.grafanaDomain,
-      grafanaPath: this.cleanString(dto.grafanaPath) ?? defaults.grafanaPath,
-      grafanaAdminPassword:
-        this.cleanString(dto.grafanaAdminPassword) ??
-        defaults.grafanaAdminPassword,
-      grafanaHostPort,
-      grafanaBindIp:
-        this.cleanString(dto.grafanaBindIp) ?? defaults.grafanaBindIp,
-      traefikHttpPort,
-      traefikDashboardPort,
-      traefikHttpsPort,
       mongodbBindIp:
         this.cleanString(dto.mongodbBindIp) ?? defaults.mongodbBindIp,
       mongodbPortNumber: dto.mongodbPortNumber ?? defaults.mongodbPortNumber,
@@ -614,38 +542,16 @@ export class TenantService {
     };
   }
 
-  private async buildDefaults(): Promise<TenantDefaults> {
-    const existingTenants = await this.prisma.tenant.findMany({
-      select: {
-        traefikHttpPort: true,
-      },
-    });
-
-    const hasPort80 = existingTenants.some((t) => t.traefikHttpPort === 80);
-
+  private buildDefaults(): TenantDefaults {
     return {
       release: '8.0.1',
       regToken: '',
-      letsencryptEnabled: false,
-      letsencryptEmail: 'demo@email.com',
-      traefikProtocol: 'http',
       hostPort: 3000,
       port: 3000,
       metricsPort: 9458,
       bindIp: '0.0.0.0',
       adminUsername: 'admin',
       adminPass: 'admin123',
-      prometheusRetentionSize: '15GB',
-      prometheusRetentionTime: '15d',
-      prometheusPort: 9000,
-      grafanaDomain: '',
-      grafanaPath: '/grafana',
-      grafanaAdminPassword: 'rc-admin',
-      grafanaHostPort: 5050,
-      grafanaBindIp: '127.0.0.1',
-      traefikHttpPort: hasPort80 ? 8082 : 80,
-      traefikDashboardPort: hasPort80 ? 8081 : 8080,
-      traefikHttpsPort: hasPort80 ? 8443 : 443,
       mongodbBindIp: '127.0.0.1',
       mongodbPortNumber: 27017,
       mongodbHostPortNumber: 27017,
@@ -659,11 +565,6 @@ export class TenantService {
     field:
       | 'hostPort'
       | 'metricsPort'
-      | 'prometheusPort'
-      | 'grafanaHostPort'
-      | 'traefikHttpPort'
-      | 'traefikDashboardPort'
-      | 'traefikHttpsPort'
       | 'mongodbHostPortNumber'
       | 'natsPortNumber',
     fallback: number,
@@ -673,11 +574,6 @@ export class TenantService {
       select: {
         hostPort: true,
         metricsPort: true,
-        prometheusPort: true,
-        grafanaHostPort: true,
-        traefikHttpPort: true,
-        traefikDashboardPort: true,
-        traefikHttpsPort: true,
         mongodbHostPortNumber: true,
         natsPortNumber: true,
       },
@@ -897,12 +793,8 @@ export class TenantService {
 
   private toEnvFileContent(input: {
     regToken: string;
-    domain: string;
     rootUrl: string;
     release: string;
-    letsencryptEnabled: boolean;
-    letsencryptEmail: string;
-    traefikProtocol: string;
     composeProjectName: string;
     hostPort: number;
     port: number;
@@ -910,17 +802,6 @@ export class TenantService {
     bindIp: string;
     adminUsername: string;
     adminPass: string;
-    prometheusRetentionSize: string;
-    prometheusRetentionTime: string;
-    prometheusPort: number;
-    grafanaDomain: string;
-    grafanaPath: string;
-    grafanaAdminPassword: string;
-    grafanaHostPort: number;
-    grafanaBindIp: string;
-    traefikHttpPort: number;
-    traefikDashboardPort: number;
-    traefikHttpsPort: number;
     mongodbBindIp: string;
     mongodbPortNumber: number;
     mongodbHostPortNumber: number;
@@ -931,12 +812,8 @@ export class TenantService {
     return [
       '#!/bin/sh',
       `REG_TOKEN=${input.regToken}`,
-      `DOMAIN=${input.domain}`,
       `ROOT_URL=${input.rootUrl}`,
       `RELEASE=${input.release}`,
-      `LETSENCRYPT_ENABLED=${input.letsencryptEnabled}`,
-      `LETSENCRYPT_EMAIL=${input.letsencryptEmail}`,
-      `TRAEFIK_PROTOCOL=${input.traefikProtocol}`,
       `COMPOSE_PROJECT_NAME=${input.composeProjectName}`,
       `HOST_PORT=${input.hostPort}`,
       `PORT=${input.port}`,
@@ -944,17 +821,6 @@ export class TenantService {
       `BIND_IP=${input.bindIp}`,
       `ADMIN_USERNAME=${input.adminUsername}`,
       `ADMIN_PASS=${input.adminPass}`,
-      `PROMETHEUS_RETENTION_SIZE=${input.prometheusRetentionSize}`,
-      `PROMETHEUS_RETENTION_TIME=${input.prometheusRetentionTime}`,
-      `PROMETHEUS_PORT=${input.prometheusPort}`,
-      `GRAFANA_DOMAIN=${input.grafanaDomain}`,
-      `GRAFANA_PATH=${input.grafanaPath}`,
-      `GRAFANA_ADMIN_PASSWORD=${input.grafanaAdminPassword}`,
-      `GRAFANA_HOST_PORT=${input.grafanaHostPort}`,
-      `GRAFANA_BIND_IP=${input.grafanaBindIp}`,
-      `TRAEFIK_HTTP_PORT=${input.traefikHttpPort}`,
-      `TRAEFIK_DASHBOARD_PORT=${input.traefikDashboardPort}`,
-      `TRAEFIK_HTTPS_PORT=${input.traefikHttpsPort}`,
       `MONGODB_BIND_IP=${input.mongodbBindIp}`,
       `MONGODB_PORT_NUMBER=${input.mongodbPortNumber}`,
       `MONGODB_HOST_PORT_NUMBER=${input.mongodbHostPortNumber}`,
@@ -1075,21 +941,16 @@ export class TenantService {
     };
   }
 
-  private buildRootUrl(
-    domain: string,
-    protocol: string,
-    traefikHttpPort: number,
-  ): string {
-    const safeProtocol = protocol.toLowerCase() === 'https' ? 'https' : 'http';
-
-    if (
-      (safeProtocol === 'http' && traefikHttpPort === 80) ||
-      (safeProtocol === 'https' && traefikHttpPort === 443)
-    ) {
-      return `${safeProtocol}://${domain}`;
+  private buildRootUrl(domain: string, appPort: number): string {
+    if (appPort === 80) {
+      return `http://${domain}`;
     }
 
-    return `${safeProtocol}://${domain}:${traefikHttpPort}`;
+    return `http://${domain}:${appPort}`;
+  }
+
+  private buildLocalRocketUrl(hostPort: number): string {
+    return `http://127.0.0.1:${hostPort}`;
   }
 
   private cleanString(value: string | undefined): string | undefined {

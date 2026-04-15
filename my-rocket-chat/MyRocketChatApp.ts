@@ -305,7 +305,7 @@ export class MyRocketChatApp
                     type: UIKitSurfaceType.MODAL,
                     id: "join-team-modal",
                     title: {
-                        text: "Join room by code",
+                        text: "Join team by code",
                         type: "plain_text",
                     },
                     submit: {
@@ -343,7 +343,7 @@ export class MyRocketChatApp
                                 type: "plain_text_input",
                                 placeholder: {
                                     type: "plain_text",
-                                    text: "Example: A9K2Q7XZ",
+                                    text: "Example: A9K2Q7",
                                 },
                             },
                         },
