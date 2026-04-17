@@ -116,10 +116,27 @@ export class TenantService {
 
       await this.safeDeleteFile(envFilePath);
 
+      const loginAttempts = this.resolvePositiveIntEnv(
+        'PROVISION_LOGIN_MAX_ATTEMPTS',
+        24,
+      );
+      const loginDelayMs = this.resolvePositiveIntEnv(
+        'PROVISION_LOGIN_DELAY_MS',
+        5000,
+      );
+      const loginInitialDelayMs = this.resolvePositiveIntEnv(
+        'PROVISION_LOGIN_INITIAL_DELAY_MS',
+        5000,
+      );
+
+      if (loginInitialDelayMs > 0) {
+        await this.sleep(loginInitialDelayMs);
+      }
+
       const activation = await this.activateTenantLogin(
         tenant.id,
-        Number(process.env.PROVISION_LOGIN_MAX_ATTEMPTS ?? 12),
-        Number(process.env.PROVISION_LOGIN_DELAY_MS ?? 5000),
+        loginAttempts,
+        loginDelayMs,
       );
 
       if (!activation.success) {
@@ -136,13 +153,48 @@ export class TenantService {
         };
       }
 
+      let autoDeployResult:
+        | {
+            commandUsed: string;
+            stdout: string;
+            stderr: string;
+          }
+        | undefined;
+
+      if (this.shouldAutoDeployAppEngineAfterProvision()) {
+        try {
+          const appEngineDir = this.resolveAppEngineDir();
+          autoDeployResult = await this.runRcAppsDeploy(
+            appEngineDir,
+            activation.loginUrl,
+            resolved.adminUsername,
+            resolved.adminPass,
+          );
+        } catch (error) {
+          return {
+            message:
+              'Provision và auto-login thành công, nhưng auto deploy app engine thất bại',
+            data: {
+              tenant: activation.tenant,
+              composeProjectName: resolved.composeProjectName,
+              rocketUrl: resolved.rocketUrl,
+              deployStatus: 'RUNNING',
+              reason: this.getErrorMessage(error),
+            },
+          };
+        }
+      }
+
       return {
-        message: 'Provision tenant thành công',
+        message: this.shouldAutoDeployAppEngineAfterProvision()
+          ? 'Provision tenant + auto login + auto deploy app engine thành công'
+          : 'Provision tenant + auto login thành công',
         data: {
           tenant: activation.tenant,
           envFile: envFilePath,
           composeProjectName: resolved.composeProjectName,
           rocketUrl: resolved.rocketUrl,
+          autoDeployResult,
         },
       };
     } catch (error) {
@@ -378,6 +430,7 @@ export class TenantService {
     | {
         success: true;
         tenant: unknown;
+        loginUrl: string;
       }
     | {
         success: false;
@@ -421,41 +474,49 @@ export class TenantService {
     }
 
     let lastError = 'Tenant chưa sẵn sàng';
-    const localRocketUrl = await this.resolveLocalRocketUrl(tenant.hostPort);
+    const localHosts = this.getLocalHostCandidates();
+
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        const healthy = await this.checkRocketHealth(localRocketUrl);
-        if (!healthy) {
-          throw new Error('Rocket.Chat health check chưa pass');
+      for (const host of localHosts) {
+        const localRocketUrl = this.buildLocalRocketUrl(host, tenant.hostPort);
+
+        try {
+          const healthy = await this.checkRocketHealth(localRocketUrl);
+          if (!healthy) {
+            lastError = `Health check chưa pass ở ${localRocketUrl}`;
+            continue;
+          }
+
+          const login = await this.rocketChatService.loginWithCredentials(
+            localRocketUrl,
+            String(tenant.adminUsername),
+            String(tenant.adminPass),
+          );
+
+          const updatedTenant = await this.prisma.tenant.update({
+            where: { id: tenant.id },
+            data: {
+              adminUserId: login.userId,
+              adminAuthToken: login.authToken,
+              adminTokenExpireAt: null,
+              deployStatus: 'RUNNING',
+              deployError: null,
+              lastProvisionedAt: new Date(),
+            },
+          });
+
+          return {
+            success: true,
+            tenant: updatedTenant,
+            loginUrl: localRocketUrl,
+          };
+        } catch (error) {
+          lastError = `${this.getErrorMessage(error)} @ ${localRocketUrl}`;
         }
+      }
 
-        const login = await this.rocketChatService.loginWithCredentials(
-          localRocketUrl,
-          String(tenant.adminUsername),
-          String(tenant.adminPass),
-        );
-
-        const updatedTenant = await this.prisma.tenant.update({
-          where: { id: tenant.id },
-          data: {
-            adminUserId: login.userId,
-            adminAuthToken: login.authToken,
-            adminTokenExpireAt: null,
-            deployStatus: 'RUNNING',
-            deployError: null,
-            lastProvisionedAt: new Date(),
-          },
-        });
-
-        return {
-          success: true,
-          tenant: updatedTenant,
-        };
-      } catch (error) {
-        lastError = this.getErrorMessage(error);
-        if (attempt < maxAttempts) {
-          await this.sleep(delayMs);
-        }
+      if (attempt < maxAttempts) {
+        await this.sleep(delayMs);
       }
     }
 
@@ -647,6 +708,31 @@ export class TenantService {
     }
 
     return { command, args: ['compose', ...baseArgs] };
+  }
+
+  private shouldAutoDeployAppEngineAfterProvision(): boolean {
+    const value = this.cleanString(
+      process.env.PROVISION_AUTO_DEPLOY_APP_ENGINE,
+    );
+    if (!value) {
+      return true;
+    }
+
+    return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+  }
+
+  private resolvePositiveIntEnv(key: string, fallback: number): number {
+    const value = this.cleanString(process.env[key]);
+    if (!value) {
+      return fallback;
+    }
+
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return fallback;
+    }
+
+    return parsed;
   }
 
   private async runRcAppsDeploy(
@@ -862,12 +948,12 @@ export class TenantService {
   }
 
   async getTenantsList(query: QueryTenantsDto) {
-    const page = query.page ?? 1;
-    const pageSize = query.pageSize ?? 10;
+    const page = this.parsePositiveIntQuery(query.page, 1);
+    const pageSize = this.parsePositiveIntQuery(query.pageSize, 10);
     const skip = (page - 1) * pageSize;
     const sortBy = query.sortBy ?? 'createdAt';
-    const sortOrder = query.sortOrder ?? 'desc';
-    const isDeleted = query.isDeleted ?? false;
+    const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
+    const isDeleted = this.parseBooleanQuery(query.isDeleted, false);
 
     // Build where clause
     interface TenantWhere {
@@ -1006,5 +1092,38 @@ export class TenantService {
     }
 
     return 'Unknown error';
+  }
+
+  private parseBooleanQuery(value: unknown, fallback: boolean): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'true') {
+        return true;
+      }
+      if (normalized === 'false') {
+        return false;
+      }
+    }
+
+    return fallback;
+  }
+
+  private parsePositiveIntQuery(value: unknown, fallback: number): number {
+    if (typeof value === 'number' && Number.isInteger(value) && value > 0) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isInteger(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+
+    return fallback;
   }
 }
