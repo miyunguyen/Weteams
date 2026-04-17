@@ -9,7 +9,7 @@
         "support": "Minh Nguyen"
     },
     "name": "WeTeams",
-    "nameSlug": "we-teams-bot",
+    "nameSlug": "weteams",
     "classFile": "MyRocketChatApp.ts",
     "description": "WeTeams",
     "implements": [
