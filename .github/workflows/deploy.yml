@@ -18,6 +18,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
+            git stash
             git pull origin main
             cd web-admin/compose
             sudo docker compose up -d --build backend frontend
