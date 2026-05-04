@@ -1,13 +1,6 @@
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
 
-ARG NEXT_PUBLIC_API_BASE_URL=http://backend:3001/v1
-ARG NEXT_PUBLIC_SOCKET_URL=http://backend:3001
-
-ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
-ENV NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
-ENV NODE_ENV=production
-
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
 
