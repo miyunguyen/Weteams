@@ -387,7 +387,9 @@ export const ModelName = {
   Tenant: 'Tenant',
   User: 'User',
   Team: 'Team',
-  TeamMember: 'TeamMember'
+  TeamMember: 'TeamMember',
+  WebAdminUser: 'WebAdminUser',
+  WebAdminUserTenant: 'WebAdminUserTenant'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -403,7 +405,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "tenant" | "user" | "team" | "teamMember"
+    modelProps: "tenant" | "user" | "team" | "teamMember" | "webAdminUser" | "webAdminUserTenant"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -703,6 +705,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WebAdminUser: {
+      payload: Prisma.$WebAdminUserPayload<ExtArgs>
+      fields: Prisma.WebAdminUserFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WebAdminUserFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WebAdminUserFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>
+        }
+        findFirst: {
+          args: Prisma.WebAdminUserFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WebAdminUserFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>
+        }
+        findMany: {
+          args: Prisma.WebAdminUserFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>[]
+        }
+        create: {
+          args: Prisma.WebAdminUserCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>
+        }
+        createMany: {
+          args: Prisma.WebAdminUserCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WebAdminUserCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>[]
+        }
+        delete: {
+          args: Prisma.WebAdminUserDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>
+        }
+        update: {
+          args: Prisma.WebAdminUserUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>
+        }
+        deleteMany: {
+          args: Prisma.WebAdminUserDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WebAdminUserUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WebAdminUserUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>[]
+        }
+        upsert: {
+          args: Prisma.WebAdminUserUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserPayload>
+        }
+        aggregate: {
+          args: Prisma.WebAdminUserAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWebAdminUser>
+        }
+        groupBy: {
+          args: Prisma.WebAdminUserGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WebAdminUserGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WebAdminUserCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WebAdminUserCountAggregateOutputType> | number
+        }
+      }
+    }
+    WebAdminUserTenant: {
+      payload: Prisma.$WebAdminUserTenantPayload<ExtArgs>
+      fields: Prisma.WebAdminUserTenantFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WebAdminUserTenantFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WebAdminUserTenantFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>
+        }
+        findFirst: {
+          args: Prisma.WebAdminUserTenantFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WebAdminUserTenantFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>
+        }
+        findMany: {
+          args: Prisma.WebAdminUserTenantFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>[]
+        }
+        create: {
+          args: Prisma.WebAdminUserTenantCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>
+        }
+        createMany: {
+          args: Prisma.WebAdminUserTenantCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WebAdminUserTenantCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>[]
+        }
+        delete: {
+          args: Prisma.WebAdminUserTenantDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>
+        }
+        update: {
+          args: Prisma.WebAdminUserTenantUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>
+        }
+        deleteMany: {
+          args: Prisma.WebAdminUserTenantDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WebAdminUserTenantUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WebAdminUserTenantUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>[]
+        }
+        upsert: {
+          args: Prisma.WebAdminUserTenantUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebAdminUserTenantPayload>
+        }
+        aggregate: {
+          args: Prisma.WebAdminUserTenantAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWebAdminUserTenant>
+        }
+        groupBy: {
+          args: Prisma.WebAdminUserTenantGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WebAdminUserTenantGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WebAdminUserTenantCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WebAdminUserTenantCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -763,7 +913,6 @@ export const TenantScalarFieldEnum = {
   mongodbBindIp: 'mongodbBindIp',
   mongodbPortNumber: 'mongodbPortNumber',
   mongodbHostPortNumber: 'mongodbHostPortNumber',
-  mongodbHostPath: 'mongodbHostPath',
   natsPortNumber: 'natsPortNumber',
   natsBindIp: 'natsBindIp',
   envRaw: 'envRaw',
@@ -820,6 +969,34 @@ export const TeamMemberScalarFieldEnum = {
 } as const
 
 export type TeamMemberScalarFieldEnum = (typeof TeamMemberScalarFieldEnum)[keyof typeof TeamMemberScalarFieldEnum]
+
+
+export const WebAdminUserScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  username: 'username',
+  hashedPassword: 'hashedPassword',
+  role: 'role',
+  tenantId: 'tenantId',
+  isActive: 'isActive',
+  lastLoginAt: 'lastLoginAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebAdminUserScalarFieldEnum = (typeof WebAdminUserScalarFieldEnum)[keyof typeof WebAdminUserScalarFieldEnum]
+
+
+export const WebAdminUserTenantScalarFieldEnum = {
+  id: 'id',
+  webAdminUserId: 'webAdminUserId',
+  tenantId: 'tenantId',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebAdminUserTenantScalarFieldEnum = (typeof WebAdminUserTenantScalarFieldEnum)[keyof typeof WebAdminUserTenantScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -961,6 +1138,20 @@ export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'WebAdminUserRole'
+ */
+export type EnumWebAdminUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WebAdminUserRole'>
+    
+
+
+/**
+ * Reference to a field of type 'WebAdminUserRole[]'
+ */
+export type ListEnumWebAdminUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'WebAdminUserRole[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -1072,6 +1263,8 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   team?: Prisma.TeamOmit
   teamMember?: Prisma.TeamMemberOmit
+  webAdminUser?: Prisma.WebAdminUserOmit
+  webAdminUserTenant?: Prisma.WebAdminUserTenantOmit
 }
 
 /* Types for Logging */

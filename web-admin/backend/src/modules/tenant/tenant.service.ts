@@ -41,7 +41,44 @@ export class TenantService {
     private readonly rocketChatService: RocketChatService,
   ) {}
 
-  async provisionTenant(dto: ProvisionTenantDto) {
+  private checkTenantAccess(user: any, tenantId?: string): void {
+    if (!user) {
+      throw new AppException(HttpStatus.UNAUTHORIZED, {
+        message: 'Chưa xác thực',
+        errorCode: 'UNAUTHORIZED',
+      });
+    }
+
+    // SUPER_ADMIN và ADMIN có quyền truy cập tất cả tenants
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
+      return;
+    }
+
+    // TENANT_USER chỉ có quyền truy cập tenant được assigned
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user.role === 'TENANT_USER') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (!tenantId || tenantId !== user.tenantId) {
+        throw new AppException(HttpStatus.FORBIDDEN, {
+          message: 'Bạn không có quyền để truy cập tenant này',
+          errorCode: 'FORBIDDEN',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          data: { tenantId, userTenantId: user.tenantId },
+        });
+      }
+      return;
+    }
+
+    throw new AppException(HttpStatus.FORBIDDEN, {
+      message: 'Role không hợp lệ',
+      errorCode: 'INVALID_ROLE',
+    });
+  }
+
+  async provisionTenant(dto: ProvisionTenantDto, user?: any) {
+    this.checkTenantAccess(user);
+
     const domain = this.normalizeDomain(dto.domain);
     if (!domain) {
       throw new AppException(HttpStatus.BAD_REQUEST, {
@@ -221,11 +258,13 @@ export class TenantService {
     }
   }
 
-  async loginTenant(dto: LoginTenantDto) {
+  async loginTenant(dto: LoginTenantDto, user?: any) {
     const tenant = await this.findTenantByIdentifier(
       this.cleanString(dto.tenantId),
       this.cleanString(dto.composeProjectName),
     );
+
+    this.checkTenantAccess(user, tenant.id);
 
     // Always re-login and persist a fresh token for this tenant.
     const activation = await this.activateTenantLogin(
@@ -254,11 +293,13 @@ export class TenantService {
     };
   }
 
-  async deployTenantApp(dto: DeployAppDto) {
+  async deployTenantApp(dto: DeployAppDto, user?: any) {
     const tenantRef = await this.findTenantByIdentifier(
       this.cleanString(dto.tenantId),
       this.cleanString(dto.composeProjectName),
     );
+
+    this.checkTenantAccess(user, tenantRef.id);
 
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantRef.id },
@@ -339,11 +380,13 @@ export class TenantService {
     };
   }
 
-  async deprovisionTenant(dto: DeprovisionTenantDto) {
+  async deprovisionTenant(dto: DeprovisionTenantDto, user?: any) {
     const tenant = await this.findTenantByIdentifier(
       this.cleanString(dto.tenantId),
       this.cleanString(dto.composeProjectName),
     );
+
+    this.checkTenantAccess(user, tenant.id);
 
     const composeDir = this.resolveComposeDir();
     const resolvedComposeProjectName = String(tenant.composeProjectName);
@@ -947,7 +990,7 @@ export class TenantService {
     return value || 'tenant';
   }
 
-  async getTenantsList(query: QueryTenantsDto) {
+  async getTenantsList(query: QueryTenantsDto, user?: any) {
     const page = this.parsePositiveIntQuery(query.page, 1);
     const pageSize = this.parsePositiveIntQuery(query.pageSize, 10);
     const skip = (page - 1) * pageSize;
@@ -960,10 +1003,18 @@ export class TenantService {
       isDeleted: boolean;
       OR?: any[];
       deployStatus?: any;
+      id?: any;
     }
     const where: TenantWhere = {
       isDeleted,
     };
+
+    // Filter tenants based on user role
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user && user.role === 'TENANT_USER' && user.tenantId) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      where.id = user.tenantId;
+    }
 
     if (query.search) {
       where.OR = [

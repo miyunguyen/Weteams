@@ -54,7 +54,9 @@ export const ModelName = {
   Tenant: 'Tenant',
   User: 'User',
   Team: 'Team',
-  TeamMember: 'TeamMember'
+  TeamMember: 'TeamMember',
+  WebAdminUser: 'WebAdminUser',
+  WebAdminUserTenant: 'WebAdminUserTenant'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -94,7 +96,6 @@ export const TenantScalarFieldEnum = {
   mongodbBindIp: 'mongodbBindIp',
   mongodbPortNumber: 'mongodbPortNumber',
   mongodbHostPortNumber: 'mongodbHostPortNumber',
-  mongodbHostPath: 'mongodbHostPath',
   natsPortNumber: 'natsPortNumber',
   natsBindIp: 'natsBindIp',
   envRaw: 'envRaw',
@@ -151,6 +152,34 @@ export const TeamMemberScalarFieldEnum = {
 } as const
 
 export type TeamMemberScalarFieldEnum = (typeof TeamMemberScalarFieldEnum)[keyof typeof TeamMemberScalarFieldEnum]
+
+
+export const WebAdminUserScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  username: 'username',
+  hashedPassword: 'hashedPassword',
+  role: 'role',
+  tenantId: 'tenantId',
+  isActive: 'isActive',
+  lastLoginAt: 'lastLoginAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebAdminUserScalarFieldEnum = (typeof WebAdminUserScalarFieldEnum)[keyof typeof WebAdminUserScalarFieldEnum]
+
+
+export const WebAdminUserTenantScalarFieldEnum = {
+  id: 'id',
+  webAdminUserId: 'webAdminUserId',
+  tenantId: 'tenantId',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebAdminUserTenantScalarFieldEnum = (typeof WebAdminUserTenantScalarFieldEnum)[keyof typeof WebAdminUserTenantScalarFieldEnum]
 
 
 export const SortOrder = {

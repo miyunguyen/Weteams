@@ -12,6 +12,9 @@ else
   npx prisma db push --accept-data-loss
 fi
 
+echo "[backend] prisma db seed"
+npx prisma db seed
+
 # Ensure my-rocket-chat dependencies are installed
 if [ -d "/workspace/my-rocket-chat" ]; then
   if [ ! -d "/workspace/my-rocket-chat/node_modules" ]; then

@@ -26,3 +26,12 @@ export const DeployStatus = {
 } as const
 
 export type DeployStatus = (typeof DeployStatus)[keyof typeof DeployStatus]
+
+
+export const WebAdminUserRole = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'ADMIN',
+  TENANT_USER: 'TENANT_USER'
+} as const
+
+export type WebAdminUserRole = (typeof WebAdminUserRole)[keyof typeof WebAdminUserRole]
