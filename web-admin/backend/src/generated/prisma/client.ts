@@ -59,3 +59,13 @@ export type Team = Prisma.TeamModel
  * 
  */
 export type TeamMember = Prisma.TeamMemberModel
+/**
+ * Model WebAdminUser
+ * 
+ */
+export type WebAdminUser = Prisma.WebAdminUserModel
+/**
+ * Model WebAdminUserTenant
+ * 
+ */
+export type WebAdminUserTenant = Prisma.WebAdminUserTenantModel

@@ -119,3 +119,41 @@ enum DeployStatus {
   RUNNING
   FAILED
 }
+
+enum WebAdminUserRole {
+  SUPER_ADMIN
+  ADMIN
+  TENANT_USER
+}
+
+model WebAdminUser {
+  id             String           @id @default(uuid())
+  email          String           @unique
+  username       String           @unique
+  hashedPassword String
+  role           WebAdminUserRole @default(TENANT_USER)
+  tenantId       String?
+  isActive       Boolean          @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  tenant WebAdminUserTenant?
+
+  @@index([email])
+  @@index([tenantId])
+}
+
+model WebAdminUserTenant {
+  id             String   @id @default(uuid())
+  webAdminUserId String   @unique
+  tenantId       String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  webAdminUser WebAdminUser @relation(fields: [webAdminUserId], references: [id], onDelete: Cascade)
+
+  @@unique([webAdminUserId, tenantId])
+  @@index([tenantId])
+}

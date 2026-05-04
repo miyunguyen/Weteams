@@ -8,6 +8,7 @@ import { LoginTenantDto } from './dto/login-tenant.dto';
 import { DeployAppDto } from './dto/deploy-app.dto';
 import { QueryTenantsDto } from './dto/query-tenants.dto';
 import { AppException } from '../../common/exceptions/app.exception';
+import { TenantGateway } from './tenant.gateway';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import * as path from 'node:path';
@@ -39,9 +40,61 @@ export class TenantService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly rocketChatService: RocketChatService,
+    private readonly tenantGateway: TenantGateway,
   ) {}
 
-  async provisionTenant(dto: ProvisionTenantDto) {
+  private emitTenantUpdated(
+    tenantId: string,
+    action: string,
+    deployStatus?: string,
+    updatedAt?: Date,
+  ): void {
+    this.tenantGateway.emitTenantUpdated({
+      tenantId,
+      action,
+      deployStatus,
+      updatedAt: updatedAt?.toISOString(),
+    });
+  }
+
+  private checkTenantAccess(user: any, tenantId?: string): void {
+    if (!user) {
+      throw new AppException(HttpStatus.UNAUTHORIZED, {
+        message: 'Chưa xác thực',
+        errorCode: 'UNAUTHORIZED',
+      });
+    }
+
+    // SUPER_ADMIN và ADMIN có quyền truy cập tất cả tenants
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
+      return;
+    }
+
+    // TENANT_USER chỉ có quyền truy cập tenant được assigned
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user.role === 'TENANT_USER') {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (!tenantId || tenantId !== user.tenantId) {
+        throw new AppException(HttpStatus.FORBIDDEN, {
+          message: 'Bạn không có quyền để truy cập tenant này',
+          errorCode: 'FORBIDDEN',
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          data: { tenantId, userTenantId: user.tenantId },
+        });
+      }
+      return;
+    }
+
+    throw new AppException(HttpStatus.FORBIDDEN, {
+      message: 'Role không hợp lệ',
+      errorCode: 'INVALID_ROLE',
+    });
+  }
+
+  async provisionTenant(dto: ProvisionTenantDto, user?: any) {
+    this.checkTenantAccess(user);
+
     const domain = this.normalizeDomain(dto.domain);
     if (!domain) {
       throw new AppException(HttpStatus.BAD_REQUEST, {
@@ -93,6 +146,13 @@ export class TenantService {
           },
         });
 
+    this.emitTenantUpdated(
+      tenant.id,
+      'provision_started',
+      'DEPLOYING',
+      tenant.updatedAt,
+    );
+
     try {
       const composeDir = this.resolveComposeDir();
       const envFileName = `.env.${resolved.composeProjectName}`;
@@ -140,6 +200,13 @@ export class TenantService {
       );
 
       if (!activation.success) {
+        this.emitTenantUpdated(
+          tenant.id,
+          'provision_waiting_login',
+          'DEPLOYING',
+          tenant.updatedAt,
+        );
+
         return {
           message:
             'Provision hoàn tất nhưng tenant chưa login được. Hãy gọi endpoint tenant/login sau ít phút.',
@@ -198,13 +265,19 @@ export class TenantService {
         },
       };
     } catch (error) {
-      await this.prisma.tenant.update({
+      const failedTenant = await this.prisma.tenant.update({
         where: { id: tenant.id },
         data: {
           deployStatus: 'FAILED',
           deployError: this.getErrorMessage(error),
         },
       });
+      this.emitTenantUpdated(
+        failedTenant.id,
+        'provision_failed',
+        'FAILED',
+        failedTenant.updatedAt,
+      );
 
       if (error instanceof AppException) {
         throw error;
@@ -221,11 +294,13 @@ export class TenantService {
     }
   }
 
-  async loginTenant(dto: LoginTenantDto) {
+  async loginTenant(dto: LoginTenantDto, user?: any) {
     const tenant = await this.findTenantByIdentifier(
       this.cleanString(dto.tenantId),
       this.cleanString(dto.composeProjectName),
     );
+
+    this.checkTenantAccess(user, tenant.id);
 
     // Always re-login and persist a fresh token for this tenant.
     const activation = await this.activateTenantLogin(
@@ -254,11 +329,13 @@ export class TenantService {
     };
   }
 
-  async deployTenantApp(dto: DeployAppDto) {
+  async deployTenantApp(dto: DeployAppDto, user?: any) {
     const tenantRef = await this.findTenantByIdentifier(
       this.cleanString(dto.tenantId),
       this.cleanString(dto.composeProjectName),
     );
+
+    this.checkTenantAccess(user, tenantRef.id);
 
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantRef.id },
@@ -339,17 +416,19 @@ export class TenantService {
     };
   }
 
-  async deprovisionTenant(dto: DeprovisionTenantDto) {
+  async deprovisionTenant(dto: DeprovisionTenantDto, user?: any) {
     const tenant = await this.findTenantByIdentifier(
       this.cleanString(dto.tenantId),
       this.cleanString(dto.composeProjectName),
     );
 
+    this.checkTenantAccess(user, tenant.id);
+
     const composeDir = this.resolveComposeDir();
     const resolvedComposeProjectName = String(tenant.composeProjectName);
     await this.runComposeDown(composeDir, resolvedComposeProjectName);
 
-    await this.prisma.tenant.update({
+    const updatedTenant = await this.prisma.tenant.update({
       where: { id: tenant.id },
       data: {
         isDeleted: true,
@@ -358,12 +437,281 @@ export class TenantService {
         deployError: 'Tenant đã bị xoá mềm',
       },
     });
+    this.emitTenantUpdated(
+      updatedTenant.id,
+      'deprovisioned',
+      'PENDING',
+      updatedTenant.updatedAt,
+    );
 
     return {
       message: 'Deprovision tenant thành công',
       data: {
         tenantId: tenant.id,
         composeProjectName: resolvedComposeProjectName,
+      },
+    };
+  }
+
+  async updateTenantConfig(tenantId: string, user?: any) {
+    const tenant = await this.findTenantByIdentifier(
+      this.cleanString(tenantId),
+      undefined,
+    );
+
+    this.checkTenantAccess(user, tenant.id);
+
+    const currentTenant = await this.prisma.tenant.findUnique({
+      where: { id: tenant.id },
+      select: {
+        id: true,
+        composeProjectName: true,
+        deployStatus: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!currentTenant) {
+      throw new AppException(HttpStatus.NOT_FOUND, {
+        message: 'Không tìm thấy tenant',
+        errorCode: 'TENANT_NOT_FOUND',
+        data: { tenantId: tenant.id },
+      });
+    }
+
+    this.emitTenantUpdated(
+      currentTenant.id,
+      'config_updated',
+      currentTenant.deployStatus,
+      currentTenant.updatedAt,
+    );
+
+    return {
+      message: 'Đồng bộ cấu hình tenant thành công',
+      data: {
+        tenantId: currentTenant.id,
+        composeProjectName: currentTenant.composeProjectName,
+        deployStatus: currentTenant.deployStatus,
+      },
+    };
+  }
+
+  async restartTenantService(tenantId: string, user?: any) {
+    const tenant = await this.findTenantByIdentifier(
+      this.cleanString(tenantId),
+      undefined,
+    );
+
+    this.checkTenantAccess(user, tenant.id);
+
+    const currentTenant = await this.prisma.tenant.findUnique({
+      where: { id: tenant.id },
+      select: {
+        id: true,
+        composeProjectName: true,
+        deployStatus: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!currentTenant) {
+      throw new AppException(HttpStatus.NOT_FOUND, {
+        message: 'Không tìm thấy tenant',
+        errorCode: 'TENANT_NOT_FOUND',
+        data: { tenantId: tenant.id },
+      });
+    }
+
+    const composeDir = this.resolveComposeDir();
+    const baseArgs = [
+      '-p',
+      String(currentTenant.composeProjectName),
+      '-f',
+      'generated/docker-compose-no-traefik.yml',
+      'restart',
+    ];
+    const { command, args } = this.resolveComposeCommand(baseArgs);
+
+    try {
+      await execFileAsync(command, args, { cwd: composeDir });
+      this.emitTenantUpdated(
+        currentTenant.id,
+        'restart_completed',
+        currentTenant.deployStatus,
+        currentTenant.updatedAt,
+      );
+
+      return {
+        message: 'Khởi động lại tenant thành công',
+        data: {
+          tenantId: currentTenant.id,
+          composeProjectName: currentTenant.composeProjectName,
+        },
+      };
+    } catch (error) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Khởi động lại tenant thất bại',
+        errorCode: 'TENANT_RESTART_FAILED',
+        data: {
+          tenantId: currentTenant.id,
+          composeProjectName: currentTenant.composeProjectName,
+          reason: this.getErrorMessage(error),
+        },
+      });
+    }
+  }
+
+  async fetchTenantLogs(tenantId: string, user?: any) {
+    const tenant = await this.findTenantByIdentifier(
+      this.cleanString(tenantId),
+      undefined,
+    );
+
+    this.checkTenantAccess(user, tenant.id);
+    const currentTenant = await this.prisma.tenant.findUnique({
+      where: { id: tenant.id },
+      select: {
+        id: true,
+        composeProjectName: true,
+      },
+    });
+
+    if (!currentTenant) {
+      throw new AppException(HttpStatus.NOT_FOUND, {
+        message: 'Không tìm thấy tenant',
+        errorCode: 'TENANT_NOT_FOUND',
+        data: { tenantId: tenant.id },
+      });
+    }
+
+    const composeProjectName = String(currentTenant.composeProjectName);
+
+    const composeDir = this.resolveComposeDir();
+    const baseArgs = [
+      '-p',
+      composeProjectName,
+      '-f',
+      'generated/docker-compose-no-traefik.yml',
+      'logs',
+      '--tail',
+      '200',
+    ];
+    const { command, args } = this.resolveComposeCommand(baseArgs);
+
+    try {
+      const result = await execFileAsync(command, args, { cwd: composeDir });
+      return {
+        message: 'Lấy logs tenant thành công',
+        data: result.stdout || result.stderr || '',
+      };
+    } catch (error) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Lấy logs tenant thất bại',
+        errorCode: 'TENANT_LOGS_FAILED',
+        data: {
+          tenantId: currentTenant.id,
+          composeProjectName,
+          reason: this.getErrorMessage(error),
+        },
+      });
+    }
+  }
+
+  async getTenantDetail(tenantId: string, user?: any) {
+    const tenant = await this.findTenantByIdentifier(
+      this.cleanString(tenantId),
+      undefined,
+    );
+
+    this.checkTenantAccess(user, tenant.id);
+
+    const detail = await this.prisma.tenant.findUnique({
+      where: { id: tenant.id },
+      include: {
+        _count: {
+          select: {
+            users: true,
+            teams: true,
+          },
+        },
+        users: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          include: {
+            teamMembers: {
+              orderBy: {
+                joinedAt: 'desc',
+              },
+              include: {
+                team: {
+                  select: {
+                    id: true,
+                    tenantId: true,
+                    roomId: true,
+                    name: true,
+                    joinCode: true,
+                    teamId: true,
+                    createdAt: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        teams: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+          include: {
+            members: {
+              orderBy: {
+                joinedAt: 'desc',
+              },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    tenantId: true,
+                    rocketUserId: true,
+                    username: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    dateOfBirth: true,
+                    address: true,
+                    citizenId: true,
+                    phoneNumber: true,
+                    avatarUrl: true,
+                    createdAt: true,
+                    updatedAt: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!detail) {
+      throw new AppException(HttpStatus.NOT_FOUND, {
+        message: 'Không tìm thấy tenant',
+        errorCode: 'TENANT_NOT_FOUND',
+        data: { tenantId: tenant.id },
+      });
+    }
+
+    const teamMemberTotal = detail.teams.reduce(
+      (total, team) => total + team.members.length,
+      0,
+    );
+
+    return {
+      message: 'Lấy chi tiết tenant thành công',
+      data: {
+        ...detail,
+        teamMemberTotal,
       },
     };
   }
@@ -505,6 +853,13 @@ export class TenantService {
             },
           });
 
+          this.emitTenantUpdated(
+            updatedTenant.id,
+            'login_success',
+            'RUNNING',
+            updatedTenant.updatedAt,
+          );
+
           return {
             success: true,
             tenant: updatedTenant,
@@ -520,13 +875,19 @@ export class TenantService {
       }
     }
 
-    await this.prisma.tenant.update({
+    const pendingTenant = await this.prisma.tenant.update({
       where: { id: tenant.id },
       data: {
         deployStatus: 'DEPLOYING',
         deployError: lastError,
       },
     });
+    this.emitTenantUpdated(
+      pendingTenant.id,
+      'login_retrying',
+      'DEPLOYING',
+      pendingTenant.updatedAt,
+    );
 
     return {
       success: false,
@@ -947,7 +1308,7 @@ export class TenantService {
     return value || 'tenant';
   }
 
-  async getTenantsList(query: QueryTenantsDto) {
+  async getTenantsList(query: QueryTenantsDto, user?: any) {
     const page = this.parsePositiveIntQuery(query.page, 1);
     const pageSize = this.parsePositiveIntQuery(query.pageSize, 10);
     const skip = (page - 1) * pageSize;
@@ -960,10 +1321,18 @@ export class TenantService {
       isDeleted: boolean;
       OR?: any[];
       deployStatus?: any;
+      id?: any;
     }
     const where: TenantWhere = {
       isDeleted,
     };
+
+    // Filter tenants based on user role
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user && user.role === 'TENANT_USER' && user.tenantId) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      where.id = user.tenantId;
+    }
 
     if (query.search) {
       where.OR = [

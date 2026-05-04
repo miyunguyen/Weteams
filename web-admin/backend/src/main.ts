@@ -6,6 +6,27 @@ import { AppExceptionFilter } from './common/filters/app-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const allowedOrigins = new Set(
+    [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'https://admin.weteams.net',
+    ].filter((origin): origin is string => Boolean(origin)),
+  );
+
+  app.enableCors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS blocked for origin: ${origin}`), false);
+    },
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   app.setGlobalPrefix('v1');
 
   app.useGlobalInterceptors(new ResponseInterceptor());

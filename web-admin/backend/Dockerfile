@@ -2,7 +2,7 @@ FROM node:20-bookworm-slim AS build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 COPY . .
 RUN npx prisma generate
@@ -17,7 +17,7 @@ RUN apt-get update \
 
 COPY package*.json ./
 
-RUN npm ci && npm install -g @rocket.chat/apps-cli
+RUN npm ci --legacy-peer-deps && npm install -g @rocket.chat/apps-cli
 
 COPY prisma ./prisma
 COPY prisma.config.ts ./prisma.config.ts
