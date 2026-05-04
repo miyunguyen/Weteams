@@ -2,13 +2,14 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { login, setStoredToken, getStoredToken, ApiError } from '@/services/api';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@weteams.local');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,10 +28,14 @@ export default function LoginPage() {
     try {
       const session = await login({ identifier: email, password });
       setStoredToken(session.token);
+      toast.success('Đăng nhập thành công', {
+        description: 'Đang chuyển đến dashboard...',
+      });
       router.replace('/dashboard');
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Unable to sign in';
       setError(message);
+      toast.error('Đăng nhập thất bại', { description: message });
     } finally {
       setIsSubmitting(false);
     }
@@ -60,7 +65,7 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-              placeholder="admin@weteams.local or admin"
+              placeholder="Enter username or email"
               autoComplete="username"
             />
           </Field>
@@ -74,7 +79,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-                placeholder="••••••••"
+                placeholder="Enter password"
                 autoComplete="current-password"
               />
               <button
@@ -99,10 +104,6 @@ export default function LoginPage() {
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
-
-        <p className="mt-6 text-center text-xs leading-5 text-slate-400">
-          Default credentials: admin@weteams.local (email) or admin (username) / admin123
-        </p>
       </div>
     </div>
   );

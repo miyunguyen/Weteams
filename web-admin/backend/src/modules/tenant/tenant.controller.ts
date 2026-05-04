@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Post,
+  Param,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -44,6 +45,33 @@ export class TenantController {
   @Post('deployments')
   deployApp(@Body() dto: DeployAppDto, @CurrentUser() user: any) {
     return this.tenantService.deployTenantApp(dto, user);
+  }
+
+  @HttpCode(200)
+  @Post(':tenantId/config')
+  updateConfig(@Param('tenantId') tenantId: string, @CurrentUser() user: any) {
+    return this.tenantService.updateTenantConfig(tenantId, user);
+  }
+
+  @HttpCode(200)
+  @Post(':tenantId/restart')
+  restartService(
+    @Param('tenantId') tenantId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.tenantService.restartTenantService(tenantId, user);
+  }
+
+  @HttpCode(200)
+  @Get(':tenantId/logs')
+  fetchLogs(@Param('tenantId') tenantId: string, @CurrentUser() user: any) {
+    return this.tenantService.fetchTenantLogs(tenantId, user);
+  }
+
+  @HttpCode(200)
+  @Get(':tenantId/detail')
+  getDetail(@Param('tenantId') tenantId: string, @CurrentUser() user: any) {
+    return this.tenantService.getTenantDetail(tenantId, user);
   }
 
   @HttpCode(200)

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Manrope, Space_Grotesk } from 'next/font/google';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 const headingFont = Space_Grotesk({
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`}>
       <body className="font-body min-h-screen">
         {children}
+        <Toaster richColors position="top-right" closeButton expand />
       </body>
     </html>
   );

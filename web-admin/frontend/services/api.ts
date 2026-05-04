@@ -5,6 +5,9 @@ import type {
   LoginPayload,
 } from '@/types/auth';
 import type {
+  CreateTenantPayload,
+  CreateTenantResult,
+  TenantDetail,
   Tenant,
   TenantActionPayload,
   TenantActionResult,
@@ -79,11 +82,11 @@ async function parseResponse<T>(response: Response): Promise<ApiSuccess<T>> {
     : await response.text().catch(() => '');
 
   if (!response.ok) {
-    const errorPayload =
+    const errorPayload: ApiErrorResponse =
       parsed && typeof parsed === 'object'
         ? (parsed as ApiErrorResponse)
         : {
-            success: false,
+            success: false as const,
             message:
               typeof parsed === 'string' && parsed
                 ? parsed
@@ -158,20 +161,21 @@ export async function getTenants(query: TenantListQuery = {}) {
   return response.data;
 }
 
-export async function getTenantById(tenantId: string): Promise<Tenant> {
-  const tenantList = await getTenants({ page: 1, pageSize: 500 });
-  const tenant = tenantList.items.find((item) => item.id === tenantId);
+export async function getTenantById(tenantId: string): Promise<TenantDetail> {
+  const response = await request<TenantDetail>(`/tenants/${tenantId}/detail`, {
+    method: 'GET',
+  });
 
-  if (!tenant) {
-    throw new ApiError('Tenant not found', 404, {
-      success: false,
-      message: 'Tenant not found',
-      errorCode: 'TENANT_NOT_FOUND',
-      statusCode: 404,
-    });
-  }
+  return response.data;
+}
 
-  return tenant;
+export async function createTenant(payload: CreateTenantPayload): Promise<CreateTenantResult> {
+  const response = await request<CreateTenantResult>('/tenants', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
 }
 
 export async function deleteTenant(payload: TenantActionPayload): Promise<TenantActionResult> {
