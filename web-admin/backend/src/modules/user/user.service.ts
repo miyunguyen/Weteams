@@ -449,6 +449,72 @@ export class UserService {
     };
   }
 
+  async syncUsersFromRocket(tenantId: string) {
+    let offset = 0;
+    const count = 100;
+    const synced: Array<any> = [];
+
+    while (true) {
+      const res = await this.rocketChatService.listUsers(
+        tenantId,
+        offset,
+        count,
+      );
+      const data = res?.data;
+      const users = Array.isArray(data?.users) ? data.users : [];
+
+      for (const ru of users) {
+        const rocketUserId = String(ru._id ?? '');
+        const username = String(ru.username ?? '').trim();
+        const email =
+          Array.isArray(ru.emails) && ru.emails[0]
+            ? String(ru.emails[0].address ?? '')
+            : undefined;
+        const name = String(ru.name ?? '') || username;
+
+        const existing = await this.prisma.user.findFirst({
+          where: {
+            tenantId,
+            OR: [{ rocketUserId }, { username }],
+          },
+        });
+
+        if (existing) {
+          const updated = await this.prisma.user.update({
+            where: { id: existing.id },
+            data: {
+              rocketUserId,
+              username,
+              email,
+              name,
+            },
+          });
+          synced.push(updated);
+        } else {
+          const created = await this.prisma.user.create({
+            data: {
+              tenantId,
+              rocketUserId,
+              username,
+              email,
+              name,
+            },
+          });
+          synced.push(created);
+        }
+      }
+
+      const total = Number(data?.total ?? users.length + offset);
+      offset += users.length;
+      if (offset >= total || users.length === 0) break;
+    }
+
+    return {
+      message: 'Đồng bộ users từ Rocket.Chat hoàn tất',
+      data: { syncedCount: synced.length },
+    };
+  }
+
   private cleanOptionalString(value?: string): string | undefined {
     if (!value) {
       return undefined;

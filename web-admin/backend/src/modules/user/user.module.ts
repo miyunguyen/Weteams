@@ -8,5 +8,6 @@ import { RocketChatModule } from '../rocketChat/rocketChat.module';
   imports: [PrismaModule, RocketChatModule],
   controllers: [UserController],
   providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}

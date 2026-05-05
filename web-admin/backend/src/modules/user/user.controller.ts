@@ -46,6 +46,12 @@ export class UserController {
   }
 
   @HttpCode(200)
+  @Post('sync-from-rocket')
+  syncFromRocket(@Body() body: { tenantId: string }) {
+    return this.userService.syncUsersFromRocket(body.tenantId);
+  }
+
+  @HttpCode(200)
   @Post('app-context')
   createFromApp(@Body() dto: FromAppUserDto) {
     return this.userService.createOrUpdateFromApp(dto);

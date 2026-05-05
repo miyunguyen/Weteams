@@ -3,17 +3,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, ExternalLink, Layers3, ShieldCheck, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, CircleCheckBig, ExternalLink, Layers3, Loader2, Rocket, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
   ApiError,
+  deployTenantApp,
   deleteTenant,
   getStoredToken,
   getTenantById,
   restartTenantService,
   updateTenantConfig,
+  getTenantUsers,
+  getTenantTeams,
+  getTeamMembers,
+  syncTenantUsersFromRocket,
+  syncTeamMembershipsFromRocket,
 } from '@/services/api';
 import { getTenantSocket, type TenantRealtimeEvent } from '@/services/tenantRealtime';
 import type { TenantDetail, TenantDetailTeam, TenantDetailUser } from '@/types/tenant';
@@ -32,6 +38,8 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const [showProvision, setShowProvision] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [deployStatus, setDeployStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [deployMessage, setDeployMessage] = useState<string | null>(null);
 
   const loadTenant = useCallback(async () => {
     setIsLoading(true);
@@ -161,6 +169,139 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     }
   }, []);
 
+  const handleDeployAppEngine = useCallback(async () => {
+    if (!tenant) return;
+
+    setDeployStatus('loading');
+    setDeployMessage('Đang khởi chạy deploy Rocket.Chat App Engine...');
+
+    try {
+      const result = await deployTenantApp({ tenantId: tenant.id });
+      setDeployStatus('success');
+      setDeployMessage(result?.message ?? 'Deploy app engine hoàn tất');
+      toast.success('Deploy app engine thành công', {
+        description: result?.data?.commandUsed
+          ? `Đã chạy: ${result.data.commandUsed}`
+          : 'Rocket.Chat App Engine đã được deploy.',
+      });
+      void loadTenant();
+    } catch (error) {
+      const text = error instanceof ApiError ? error.message : 'Deploy failed';
+      setDeployStatus('error');
+      setDeployMessage(text);
+      toast.error('Deploy app engine thất bại', { description: text });
+    }
+  }, [tenant, loadTenant]);
+
+  // teams table state
+  const [teamsPage, setTeamsPage] = useState(1);
+  const [teamsPageSize] = useState(10);
+  const [teamsData, setTeamsData] = useState<any | null>(null);
+  const [teamsLoading, setTeamsLoading] = useState(false);
+
+  // users table state
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersPageSize] = useState(10);
+  const [usersData, setUsersData] = useState<any | null>(null);
+  const [usersLoading, setUsersLoading] = useState(false);
+
+  // team members modal
+  const [membersModalOpen, setMembersModalOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [membersPage, setMembersPage] = useState(1);
+  const [membersPageSize] = useState(10);
+  const [membersData, setMembersData] = useState<any | null>(null);
+  const [membersLoading, setMembersLoading] = useState(false);
+
+  // sync states
+  const [syncUsersLoading, setSyncUsersLoading] = useState(false);
+  const [syncTeamsLoading, setSyncTeamsLoading] = useState(false);
+
+  const loadTeams = useCallback(async () => {
+    if (!tenant) return;
+    setTeamsLoading(true);
+    try {
+      const data = await getTenantTeams(tenant.id, { page: teamsPage, pageSize: teamsPageSize });
+      setTeamsData(data);
+    } catch (e) {
+      // ignore, message shown elsewhere
+    } finally {
+      setTeamsLoading(false);
+    }
+  }, [tenant, teamsPage, teamsPageSize]);
+
+  const loadUsers = useCallback(async () => {
+    if (!tenant) return;
+    setUsersLoading(true);
+    try {
+      const data = await getTenantUsers(tenant.id, { page: usersPage, pageSize: usersPageSize });
+      setUsersData(data);
+    } catch (e) {
+      // ignore
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [tenant, usersPage, usersPageSize]);
+
+  const loadMembers = useCallback(async () => {
+    if (!selectedTeamId) return;
+    setMembersLoading(true);
+    try {
+      const data = await getTeamMembers(selectedTeamId, { page: membersPage, pageSize: membersPageSize });
+      setMembersData(data);
+    } catch (e) {
+      // ignore
+    } finally {
+      setMembersLoading(false);
+    }
+  }, [selectedTeamId, membersPage, membersPageSize]);
+
+  const handleSyncUsers = useCallback(async () => {
+    if (!tenant) return;
+    setSyncUsersLoading(true);
+    try {
+      const result = await syncTenantUsersFromRocket(tenant.id);
+      toast.success('Đồng bộ users từ Rocket.Chat thành công', {
+        description: result?.syncedCount ? `Đã đồng bộ ${result.syncedCount} user` : 'Hoàn tất',
+      });
+      void loadUsers();
+    } catch (error) {
+      const text = error instanceof ApiError ? error.message : 'Sync failed';
+      toast.error('Không thể đồng bộ users', { description: text });
+    } finally {
+      setSyncUsersLoading(false);
+    }
+  }, [tenant, loadUsers]);
+
+  const handleSyncTeams = useCallback(async () => {
+    if (!tenant) return;
+    setSyncTeamsLoading(true);
+    try {
+      const result = await syncTeamMembershipsFromRocket(tenant.id);
+      toast.success('Đồng bộ team memberships từ Rocket.Chat thành công', {
+        description: result?.syncedCount ? `Đã đồng bộ ${result.syncedCount} user` : 'Hoàn tất',
+      });
+      void loadTeams();
+    } catch (error) {
+      const text = error instanceof ApiError ? error.message : 'Sync failed';
+      toast.error('Không thể đồng bộ teams', { description: text });
+    } finally {
+      setSyncTeamsLoading(false);
+    }
+  }, [tenant, loadTeams]);
+
+  useEffect(() => {
+    void loadTeams();
+  }, [loadTeams]);
+
+  useEffect(() => {
+    void loadUsers();
+  }, [loadUsers]);
+
+  useEffect(() => {
+    void loadMembers();
+  }, [loadMembers]);
+
   const handleDelete = async () => {
     setIsDeleteLoading(true);
 
@@ -223,6 +364,18 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           </div>
 
           <div className="flex flex-wrap gap-3">
+            <Button
+              variant="secondary"
+              onClick={handleDeployAppEngine}
+              disabled={deployStatus === 'loading' || actionLoading !== null}
+              icon={deployStatus === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+            >
+              {deployStatus === 'loading'
+                ? 'Deploying...'
+                : deployStatus === 'success'
+                  ? 'Redeploy app engine'
+                  : 'Deploy app engine'}
+            </Button>
             {tenant.rootUrl ? (
               <a
                 href={toExternalUrl(tenant.rootUrl)}
@@ -243,6 +396,42 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         {message ? (
           <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
             {message}
+          </div>
+        ) : null}
+
+        {deployStatus !== 'idle' ? (
+          <div
+            className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
+              deployStatus === 'loading'
+                ? 'border-sky-200 bg-sky-50 text-sky-800'
+                : deployStatus === 'success'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                  : 'border-rose-200 bg-rose-50 text-rose-800'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5">
+                {deployStatus === 'loading' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : deployStatus === 'success' ? (
+                  <CircleCheckBig className="h-4 w-4" />
+                ) : (
+                  <ShieldAlert className="h-4 w-4" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">
+                  {deployStatus === 'loading'
+                    ? 'Deploy app engine đang chạy'
+                    : deployStatus === 'success'
+                      ? 'Deploy app engine thành công'
+                      : 'Deploy app engine thất bại'}
+                </p>
+                <p className="mt-1 break-words text-sm opacity-90">
+                  {deployMessage ?? 'Không có thông tin bổ sung'}
+                </p>
+              </div>
+            </div>
           </div>
         ) : null}
       </section>
@@ -299,32 +488,168 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       </div>
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-          <ShieldCheck className="h-4 w-4" />
-          Teams
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <ShieldCheck className="h-4 w-4" />
+            Teams
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              onClick={handleSyncTeams} 
+              disabled={syncTeamsLoading}
+              className="whitespace-nowrap"
+            >
+              {syncTeamsLoading ? 'Syncing...' : 'Sync from Rocket'}
+            </Button>
+            <div className="text-sm text-slate-500">Page {teamsData?.pagination?.page || 1} / {teamsData?.pagination?.totalPages || 1}</div>
+            <div>
+              <Button size="sm" onClick={() => setTeamsPage((p) => Math.max(1, p - 1))} disabled={teamsLoading || (teamsData?.pagination?.page || 1) <= 1}>Prev</Button>
+            </div>
+            <div>
+              <Button size="sm" onClick={() => setTeamsPage((p) => p + 1)} disabled={teamsLoading || (teamsData?.pagination?.page || 1) >= (teamsData?.pagination?.totalPages || 1)}>Next</Button>
+            </div>
+          </div>
         </div>
-        <div className="mt-5 space-y-4">
-          {tenant.teams.length > 0 ? (
-            tenant.teams.map((team) => <TeamCard key={team.id} team={team} />)
-          ) : (
-            <EmptyState title="No teams" description="Tenant này chưa có team nào." />
-          )}
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full table-auto text-sm">
+            <thead>
+              <tr className="text-left text-slate-500">
+                <th className="px-3 py-2">Name</th>
+                <th className="px-3 py-2">Room ID</th>
+                <th className="px-3 py-2">Team ID</th>
+                <th className="px-3 py-2">Join code</th>
+                <th className="px-3 py-2">Members</th>
+                <th className="px-3 py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {teamsData?.items?.length > 0 ? (
+                teamsData.items.map((t: any) => (
+                  <tr key={t.id} className="border-t">
+                    <td className="px-3 py-3">{t.name || 'Unnamed'}</td>
+                    <td className="px-3 py-3">{t.roomId}</td>
+                    <td className="px-3 py-3">{t.teamId}</td>
+                    <td className="px-3 py-3 font-mono text-xs tracking-[0.12em] text-slate-700">{t.joinCode || '-'}</td>
+                    <td className="px-3 py-3">{t.memberCount ?? t._count?.members ?? 0}</td>
+                    <td className="px-3 py-3">
+                      <Button size="sm" onClick={() => { setSelectedTeamId(t.id); setMembersModalOpen(true); setMembersPage(1); }}>View members</Button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-slate-500">No teams</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-          <Users className="h-4 w-4" />
-          Users
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <Users className="h-4 w-4" />
+            Users
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              onClick={handleSyncUsers} 
+              disabled={syncUsersLoading}
+              className="whitespace-nowrap"
+            >
+              {syncUsersLoading ? 'Syncing...' : 'Sync from Rocket'}
+            </Button>
+            <div className="text-sm text-slate-500">Page {usersData?.pagination?.page || 1} / {usersData?.pagination?.totalPages || 1}</div>
+            <div>
+              <Button size="sm" onClick={() => setUsersPage((p) => Math.max(1, p - 1))} disabled={usersLoading || (usersData?.pagination?.page || 1) <= 1}>Prev</Button>
+            </div>
+            <div>
+              <Button size="sm" onClick={() => setUsersPage((p) => p + 1)} disabled={usersLoading || (usersData?.pagination?.page || 1) >= (usersData?.pagination?.totalPages || 1)}>Next</Button>
+            </div>
+          </div>
         </div>
-        <div className="mt-5 space-y-4">
-          {tenant.users.length > 0 ? (
-            tenant.users.map((user) => <UserCard key={user.id} user={user} />)
-          ) : (
-            <EmptyState title="No users" description="Tenant này chưa có user nào." />
-          )}
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full table-auto text-sm">
+            <thead>
+              <tr className="text-left text-slate-500">
+                <th className="px-3 py-2">Name</th>
+                <th className="px-3 py-2">Username</th>
+                <th className="px-3 py-2">Email</th>
+                <th className="px-3 py-2">Role</th>
+                <th className="px-3 py-2">Rocket ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {usersData?.items?.length > 0 ? (
+                usersData.items.map((u: any) => (
+                  <tr key={u.id} className="border-t">
+                    <td className="px-3 py-3">{u.name || u.username}</td>
+                    <td className="px-3 py-3">{u.username}</td>
+                    <td className="px-3 py-3">{u.email || 'N/A'}</td>
+                    <td className="px-3 py-3">{u.role || 'N/A'}</td>
+                    <td className="px-3 py-3">{u.rocketUserId || '-'}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-slate-500">No users</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
+
+      {/* Team members modal */}
+      {membersModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[90%] max-w-2xl rounded-2xl bg-white p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Team members</h3>
+              <div className="flex items-center gap-2">
+                <div className="text-sm text-slate-500">Page {membersData?.pagination?.page || 1} / {membersData?.pagination?.totalPages || 1}</div>
+                <Button size="sm" onClick={() => setMembersPage((p) => Math.max(1, p - 1))} disabled={membersLoading || (membersData?.pagination?.page || 1) <= 1}>Prev</Button>
+                <Button size="sm" onClick={() => setMembersPage((p) => p + 1)} disabled={membersLoading || (membersData?.pagination?.page || 1) >= (membersData?.pagination?.totalPages || 1)}>Next</Button>
+                <Button size="sm" onClick={() => { setMembersModalOpen(false); setSelectedTeamId(null); }}>Close</Button>
+              </div>
+            </div>
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full table-auto text-sm">
+                <thead>
+                  <tr className="text-left text-slate-500">
+                    <th className="px-3 py-2">Name</th>
+                    <th className="px-3 py-2">Username</th>
+                    <th className="px-3 py-2">Email</th>
+                    <th className="px-3 py-2">Role</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {membersData?.items?.length > 0 ? (
+                    membersData.items.map((m: any) => (
+                      <tr key={m.id} className="border-t">
+                        <td className="px-3 py-3">{m.user?.name || m.user?.username}</td>
+                        <td className="px-3 py-3">{m.user?.username}</td>
+                        <td className="px-3 py-3">{m.user?.email || 'N/A'}</td>
+                        <td className="px-3 py-3">{m.user?.role || 'N/A'}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="p-6 text-center text-slate-500">No members</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         open={isDeleteDialogOpen}

@@ -67,8 +67,7 @@ export class MyRocketChatApp
         IUIKitInteractionHandler,
         IPostRoomCreate,
         IPostRoomUserLeave,
-        IPostRoomDeleted,
-        IPostUserLoggedIn
+        IPostRoomDeleted
 {
     private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
     private readonly JOIN_MODAL_INPUT = "join_team_code_input";
@@ -93,47 +92,6 @@ export class MyRocketChatApp
                 configuration.settings.provideSetting(setting),
             ),
         );
-    }
-
-    public async executePostUserLoggedIn(
-        user: IUser,
-        read: IRead,
-        http: IHttp,
-        persis: IPersistence,
-        modify: IModify,
-    ): Promise<void> {
-        const { tenantId, apiUrl } = await this.getRuntimeSettings();
-
-        if (!tenantId || !apiUrl) {
-            this.getLogger().warn(
-                "Skip sync user on login: tenantId/apiUrl setting is missing",
-            );
-            return;
-        }
-
-        const email =
-            user.emails && user.emails.length > 0
-                ? user.emails[0].address
-                : undefined;
-
-        try {
-            const response = await http.post(`${apiUrl}/v1/users/app-context`, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                data: {
-                    tenantId,
-                    userId: user.id,
-                    username: user.username,
-                    email,
-                    name: user.name,
-                },
-            });
-
-            this.getLogger().log("Synced user from login", response?.data);
-        } catch (error) {
-            this.getLogger().warn("Sync user from login failed", error);
-        }
     }
 
     public async executePostRoomCreate(

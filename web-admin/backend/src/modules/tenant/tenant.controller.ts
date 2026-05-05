@@ -10,6 +10,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { TenantService } from './tenant.service';
+import { UserService } from '../user/user.service';
+import { TeamService } from '../team/team.service';
 import { ProvisionTenantDto } from './dto/provision-tenant.dto';
 import { DeprovisionTenantDto } from './dto/deprovision-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
@@ -21,7 +23,11 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @Controller('tenants')
 @UseGuards(JwtAuthGuard)
 export class TenantController {
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private readonly userService: UserService,
+    private readonly teamService: TeamService,
+  ) {}
 
   @HttpCode(201)
   @Post()
@@ -72,6 +78,24 @@ export class TenantController {
   @Get(':tenantId/detail')
   getDetail(@Param('tenantId') tenantId: string, @CurrentUser() user: any) {
     return this.tenantService.getTenantDetail(tenantId, user);
+  }
+
+  @HttpCode(200)
+  @Get(':tenantId/users')
+  getTenantUsers(@Param('tenantId') tenantId: string, @Query() query: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const dto = { ...(query || {}), tenantId };
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.userService.searchUsers(dto);
+  }
+
+  @HttpCode(200)
+  @Get(':tenantId/teams')
+  getTenantTeams(@Param('tenantId') tenantId: string, @Query() query: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const dto = { ...(query || {}), tenantId };
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    return this.teamService.searchTeams(dto);
   }
 
   @HttpCode(200)

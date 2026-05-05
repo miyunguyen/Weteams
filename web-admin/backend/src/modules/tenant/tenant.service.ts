@@ -634,63 +634,6 @@ export class TenantService {
             teams: true,
           },
         },
-        users: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          include: {
-            teamMembers: {
-              orderBy: {
-                joinedAt: 'desc',
-              },
-              include: {
-                team: {
-                  select: {
-                    id: true,
-                    tenantId: true,
-                    roomId: true,
-                    name: true,
-                    joinCode: true,
-                    teamId: true,
-                    createdAt: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        teams: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-          include: {
-            members: {
-              orderBy: {
-                joinedAt: 'desc',
-              },
-              include: {
-                user: {
-                  select: {
-                    id: true,
-                    tenantId: true,
-                    rocketUserId: true,
-                    username: true,
-                    name: true,
-                    email: true,
-                    role: true,
-                    dateOfBirth: true,
-                    address: true,
-                    citizenId: true,
-                    phoneNumber: true,
-                    avatarUrl: true,
-                    createdAt: true,
-                    updatedAt: true,
-                  },
-                },
-              },
-            },
-          },
-        },
       },
     });
 
@@ -702,17 +645,9 @@ export class TenantService {
       });
     }
 
-    const teamMemberTotal = detail.teams.reduce(
-      (total, team) => total + team.members.length,
-      0,
-    );
-
     return {
       message: 'Lấy chi tiết tenant thành công',
-      data: {
-        ...detail,
-        teamMemberTotal,
-      },
+      data: detail,
     };
   }
 

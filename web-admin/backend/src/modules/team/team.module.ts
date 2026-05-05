@@ -8,5 +8,6 @@ import { RocketChatModule } from '../rocketChat/rocketChat.module';
   providers: [TeamService],
   controllers: [TeamController],
   imports: [PrismaModule, RocketChatModule],
+  exports: [TeamService],
 })
 export class TeamModule {}

@@ -16,8 +16,7 @@
         "IUIKitInteractionHandler",
         "IPostRoomCreate",
         "IPostRoomUserLeave",
-        "IPostRoomDeleted",
-        "IPostUserLoggedIn"
+        "IPostRoomDeleted"
     ],
     "permissions": [
         {
