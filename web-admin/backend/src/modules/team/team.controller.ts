@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, HttpCode, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  HttpCode,
+  Post,
+  Get,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { TeamService } from './team.service';
 import { CreateFromRoomDto } from './dto/create-from-room.dto';
 import { JoinTeamDto } from './dto/join-team.dto';
@@ -38,5 +47,31 @@ export class TeamController {
   @Delete()
   deleteTeam(@Body() dto: DeleteTeamDto) {
     return this.teamService.handleDeleteTeam(dto);
+  }
+
+  @HttpCode(200)
+  @Get(':teamId/members')
+  getTeamMembers(
+    @Param('teamId') teamId: string,
+    @Query() query: Record<string, any> = {},
+  ) {
+    const page = Number(query?.page) || 1;
+    const pageSize = Number(query?.pageSize) || 20;
+    return this.teamService.listTeamMembers(teamId, page, pageSize);
+  }
+
+  @HttpCode(200)
+  @Post('sync-members')
+  syncMembersForUser(@Body() body: { tenantId: string; rocketUserId: string }) {
+    return this.teamService.syncTeamMembershipsForUser(
+      body.tenantId,
+      body.rocketUserId,
+    );
+  }
+
+  @HttpCode(200)
+  @Post('sync-all-members')
+  syncAllMemberships(@Body() body: { tenantId: string }) {
+    return this.teamService.syncAllTeamMembershipsForTenant(body.tenantId);
   }
 }

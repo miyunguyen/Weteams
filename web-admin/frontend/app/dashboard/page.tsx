@@ -334,7 +334,7 @@ export default function DashboardPage() {
       {isCreateModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4 backdrop-blur-sm">
           <div className="w-full max-h-[90vh] max-w-2xl rounded-[1.75rem] border border-white/70 bg-white shadow-2xl sm:p-7 flex flex-col">
-            <div className="mb-5 flex items-start justify-between gap-3 px-6 pt-6 sm:pt-0">
+            <div className="mb-5 flex items-start justify-between gap-3 pt-6 sm:pt-0">
               <div>
                 <h3 className="font-heading text-2xl font-semibold text-slate-950">Add New Tenant</h3>
                 <p className="mt-1 text-sm text-slate-500">
@@ -417,21 +417,25 @@ export default function DashboardPage() {
                 </Field>
               </div>
 
-              {/* Infrastructure: Ports and IPs */}
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <button
-                  type="button"
-                  onClick={() => setIsInfrastructureOpen((prev) => !prev)}
-                  className="w-full flex items-center justify-between gap-3 rounded-lg px-3 py-2 transition hover:bg-white"
-                >
-                  <h3 className="text-sm font-semibold text-slate-800">Infrastructure</h3>
+            {/* Infrastructure: Ports and IPs */}
+              <button
+                type="button"
+                onClick={() => setIsInfrastructureOpen((prev) => !prev)}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">Infrastructure</p>
+                  </div>
                   {isInfrastructureOpen ? (
                     <ChevronUp className="h-5 w-5 text-slate-600" />
                   ) : (
                     <ChevronDown className="h-5 w-5 text-slate-600" />
                   )}
-                </button>
-                {isInfrastructureOpen ? (
+                </div>
+              </button>
+              {isInfrastructureOpen ? (
+              <fieldset className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="mt-3 grid gap-4 md:grid-cols-2">
                   <Field>
                     <label htmlFor="tenant-host-port" className="text-sm font-medium text-slate-700">
@@ -550,8 +554,8 @@ export default function DashboardPage() {
                     />
                   </Field>
                 </div>
-                ) : null}
-              </div>
+              </fieldset>
+              ) : null}
 
               {/* Advanced Settings */}
               <button
@@ -562,9 +566,6 @@ export default function DashboardPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-slate-800">Advanced settings</p>
-                    <p className="text-xs text-slate-500">
-                      Mở để cấu hình release, credentials và registration token.
-                    </p>
                   </div>
                   {isAdvancedOpen ? (
                     <ChevronUp className="h-5 w-5 text-slate-600 flex-shrink-0 mt-0.5" />
@@ -576,7 +577,6 @@ export default function DashboardPage() {
 
               {isAdvancedOpen ? (
                 <fieldset className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <legend className="text-sm font-semibold text-slate-800">Advanced settings</legend>
                 <div className="mt-3 grid gap-4 md:grid-cols-2">
                   <Field>
                     <label htmlFor="tenant-release" className="text-sm font-medium text-slate-700">

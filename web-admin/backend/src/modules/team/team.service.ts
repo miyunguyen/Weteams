@@ -183,7 +183,7 @@ export class TeamService {
           data: createdTeam,
         };
       } catch (err) {
-        if (err.code === 'P2002') {
+        if ((err as { code?: string })?.code === 'P2002') {
           continue;
         }
         throw err;
@@ -407,5 +407,214 @@ export class TeamService {
     }
 
     return `${normalizedParent}_${childSuffix}`;
+  }
+
+  async searchTeams(dto: {
+    tenantId: string;
+    page?: number;
+    pageSize?: number;
+    keyword?: string;
+  }) {
+    const page = this.toPositiveInt(dto.page, 1);
+    const pageSize = this.toPositiveInt(dto.pageSize, 20);
+    const skip = (page - 1) * pageSize;
+
+    const where: any = { tenantId: dto.tenantId };
+
+    if (dto.keyword) {
+      where.OR = [
+        { name: { contains: dto.keyword, mode: 'insensitive' } },
+        { roomId: { contains: dto.keyword, mode: 'insensitive' } },
+        { teamId: { contains: dto.keyword, mode: 'insensitive' } },
+      ];
+    }
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.team.findMany({
+        where,
+        select: {
+          id: true,
+          tenantId: true,
+          roomId: true,
+          name: true,
+          joinCode: true,
+          teamId: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      this.prisma.team.count({ where }),
+    ]);
+
+    const teamIds = items.map((team) => team.id);
+    const memberCounts = teamIds.length
+      ? await this.prisma.teamMember.groupBy({
+          by: ['teamId'],
+          where: { teamId: { in: teamIds } },
+          _count: { _all: true },
+        })
+      : [];
+
+    const memberCountMap = new Map<string, number>(
+      memberCounts.map((item) => [item.teamId, item._count._all]),
+    );
+
+    const normalizedItems = items.map((team) => ({
+      ...team,
+      memberCount: memberCountMap.get(team.id) ?? 0,
+    }));
+
+    return {
+      message: 'Lấy danh sách team thành công',
+      data: {
+        items: normalizedItems,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      },
+    };
+  }
+
+  async listTeamMembers(teamId: string, page = 1, pageSize = 20) {
+    const skip = (page - 1) * pageSize;
+
+    const where = { teamId };
+
+    const [items, total] = await this.prisma.$transaction([
+      this.prisma.teamMember.findMany({
+        where,
+        orderBy: { joinedAt: 'desc' },
+        skip,
+        take: pageSize,
+        include: {
+          user: {
+            select: {
+              id: true,
+              tenantId: true,
+              rocketUserId: true,
+              username: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      }),
+      this.prisma.teamMember.count({ where }),
+    ]);
+
+    return {
+      message: 'Lấy danh sách thành viên team thành công',
+      data: {
+        items,
+        pagination: {
+          page,
+          pageSize,
+          total,
+          totalPages: Math.ceil(total / pageSize),
+        },
+      },
+    };
+  }
+
+  async syncTeamMembershipsForUser(tenantId: string, rocketUserId: string) {
+    const res = await this.rocketChat.listUserTeams(tenantId, rocketUserId);
+
+    const data = res?.data;
+
+    const teams = Array.isArray(data?.teams) ? data.teams : [];
+
+    const results: Array<any> = [];
+
+    // find local user
+    const user = await this.prisma.user.findFirst({
+      where: { tenantId, rocketUserId },
+    });
+    if (!user) {
+      return { message: 'User not found locally', data: null };
+    }
+
+    for (const t of teams) {
+      const rocketTeamId = String(t._id ?? '');
+
+      const roomId = String(t.roomId ?? '');
+
+      const name = String(t.name ?? '') || rocketTeamId;
+
+      let localTeam = await this.prisma.team.findFirst({
+        where: { tenantId, OR: [{ teamId: rocketTeamId }, { roomId }] },
+      });
+
+      if (!localTeam) {
+        // create minimal team record
+        localTeam = await this.prisma.team.create({
+          data: {
+            tenantId,
+            roomId: roomId || rocketTeamId,
+            name,
+            joinCode: this.generateJoinCode(),
+            teamId: rocketTeamId,
+          },
+        });
+      }
+
+      // create membership if not exists
+      const existing = await this.prisma.teamMember.findFirst({
+        where: { teamId: localTeam.id, userId: user.id },
+      });
+      if (!existing) {
+        await this.prisma.teamMember.create({
+          data: { teamId: localTeam.id, userId: user.id },
+        });
+
+        results.push({ team: localTeam, created: true });
+      } else {
+        results.push({ team: localTeam, created: false });
+      }
+    }
+
+    return { message: 'Đồng bộ team memberships hoàn tất', data: results };
+  }
+
+  async syncAllTeamMembershipsForTenant(tenantId: string) {
+    const users = await this.prisma.user.findMany({ where: { tenantId } });
+
+    const results: Array<any> = [];
+
+    for (const user of users) {
+      if (!user.rocketUserId) continue;
+      try {
+        await this.syncTeamMembershipsForUser(tenantId, user.rocketUserId);
+
+        results.push({ userId: user.id, status: 'success' });
+      } catch (e) {
+        results.push({ userId: user.id, status: 'failed', reason: String(e) });
+      }
+    }
+
+    return {
+      message: 'Đồng bộ tất cả team memberships hoàn tất',
+      data: { syncedCount: results.length, details: results },
+    };
+  }
+
+  private toPositiveInt(value: unknown, fallback: number): number {
+    if (typeof value === 'number' && Number.isInteger(value) && value > 0) {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      const parsed = Number.parseInt(value, 10);
+      if (Number.isInteger(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+
+    return fallback;
   }
 }

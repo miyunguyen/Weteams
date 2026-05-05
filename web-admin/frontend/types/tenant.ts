@@ -58,6 +58,28 @@ export interface TenantActionResult {
   data: unknown;
 }
 
+export interface TenantDeployAppPayload {
+  tenantId: string;
+  maxAttempts?: number;
+  delayMs?: number;
+}
+
+export interface TenantDeployAppResult {
+  message: string;
+  data: {
+    tenantId?: string;
+    composeProjectName?: string;
+    rocketUrl?: string;
+    appEngineDir?: string;
+    commandUsed?: string;
+    stdout?: string;
+    stderr?: string;
+    reason?: string;
+    deployStatus?: string;
+    tenant?: Tenant;
+  };
+}
+
 export interface TenantDetailTeamMemberUser {
   id: string;
   tenantId: string;

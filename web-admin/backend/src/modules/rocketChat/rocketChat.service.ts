@@ -266,6 +266,28 @@ export class RocketChatService {
     );
   }
 
+  async listUsers(tenantId: string, offset = 0, count = 50) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.get(
+        `${tenant.rocketUrl}/api/v1/users.list?offset=${offset}&count=${count}`,
+        {
+          headers,
+        },
+      ),
+    );
+  }
+
+  async listUserTeams(tenantId: string, rocketUserId: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.get(
+        `${tenant.rocketUrl}/api/v1/users.listTeams?userId=${rocketUserId}`,
+        {
+          headers,
+        },
+      ),
+    );
+  }
+
   async createGroup(tenantId: string, name: string, teamId: string) {
     return this.callApi(tenantId, (headers, tenant) =>
       axios.post(

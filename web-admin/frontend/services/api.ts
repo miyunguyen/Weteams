@@ -7,6 +7,8 @@ import type {
 import type {
   CreateTenantPayload,
   CreateTenantResult,
+  TenantDeployAppPayload,
+  TenantDeployAppResult,
   TenantDetail,
   Tenant,
   TenantActionPayload,
@@ -205,9 +207,63 @@ export async function restartTenantService(payload: TenantActionPayload) {
   return response.data;
 }
 
+export async function deployTenantApp(payload: TenantDeployAppPayload) {
+  const response = await request<TenantDeployAppResult>('/tenants/deployments', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
 export async function fetchTenantLogs(payload: TenantActionPayload) {
   const response = await request<TenantActionResult>(`/tenants/${payload.tenantId}/logs`, {
     method: 'GET',
+  });
+
+  return response.data;
+}
+
+export async function getTenantUsers(tenantId: string, query: { page?: number; pageSize?: number; keyword?: string } = {}) {
+  const response = await request<any>(`/tenants/${tenantId}/users`, {
+    method: 'GET',
+    searchParams: query as Record<string, string | number | boolean | undefined>,
+  });
+
+  return response.data;
+}
+
+export async function getTenantTeams(tenantId: string, query: { page?: number; pageSize?: number; keyword?: string } = {}) {
+  const response = await request<any>(`/tenants/${tenantId}/teams`, {
+    method: 'GET',
+    searchParams: query as Record<string, string | number | boolean | undefined>,
+  });
+
+  return response.data;
+}
+
+export async function getTeamMembers(teamId: string, query: { page?: number; pageSize?: number } = {}) {
+  const response = await request<any>(`/teams/${teamId}/members`, {
+    method: 'GET',
+    searchParams: query as Record<string, string | number | boolean | undefined>,
+  });
+
+  return response.data;
+}
+
+export async function syncTenantUsersFromRocket(tenantId: string) {
+  const response = await request<any>('/users/sync-from-rocket', {
+    method: 'POST',
+    body: JSON.stringify({ tenantId }),
+  });
+
+  return response.data;
+}
+
+export async function syncTeamMembershipsFromRocket(tenantId: string) {
+  const response = await request<any>('/teams/sync-all-members', {
+    method: 'POST',
+    body: JSON.stringify({ tenantId }),
   });
 
   return response.data;
