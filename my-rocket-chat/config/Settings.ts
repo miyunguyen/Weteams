@@ -49,7 +49,10 @@ export const settings: Array<ISetting> = [
                 key: "gemini-2.0-flash-lite",
                 i18nLabel: "Gemini 2.0 Flash-Lite",
             },
-
+            {
+                key: "gemini-flash-lite-latest",
+                i18nLabel: "Gemini Flash-Lite Latest",
+            },
             {
                 key: "gemini-3-flash-preview",
                 i18nLabel: "Gemini 3 Flash Preview",
