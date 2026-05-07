@@ -48,6 +48,9 @@
         },
         {
             "name": "message.write"
+        },
+        {
+            "name": "slashcommand"
         }
     ]
 }
