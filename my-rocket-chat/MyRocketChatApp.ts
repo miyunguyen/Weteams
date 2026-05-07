@@ -9,10 +9,7 @@ import {
     IRead,
 } from "@rocket.chat/apps-engine/definition/accessors";
 import { App } from "@rocket.chat/apps-engine/definition/App";
-import {
-    AppMethod,
-    IAppInfo,
-} from "@rocket.chat/apps-engine/definition/metadata";
+import { IAppInfo } from "@rocket.chat/apps-engine/definition/metadata";
 import {
     IPostRoomCreate,
     IPostRoomDeleted,
@@ -20,10 +17,6 @@ import {
     IRoom,
     IRoomUserLeaveContext,
 } from "@rocket.chat/apps-engine/definition/rooms";
-import {
-    ISetting,
-    SettingType,
-} from "@rocket.chat/apps-engine/definition/settings";
 import { UIActionButtonContext } from "@rocket.chat/apps-engine/definition/ui";
 import {
     UIKitActionButtonInteractionContext,
@@ -32,35 +25,10 @@ import {
     IUIKitInteractionHandler,
     UIKitViewSubmitInteractionContext,
 } from "@rocket.chat/apps-engine/definition/uikit";
-import {
-    IPostUserCreated,
-    IPostUserLoggedIn,
-    IPostUserLoggedOut,
-    IUser,
-    IUserContext,
-} from "@rocket.chat/apps-engine/definition/users";
+import { IUser } from "@rocket.chat/apps-engine/definition/users";
+import { settings } from "./config/Settings";
+import { AICommand } from "./commands/AICommand";
 
-const settings: Array<ISetting> = [
-    {
-        id: "tenantId",
-        type: SettingType.STRING,
-        packageValue: "",
-        value: "",
-        required: false,
-        public: false,
-        i18nLabel: "Tenant Id",
-        i18nDescription: "",
-    },
-    {
-        id: "apiUrl",
-        type: SettingType.STRING,
-        packageValue: "https://api.weteams.net",
-        required: false,
-        public: false,
-        i18nLabel: "API URL",
-        i18nDescription: "",
-    },
-];
 export class MyRocketChatApp
     extends App
     implements
@@ -91,6 +59,10 @@ export class MyRocketChatApp
             settings.map((setting) =>
                 configuration.settings.provideSetting(setting),
             ),
+        );
+
+        configuration.slashCommands.provideSlashCommand(
+            new AICommand(this.getInfo()),
         );
     }
 
