@@ -53,6 +53,16 @@ export class AICommand implements ISlashCommand {
             return;
         }
 
+        // Hiện lại tin nhắn người dùng
+        await this.sendMessage(
+            modify,
+            read,
+            room,
+            sender,
+            `/weteams-ai ${userPrompt}`,
+            true,
+        );
+
         try {
             // Gửi tin nhắn chờ
             await this.notifyUser(
@@ -93,16 +103,6 @@ export class AICommand implements ISlashCommand {
                 http,
                 apiKey,
                 llmModel,
-            );
-
-            // Hiện lại tin nhắn người dùng
-            await this.sendMessage(
-                modify,
-                read,
-                room,
-                sender,
-                `/weteams-ai ${userPrompt}`,
-                true,
             );
 
             // Gửi kết quả cuối cùng

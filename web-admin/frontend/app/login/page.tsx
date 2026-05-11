@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { login, setStoredToken, getStoredToken, ApiError } from '@/services/api';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,14 @@ export default function LoginPage() {
       router.replace('/dashboard');
     }
   }, [router]);
+
+  useEffect(() => {
+    if (searchParams.get('reason') === 'session-expired') {
+      toast.error('Phiên đăng nhập đã hết hạn', {
+        description: 'Vui lòng đăng nhập lại để tiếp tục.',
+      });
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

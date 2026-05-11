@@ -20,6 +20,11 @@ import {
   getTeamMembers,
   syncTenantUsersFromRocket,
   syncTeamMembershipsFromRocket,
+  createTeamWithChannels,
+  importUsers,
+  createUser,
+  updateUser,
+  deleteUser,
 } from '@/services/api';
 import { getTenantSocket, type TenantRealtimeEvent } from '@/services/tenantRealtime';
 import type { TenantDetail, TenantDetailTeam, TenantDetailUser } from '@/types/tenant';
@@ -41,6 +46,25 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const [deployStatus, setDeployStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [deployMessage, setDeployMessage] = useState<string | null>(null);
 
+  const [createTeamOpen, setCreateTeamOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [userFormOpen, setUserFormOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+
+  const [teamForm, setTeamForm] = useState<{ roomName: string; channelsText: string }>({ roomName: '', channelsText: '' });
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [userForm, setUserForm] = useState<Record<string, any>>({ name: '', username: '', email: '', role: undefined, phoneNumber: '', citizenId: '', address: '', dateOfBirth: '', avatarUrl: '' });
+
+  // Handle 401 Unauthorized (token expired)
+  const handleAuthError = useCallback((error: unknown) => {
+    if (error instanceof ApiError && error.status === 401) {
+      toast.error('Phiên đăng nhập đã hết hạn', { description: 'Vui lòng đăng nhập lại' });
+      router.push('/login');
+      return true;
+    }
+    return false;
+  }, [router]);
+
   const loadTenant = useCallback(async () => {
     setIsLoading(true);
     setMessage(null);
@@ -49,13 +73,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       const result = await getTenantById(tenantId);
       setTenant(result);
     } catch (error) {
+      if (handleAuthError(error)) return;
       const text = error instanceof ApiError ? error.message : 'Unable to load tenant';
       setMessage(text);
       setTenant(null);
     } finally {
       setIsLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, handleAuthError]);
 
   useEffect(() => {
     if (!getStoredToken()) {
@@ -162,12 +187,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         setMessage(`${actionName} completed`);
       }
     } catch (error) {
-      const text = error instanceof ApiError ? error.message : 'Action failed';
-      setMessage(text);
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Action failed';
+        setMessage(text);
+      }
     } finally {
       setActionLoading(null);
     }
-  }, []);
+  }, [handleAuthError]);
 
   const handleDeployAppEngine = useCallback(async () => {
     if (!tenant) return;
@@ -186,12 +213,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       });
       void loadTenant();
     } catch (error) {
-      const text = error instanceof ApiError ? error.message : 'Deploy failed';
-      setDeployStatus('error');
-      setDeployMessage(text);
-      toast.error('Deploy app engine thất bại', { description: text });
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Deploy failed';
+        setDeployStatus('error');
+        setDeployMessage(text);
+        toast.error('Deploy app engine thất bại', { description: text });
+      }
     }
-  }, [tenant, loadTenant]);
+  }, [tenant, loadTenant, handleAuthError]);
 
   // teams table state
   const [teamsPage, setTeamsPage] = useState(1);
@@ -223,12 +252,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     try {
       const data = await getTenantTeams(tenant.id, { page: teamsPage, pageSize: teamsPageSize });
       setTeamsData(data);
-    } catch (e) {
-      // ignore, message shown elsewhere
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        // silently ignore other errors
+      }
     } finally {
       setTeamsLoading(false);
     }
-  }, [tenant, teamsPage, teamsPageSize]);
+  }, [tenant, teamsPage, teamsPageSize, handleAuthError]);
 
   const loadUsers = useCallback(async () => {
     if (!tenant) return;
@@ -236,12 +267,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     try {
       const data = await getTenantUsers(tenant.id, { page: usersPage, pageSize: usersPageSize });
       setUsersData(data);
-    } catch (e) {
-      // ignore
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        // silently ignore other errors
+      }
     } finally {
       setUsersLoading(false);
     }
-  }, [tenant, usersPage, usersPageSize]);
+  }, [tenant, usersPage, usersPageSize, handleAuthError]);
 
   const loadMembers = useCallback(async () => {
     if (!selectedTeamId) return;
@@ -249,12 +282,93 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     try {
       const data = await getTeamMembers(selectedTeamId, { page: membersPage, pageSize: membersPageSize });
       setMembersData(data);
-    } catch (e) {
-      // ignore
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        // silently ignore other errors
+      }
     } finally {
       setMembersLoading(false);
     }
-  }, [selectedTeamId, membersPage, membersPageSize]);
+  }, [selectedTeamId, membersPage, membersPageSize, handleAuthError]);
+
+  // Handlers that depend on loadTeams/loadUsers
+  const submitCreateTeam = useCallback(async () => {
+    if (!tenant) return;
+    try {
+      const channels = teamForm.channelsText
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      await createTeamWithChannels({ tenantId: tenant.id, roomName: teamForm.roomName, channelsName: channels });
+      toast.success('Team created');
+      setCreateTeamOpen(false);
+      setTeamForm({ roomName: '', channelsText: '' });
+      void loadTeams();
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Create team failed';
+        toast.error('Create team failed', { description: text });
+      }
+    }
+  }, [teamForm, tenant, loadTeams, handleAuthError]);
+
+  const submitImportUsers = useCallback(async () => {
+    if (!tenant || !importFile) return;
+    try {
+      const result = await importUsers(importFile, tenant.id);
+      toast.success('Import completed', { description: result?.message ?? '' });
+      setImportOpen(false);
+      setImportFile(null);
+      void loadUsers();
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Import failed';
+        toast.error('Import failed', { description: text });
+      }
+    }
+  }, [importFile, tenant, loadUsers, handleAuthError]);
+
+  const submitCreateOrUpdateUser = useCallback(async () => {
+    if (!tenant) return;
+    try {
+      if (editingUser) {
+        await updateUser(editingUser.id, { ...userForm, tenantId: tenant.id });
+        toast.success('User updated');
+      } else {
+        await createUser({ ...userForm, tenantId: tenant.id });
+        toast.success('User created');
+      }
+      setUserFormOpen(false);
+      setEditingUser(null);
+      void loadUsers();
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Save user failed';
+        toast.error('Save user failed', { description: text });
+      }
+    }
+  }, [editingUser, userForm, tenant, loadUsers, handleAuthError]);
+
+  const handleEditUser = useCallback((u: any) => {
+    setEditingUser(u);
+    setUserForm({ name: u.name ?? '', username: u.username ?? '', email: u.email ?? '', role: u.role ?? undefined, phoneNumber: u.phoneNumber ?? '', citizenId: u.citizenId ?? '', address: u.address ?? '', dateOfBirth: u.dateOfBirth ?? '', avatarUrl: u.avatarUrl ?? '' });
+    setUserFormOpen(true);
+  }, []);
+
+  const handleRemoveUser = useCallback(async (id: string) => {
+    if (!confirm('Delete user?')) return;
+    try {
+      await deleteUser(id);
+      toast.success('User deleted');
+      void loadUsers();
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Delete failed';
+        toast.error('Delete failed', { description: text });
+      }
+    }
+  }, [loadUsers, handleAuthError]);
 
   const handleSyncUsers = useCallback(async () => {
     if (!tenant) return;
@@ -266,12 +380,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       });
       void loadUsers();
     } catch (error) {
-      const text = error instanceof ApiError ? error.message : 'Sync failed';
-      toast.error('Không thể đồng bộ users', { description: text });
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Sync failed';
+        toast.error('Không thể đồng bộ users', { description: text });
+      }
     } finally {
       setSyncUsersLoading(false);
     }
-  }, [tenant, loadUsers]);
+  }, [tenant, loadUsers, handleAuthError]);
 
   const handleSyncTeams = useCallback(async () => {
     if (!tenant) return;
@@ -283,12 +399,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       });
       void loadTeams();
     } catch (error) {
-      const text = error instanceof ApiError ? error.message : 'Sync failed';
-      toast.error('Không thể đồng bộ teams', { description: text });
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Sync failed';
+        toast.error('Không thể đồng bộ teams', { description: text });
+      }
     } finally {
       setSyncTeamsLoading(false);
     }
-  }, [tenant, loadTeams]);
+  }, [tenant, loadTeams, handleAuthError]);
 
   useEffect(() => {
     void loadTeams();
@@ -310,9 +428,11 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       toast.success('Tenant đã được xoá');
       router.push('/dashboard');
     } catch (error) {
-      const text = error instanceof ApiError ? error.message : 'Delete failed';
-      toast.error('Không thể xoá tenant', { description: text });
-      setMessage(text);
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Delete failed';
+        toast.error('Không thể xoá tenant', { description: text });
+        setMessage(text);
+      }
     } finally {
       setIsDeleteLoading(false);
       setIsDeleteDialogOpen(false);
@@ -436,6 +556,76 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         ) : null}
       </section>
 
+      {/* Create Team Modal */}
+      {createTeamOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[90%] max-w-lg rounded-2xl bg-white p-6">
+            <h3 className="text-lg font-semibold">Create team</h3>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="text-sm font-medium">Team name</label>
+                <input value={teamForm.roomName} onChange={(e) => setTeamForm((s) => ({ ...s, roomName: e.target.value }))} className="mt-1 w-full rounded-md border px-3 py-2" />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Child channels (comma separated)</label>
+                <input value={teamForm.channelsText} onChange={(e) => setTeamForm((s) => ({ ...s, channelsText: e.target.value }))} className="mt-1 w-full rounded-md border px-3 py-2" />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button size="sm" onClick={() => setCreateTeamOpen(false)}>Cancel</Button>
+              <Button size="sm" onClick={submitCreateTeam}>Create</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Users Modal */}
+      {importOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[90%] max-w-md rounded-2xl bg-white p-6">
+            <h3 className="text-lg font-semibold">Import users</h3>
+            <p className="mt-2 text-sm text-slate-500">Upload an Excel file (.xlsx) with required columns: name,email,username,password</p>
+            <div className="mt-4">
+              <input type="file" accept=".xlsx,.xls,.csv" onChange={(e) => setImportFile(e.target.files?.[0] ?? null)} />
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button size="sm" onClick={() => { setImportOpen(false); setImportFile(null); }}>Cancel</Button>
+              <Button size="sm" onClick={submitImportUsers} disabled={!importFile}>Upload</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Create/Edit Modal */}
+      {userFormOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[95%] max-w-2xl rounded-2xl bg-white p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">{editingUser ? 'Edit user' : 'Create user'}</h3>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={() => { setUserFormOpen(false); setEditingUser(null); }}>Close</Button>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <input placeholder="Name" value={userForm.name} onChange={(e) => setUserForm((s) => ({ ...s, name: e.target.value }))} className="rounded-md border px-3 py-2" />
+              <input placeholder="Username" value={userForm.username} onChange={(e) => setUserForm((s) => ({ ...s, username: e.target.value }))} className="rounded-md border px-3 py-2" />
+              <input placeholder="Email" value={userForm.email} onChange={(e) => setUserForm((s) => ({ ...s, email: e.target.value }))} className="rounded-md border px-3 py-2" />
+              <input placeholder="Phone" value={userForm.phoneNumber} onChange={(e) => setUserForm((s) => ({ ...s, phoneNumber: e.target.value }))} className="rounded-md border px-3 py-2" />
+              <input placeholder="Citizen ID" value={userForm.citizenId} onChange={(e) => setUserForm((s) => ({ ...s, citizenId: e.target.value }))} className="rounded-md border px-3 py-2" />
+              <input placeholder="Address" value={userForm.address} onChange={(e) => setUserForm((s) => ({ ...s, address: e.target.value }))} className="rounded-md border px-3 py-2" />
+              <input placeholder="Date of birth (YYYY-MM-DD)" value={userForm.dateOfBirth} onChange={(e) => setUserForm((s) => ({ ...s, dateOfBirth: e.target.value }))} className="rounded-md border px-3 py-2" />
+              <input placeholder="Avatar URL" value={userForm.avatarUrl} onChange={(e) => setUserForm((s) => ({ ...s, avatarUrl: e.target.value }))} className="rounded-md border px-3 py-2" />
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              {editingUser ? <Button size="sm" onClick={() => { setEditingUser(null); setUserFormOpen(false); }}>Cancel</Button> : <Button size="sm" onClick={() => { setUserFormOpen(false); }}>Cancel</Button>}
+              <Button size="sm" onClick={submitCreateOrUpdateUser}>{editingUser ? 'Save' : 'Create'}</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
         <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
           <Layers3 className="h-4 w-4" />
@@ -502,13 +692,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             >
               {syncTeamsLoading ? 'Syncing...' : 'Sync from Rocket'}
             </Button>
-            <div className="text-sm text-slate-500">Page {teamsData?.pagination?.page || 1} / {teamsData?.pagination?.totalPages || 1}</div>
-            <div>
-              <Button size="sm" onClick={() => setTeamsPage((p) => Math.max(1, p - 1))} disabled={teamsLoading || (teamsData?.pagination?.page || 1) <= 1}>Prev</Button>
-            </div>
-            <div>
-              <Button size="sm" onClick={() => setTeamsPage((p) => p + 1)} disabled={teamsLoading || (teamsData?.pagination?.page || 1) >= (teamsData?.pagination?.totalPages || 1)}>Next</Button>
-            </div>
+            <Button size="sm" onClick={() => setCreateTeamOpen(true)} className="whitespace-nowrap">Create team</Button>
           </div>
         </div>
 
@@ -546,6 +730,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             </tbody>
           </table>
         </div>
+
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-slate-500">Page {teamsData?.pagination?.page || 1} / {teamsData?.pagination?.totalPages || 1}</div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => setTeamsPage((p) => Math.max(1, p - 1))} disabled={teamsLoading || (teamsData?.pagination?.page || 1) <= 1}>Prev</Button>
+            <Button size="sm" onClick={() => setTeamsPage((p) => p + 1)} disabled={teamsLoading || (teamsData?.pagination?.page || 1) >= (teamsData?.pagination?.totalPages || 1)}>Next</Button>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
@@ -563,13 +755,8 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             >
               {syncUsersLoading ? 'Syncing...' : 'Sync from Rocket'}
             </Button>
-            <div className="text-sm text-slate-500">Page {usersData?.pagination?.page || 1} / {usersData?.pagination?.totalPages || 1}</div>
-            <div>
-              <Button size="sm" onClick={() => setUsersPage((p) => Math.max(1, p - 1))} disabled={usersLoading || (usersData?.pagination?.page || 1) <= 1}>Prev</Button>
-            </div>
-            <div>
-              <Button size="sm" onClick={() => setUsersPage((p) => p + 1)} disabled={usersLoading || (usersData?.pagination?.page || 1) >= (usersData?.pagination?.totalPages || 1)}>Next</Button>
-            </div>
+            <Button size="sm" onClick={() => setImportOpen(true)}>Import users</Button>
+            <Button size="sm" onClick={() => { setEditingUser(null); setUserForm({ name: '', username: '', email: '', role: undefined, phoneNumber: '', citizenId: '', address: '', dateOfBirth: '', avatarUrl: '' }); setUserFormOpen(true); }}>Add user</Button>
           </div>
         </div>
 
@@ -582,6 +769,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                 <th className="px-3 py-2">Email</th>
                 <th className="px-3 py-2">Role</th>
                 <th className="px-3 py-2">Rocket ID</th>
+                <th className="px-3 py-2">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -593,6 +781,12 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                     <td className="px-3 py-3">{u.email || 'N/A'}</td>
                     <td className="px-3 py-3">{u.role || 'N/A'}</td>
                     <td className="px-3 py-3">{u.rocketUserId || '-'}</td>
+                    <td className="px-3 py-3">
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => handleEditUser(u)}>Edit</Button>
+                        <Button size="sm" onClick={() => handleRemoveUser(u.id)}>Delete</Button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -602,6 +796,14 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-slate-500">Page {usersData?.pagination?.page || 1} / {usersData?.pagination?.totalPages || 1}</div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => setUsersPage((p) => Math.max(1, p - 1))} disabled={usersLoading || (usersData?.pagination?.page || 1) <= 1}>Prev</Button>
+            <Button size="sm" onClick={() => setUsersPage((p) => p + 1)} disabled={usersLoading || (usersData?.pagination?.page || 1) >= (usersData?.pagination?.totalPages || 1)}>Next</Button>
+          </div>
         </div>
       </section>
 
