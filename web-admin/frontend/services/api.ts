@@ -84,6 +84,11 @@ async function parseResponse<T>(response: Response): Promise<ApiSuccess<T>> {
     : await response.text().catch(() => '');
 
   if (!response.ok) {
+    // Handle token expiration (401 Unauthorized)
+    if (response.status === 401) {
+      clearStoredToken();
+    }
+
     const errorPayload: ApiErrorResponse =
       parsed && typeof parsed === 'object'
         ? (parsed as ApiErrorResponse)
@@ -264,6 +269,60 @@ export async function syncTeamMembershipsFromRocket(tenantId: string) {
   const response = await request<any>('/teams/sync-all-members', {
     method: 'POST',
     body: JSON.stringify({ tenantId }),
+  });
+
+  return response.data;
+}
+
+export async function createTeamWithChannels(payload: { tenantId: string; roomName: string; channelsName?: string[] }) {
+  const response = await request<any>('/teams', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+export async function importUsers(file: File, tenantId: string) {
+  const token = getStoredToken();
+  const url = buildUrl('/users/imports');
+
+  const form = new FormData();
+  form.append('file', file);
+  form.append('tenantId', tenantId);
+
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: form,
+  });
+
+  return parseResponse<any>(response).then((r) => r.data);
+}
+
+export async function createUser(payload: Record<string, unknown>) {
+  const response = await request<any>('/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+export async function updateUser(userId: string, payload: Record<string, unknown>) {
+  const response = await request<any>(`/users/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+export async function deleteUser(userId: string) {
+  const response = await request<any>(`/users/${userId}`, {
+    method: 'DELETE',
   });
 
   return response.data;
