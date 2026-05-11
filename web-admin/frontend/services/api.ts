@@ -39,6 +39,20 @@ function isBrowser() {
   return typeof window !== 'undefined';
 }
 
+function redirectToLogin() {
+  if (!isBrowser()) {
+    return;
+  }
+
+  const currentPath = window.location.pathname;
+
+  if (currentPath === '/login') {
+    return;
+  }
+
+  window.location.replace('/login?reason=session-expired');
+}
+
 export function getStoredToken() {
   if (!isBrowser()) {
     return null;
@@ -87,6 +101,7 @@ async function parseResponse<T>(response: Response): Promise<ApiSuccess<T>> {
     // Handle token expiration (401 Unauthorized)
     if (response.status === 401) {
       clearStoredToken();
+      redirectToLogin();
     }
 
     const errorPayload: ApiErrorResponse =
