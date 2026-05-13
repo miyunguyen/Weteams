@@ -3,6 +3,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { AppException } from 'src/common/exceptions/app.exception';
+import { VietnameseUtil } from 'src/common/utils/vietnamese.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
 import { CreateFromRoomDto } from './dto/create-from-room.dto';
@@ -37,108 +38,136 @@ export class TeamService {
       });
     }
 
-    const teamResponse = await this.rocketChat.createTeam(
-      tenantId,
-      roomName,
-      1,
-    );
-    const teamData = teamResponse?.data;
-    const rocketTeamId = teamData?.team?._id ?? teamData?.team?.id;
-
-    if (!teamData?.success || !rocketTeamId) {
-      throw new AppException(HttpStatus.BAD_REQUEST, {
-        message: 'Tạo team trên Rocket.Chat thất bại',
-        errorCode: 'ROCKET_CREATE_TEAM_FAILED',
-        data: teamData ?? null,
-      });
-    }
-
-    const joinCode = this.generateJoinCode();
-    const createdTeam = await this.prisma.team.create({
-      data: {
+    try {
+      const teamResponse = await this.rocketChat.createTeam(
         tenantId,
-        roomId: String(teamData?.team?.roomId ?? rocketTeamId),
-        name: roomName,
-        joinCode,
-        teamId: String(rocketTeamId),
-      },
-    });
-
-    const joinCodeText = `Mã tham gia team: ${joinCode}`;
-    const postMessageResponse = await this.rocketChat.postMessage(
-      tenantId,
-      createdTeam.roomId,
-      joinCodeText,
-    );
-    const postMessageData = postMessageResponse?.data;
-    const messageId: string = postMessageData?.message?._id;
-
-    if (!postMessageData?.success || !messageId) {
-      throw new AppException(HttpStatus.BAD_REQUEST, {
-        message: 'Gửi message join code thất bại',
-        errorCode: 'ROCKET_POST_JOIN_CODE_FAILED',
-        data: postMessageData ?? null,
-      });
-    }
-
-    const pinResponse = await this.rocketChat.pinMessage(tenantId, messageId);
-    const pinData = pinResponse?.data;
-
-    if (!pinData?.success) {
-      throw new AppException(HttpStatus.BAD_REQUEST, {
-        message: 'Pin message join code thất bại',
-        errorCode: 'ROCKET_PIN_JOIN_CODE_FAILED',
-        data: pinData ?? null,
-      });
-    }
-
-    const createGroup = async (channelName: string): Promise<any> => {
-      return this.rocketChat.createGroup(
-        tenantId,
-        channelName,
-        String(rocketTeamId),
+        roomName,
+        1,
       );
-    };
+      const teamData = teamResponse?.data;
+      const rocketTeamId = teamData?.team?._id ?? teamData?.team?.id;
 
-    const createdChannels: Array<{
-      inputName: string;
-      name: string;
-      rocketResponse: unknown;
-    }> = [];
-
-    for (const rawChannelName of channelsName) {
-      const suffix = this.normalizeChannelSuffix(rawChannelName);
-      if (!suffix) {
-        continue;
-      }
-
-      const childName = this.buildChildChannelName(roomName, suffix);
-      const groupResponse = await createGroup(childName);
-      const groupData = groupResponse?.data;
-
-      if (!groupData?.success) {
+      if (!teamData?.success || !rocketTeamId) {
         throw new AppException(HttpStatus.BAD_REQUEST, {
-          message: `Tạo group ${childName} thất bại`,
-          errorCode: 'ROCKET_CREATE_GROUP_FAILED',
-          data: groupData ?? null,
+          message: 'Tạo team trên Rocket.Chat thất bại',
+          errorCode: 'ROCKET_CREATE_TEAM_FAILED',
+          data: teamData ?? null,
         });
       }
 
-      createdChannels.push({
-        inputName: rawChannelName,
-        name: childName,
-        rocketResponse: groupData,
+      const joinCode = this.generateJoinCode();
+      const createdTeam = await this.prisma.team.create({
+        data: {
+          tenantId,
+          roomId: String(teamData?.team?.roomId ?? rocketTeamId),
+          name: roomName,
+          joinCode,
+          teamId: String(rocketTeamId),
+        },
+      });
+
+      const joinCodeText = `Mã tham gia team: ${joinCode}`;
+      const postMessageResponse = await this.rocketChat.postMessage(
+        tenantId,
+        createdTeam.roomId,
+        joinCodeText,
+      );
+      const postMessageData = postMessageResponse?.data;
+      const messageId: string = postMessageData?.message?._id;
+
+      if (!postMessageData?.success || !messageId) {
+        throw new AppException(HttpStatus.BAD_REQUEST, {
+          message: 'Gửi message join code thất bại',
+          errorCode: 'ROCKET_POST_JOIN_CODE_FAILED',
+          data: postMessageData ?? null,
+        });
+      }
+
+      const pinResponse = await this.rocketChat.pinMessage(tenantId, messageId);
+      const pinData = pinResponse?.data;
+
+      if (!pinData?.success) {
+        throw new AppException(HttpStatus.BAD_REQUEST, {
+          message: 'Pin message join code thất bại',
+          errorCode: 'ROCKET_PIN_JOIN_CODE_FAILED',
+          data: pinData ?? null,
+        });
+      }
+
+      const createGroup = async (channelName: string): Promise<any> => {
+        return this.rocketChat.createGroup(
+          tenantId,
+          channelName,
+          String(rocketTeamId),
+        );
+      };
+
+      const createdChannels: Array<{
+        inputName: string;
+        name: string;
+        rocketResponse: unknown;
+      }> = [];
+
+      for (const rawChannelName of channelsName) {
+        const suffix = this.normalizeChannelSuffix(rawChannelName);
+        if (!suffix) {
+          continue;
+        }
+
+        const childName = this.buildChildChannelName(roomName, suffix);
+        try {
+          const groupResponse = await createGroup(childName);
+          const groupData = groupResponse?.data;
+
+          if (!groupData?.success) {
+            const errorMsg = groupData?.error || 'Unknown error';
+            throw new AppException(HttpStatus.BAD_REQUEST, {
+              message: `Tạo group ${childName} thất bại: ${errorMsg}`,
+              errorCode: 'ROCKET_CREATE_GROUP_FAILED',
+              data: groupData ?? groupResponse,
+            });
+          }
+
+          createdChannels.push({
+            inputName: rawChannelName,
+            name: childName,
+            rocketResponse: groupData,
+          });
+        } catch (error) {
+          // If it's already an AppException, rethrow it
+          if (error instanceof AppException) {
+            throw error;
+          }
+          // Otherwise wrap the error
+          throw new AppException(HttpStatus.BAD_REQUEST, {
+            message: `Lỗi khi tạo group ${childName}: ${error instanceof Error ? error.message : String(error)}`,
+            errorCode: 'ROCKET_CREATE_GROUP_ERROR',
+            data: { rawChannelName, childName, error: String(error) },
+          });
+        }
+      }
+
+      return {
+        message: 'Tạo team kèm channels thành công',
+        data: {
+          team: createdTeam,
+          joinCodeMessageId: messageId,
+          channels: createdChannels,
+        },
+      };
+    } catch (error) {
+      // If it's already an AppException, rethrow it
+      if (error instanceof AppException) {
+        throw error;
+      }
+      // Log unexpected errors and wrap them
+      console.error('Unexpected error in createTeamWithChannels:', error);
+      throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: `Lỗi không mong đợi khi tạo team: ${error instanceof Error ? error.message : String(error)}`,
+        errorCode: 'TEAM_CREATION_UNEXPECTED_ERROR',
+        data: { error: String(error) },
       });
     }
-
-    return {
-      message: 'Tạo team kèm channels thành công',
-      data: {
-        team: createdTeam,
-        joinCodeMessageId: messageId,
-        channels: createdChannels,
-      },
-    };
   }
 
   async createFromRoom(dto: CreateFromRoomDto) {
@@ -385,28 +414,38 @@ export class TeamService {
     };
   }
 
+  private transliterateVietnamese(text: string): string {
+    return VietnameseUtil.transliterate(text);
+  }
+
   private normalizeChannelSuffix(value: string): string {
-    return value
+    return this.transliterateVietnamese(value)
       .trim()
       .replace(/\s+/g, '_')
+      .replace(/[^\w-]/g, '')
       .replace(/_+/g, '_')
-      .replace(/^_+|_+$/g, '');
+      .replace(/^_+|_+$/g, '')
+      .toLowerCase();
   }
 
   private buildChildChannelName(
     parentName: string,
     childSuffix: string,
   ): string {
-    const normalizedParent = parentName
+    const normalizedParent = this.transliterateVietnamese(parentName)
       .trim()
       .replace(/\s+/g, '_')
-      .replace(/_+/g, '_');
+      .replace(/[^\w-]/g, '')
+      .replace(/_+/g, '_')
+      .toLowerCase();
 
-    if (childSuffix.startsWith(`${normalizedParent}_`)) {
-      return childSuffix;
+    const normalizedChild = childSuffix.toLowerCase();
+
+    if (normalizedChild.startsWith(`${normalizedParent}_`)) {
+      return normalizedChild;
     }
 
-    return `${normalizedParent}_${childSuffix}`;
+    return `${normalizedParent}_${normalizedChild}`;
   }
 
   async searchTeams(dto: {
