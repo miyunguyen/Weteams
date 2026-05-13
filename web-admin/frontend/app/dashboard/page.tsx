@@ -16,7 +16,7 @@ import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { SearchBar } from '@/components/SearchBar';
 import { TenantCard } from '@/components/TenantCard';
-import { ApiError, createTenant, getStoredToken, getTenants } from '@/services/api';
+import { ApiError, createTenant, getCurrentUser, getStoredToken, getTenants } from '@/services/api';
 import { getTenantSocket } from '@/services/tenantRealtime';
 import type { CreateTenantPayload, DeployStatus, Tenant } from '@/types/tenant';
 
@@ -65,6 +65,7 @@ export default function DashboardPage() {
   const [isCreatingTenant, setIsCreatingTenant] = useState(false);
   const [activeProvisionTenantId, setActiveProvisionTenantId] = useState<string | null>(null);
   const [createForm, setCreateForm] = useState<CreateTenantFormState>(initialCreateTenantForm);
+  const [currentUser, setCurrentUser] = useState<{ role?: string } | null>(null);
   const currentSearchRef = useRef(searchTerm);
   const lastProvisionToastStatus = useRef<DeployStatus | null>(null);
 
@@ -114,6 +115,21 @@ export default function DashboardPage() {
 
     void loadTenants(searchTerm);
   }, [router, searchTerm, loadTenants]);
+
+  useEffect(() => {
+    if (!getStoredToken()) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        const me = await getCurrentUser();
+        setCurrentUser(me);
+      } catch {
+        setCurrentUser(null);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     currentSearchRef.current = searchTerm;
@@ -180,6 +196,13 @@ export default function DashboardPage() {
   };
 
   const handleAddTenant = () => {
+    if (currentUser?.role !== 'SUPER_ADMIN') {
+      toast.error('Không có quyền tạo tenant', {
+        description: 'Chức năng này chỉ dành cho super admin.',
+      });
+      return;
+    }
+
     setCreateForm(initialCreateTenantForm);
     setIsInfrastructureOpen(false);
     setIsAdvancedOpen(false);
@@ -241,10 +264,13 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button onClick={handleAddTenant}>Thêm tenant</Button>
+            {currentUser?.role === 'SUPER_ADMIN' ? (
+              <Button onClick={handleAddTenant}>Thêm tenant</Button>
+            ) : null}
             <Button variant="secondary" onClick={handleRefresh} disabled={isPending}>
               <span className="inline-flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
+                Làm mới
               </span>
             </Button>
           </div>

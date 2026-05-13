@@ -95,8 +95,25 @@ export class TenantService {
     });
   }
 
+  private ensureSuperAdmin(user: any): void {
+    if (!user) {
+      throw new AppException(HttpStatus.UNAUTHORIZED, {
+        message: 'Chưa xác thực',
+        errorCode: 'UNAUTHORIZED',
+      });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user.role !== 'SUPER_ADMIN') {
+      throw new AppException(HttpStatus.FORBIDDEN, {
+        message: 'Chỉ super admin mới được tạo tenant mới',
+        errorCode: 'FORBIDDEN',
+      });
+    }
+  }
+
   async provisionTenant(dto: ProvisionTenantDto, user?: any) {
-    this.checkTenantAccess(user);
+    this.ensureSuperAdmin(user);
 
     const domain = this.normalizeDomain(dto.domain);
     if (!domain) {
@@ -366,7 +383,7 @@ export class TenantService {
       this.cleanString(dto.composeProjectName),
     );
 
-    this.checkTenantAccess(user, tenantRef.id);
+    this.ensureSuperAdmin(user);
 
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantRef.id },
@@ -453,7 +470,7 @@ export class TenantService {
       this.cleanString(dto.composeProjectName),
     );
 
-    this.checkTenantAccess(user, tenant.id);
+    this.ensureSuperAdmin(user);
 
     const composeDir = this.resolveComposeDir();
     const resolvedComposeProjectName = String(tenant.composeProjectName);

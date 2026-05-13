@@ -497,18 +497,20 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button
-              variant="secondary"
-              onClick={handleDeployAppEngine}
-              disabled={deployStatus === 'loading' || actionLoading !== null}
-              icon={deployStatus === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
-            >
-              {deployStatus === 'loading'
-                ? 'Deploying...'
-                : deployStatus === 'success'
-                  ? 'Redeploy app engine'
-                  : 'Deploy app engine'}
-            </Button>
+            {currentUser?.role === 'SUPER_ADMIN' ? (
+              <Button
+                variant="secondary"
+                onClick={handleDeployAppEngine}
+                disabled={deployStatus === 'loading' || actionLoading !== null}
+                icon={deployStatus === 'loading' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+              >
+                {deployStatus === 'loading'
+                  ? 'Đang deploy...'
+                  : deployStatus === 'success'
+                    ? 'Deploy lại app engine'
+                    : 'Deploy app engine'}
+              </Button>
+            ) : null}
             {tenant.rootUrl ? (
               <a
                 href={toExternalUrl(tenant.rootUrl)}
@@ -520,9 +522,11 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                 <ExternalLink className="h-4 w-4" />
               </a>
             ) : null}
-            <Button onClick={() => setIsDeleteDialogOpen(true)} disabled={actionLoading !== null}>
-              Delete Tenant
-            </Button>
+            {currentUser?.role === 'SUPER_ADMIN' ? (
+              <Button onClick={() => setIsDeleteDialogOpen(true)} disabled={actionLoading !== null}>
+                Xoá tenant
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -939,10 +943,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
-        title="Delete tenant"
-        description={`Delete ${tenant.name}? This action will remove tenant access and mark it for cleanup.`}
-        confirmText={isDeleteLoading ? 'Deleting...' : 'Delete tenant'}
-        cancelText="Cancel"
+        title="Xoá tenant"
+        description={`Xoá ${tenant.name}? Hành động này sẽ thu hồi truy cập và đánh dấu để dọn dẹp.`}
+        confirmText={isDeleteLoading ? 'Đang xoá...' : 'Xoá tenant'}
+        cancelText="Hủy"
         loading={isDeleteLoading}
         destructive
         onConfirm={handleDelete}
