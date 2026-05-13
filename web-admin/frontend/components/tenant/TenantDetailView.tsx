@@ -136,7 +136,6 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             { label: 'Status', value: tenant.deployStatus },
             { label: 'Teams', value: String(tenant._count.teams) },
             { label: 'Users', value: String(tenant._count.users) },
-            { label: 'Team members', value: String(tenant.teamMemberTotal) },
             { label: 'Last provisioned', value: formatDate(tenant.lastProvisionedAt) },
           ]
         : [],
@@ -674,7 +673,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
         <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
           <Layers3 className="h-4 w-4" />
-          Overview
+          Tổng quan
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {overviewCards.map((card) => (
