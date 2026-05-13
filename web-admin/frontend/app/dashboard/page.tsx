@@ -233,10 +233,10 @@ export default function DashboardPage() {
               Trang quản trị
             </p>
             <h2 className="font-heading text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              Quản lý tenant, thao tác và trạng thái trong một màn hình
+              Quản lý tenant
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              Tìm kiếm, kiểm tra và quản lý tenant với phản hồi provision realtime cùng liên kết truy cập trực tiếp.
+              Tìm kiếm, kiểm tra tenant với phản hồi realtime.
             </p>
           </div>
 
@@ -245,14 +245,13 @@ export default function DashboardPage() {
             <Button variant="secondary" onClick={handleRefresh} disabled={isPending}>
               <span className="inline-flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
-                Làm mới
               </span>
             </Button>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-          <SearchBar value={searchTerm} onChange={setSearchTerm} />
+          <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder='Nhập tên hoặc domain'/>
           <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
             {visibleTenants.length} tenant đang hiển thị
           </div>
@@ -326,8 +325,8 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/80 p-10 text-center shadow-container">
-          <h3 className="text-lg font-semibold text-slate-900">No tenants found</h3>
-          <p className="mt-2 text-sm text-slate-500">Try another search term or refresh the dataset.</p>
+          <h3 className="text-lg font-semibold text-slate-900">Không tìm thấy tenant nào</h3>
+          <p className="mt-2 text-sm text-slate-500">Hãy thử tìm kiếm lại hoặc refresh</p>
         </div>
       )}
 
