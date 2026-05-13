@@ -34,10 +34,10 @@ export function DashboardShell({ children }: { children: import('react').ReactNo
 
           <div className="flex items-center gap-2">
             <div className="hidden rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 md:block">
-              {pathname.startsWith('/dashboard/tenant') ? 'Tenant detail' : 'Dashboard'}
+              {pathname.startsWith('/dashboard/tenant') ? 'Chi tiết tenant' : 'Trang quản trị'}
             </div>
             <Button variant="secondary" size="sm" onClick={handleLogout}>
-              Logout
+              Đăng xuất
             </Button>
           </div>
         </div>
