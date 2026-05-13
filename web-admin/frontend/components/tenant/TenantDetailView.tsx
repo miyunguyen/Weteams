@@ -71,7 +71,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     'Phụ huynh',
   ];
   const [selectedChannels, setSelectedChannels] = useState<Set<string>>(
-    new Set(DEFAULT_CHANNELS),
+    new Set(),
   );
   const [customChannels, setCustomChannels] = useState<string[]>([]);
   const [newChannel, setNewChannel] = useState('');
@@ -344,7 +344,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         toast.error('Create team failed', { description: text });
       }
     }
-  }, [teamForm, tenant, loadTeams, handleAuthError]);
+  }, [teamForm, tenant, loadTeams, handleAuthError, selectedChannels]);
 
   const submitImportUsers = useCallback(async () => {
     if (!tenant || !importFile) return;

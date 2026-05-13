@@ -424,8 +424,7 @@ export class TeamService {
       .replace(/\s+/g, '_')
       .replace(/[^\w-]/g, '')
       .replace(/_+/g, '_')
-      .replace(/^_+|_+$/g, '')
-      .toLowerCase();
+      .replace(/^_+|_+$/g, '');
   }
 
   private buildChildChannelName(
@@ -435,11 +434,9 @@ export class TeamService {
     const normalizedParent = this.transliterateVietnamese(parentName)
       .trim()
       .replace(/\s+/g, '_')
-      .replace(/[^\w-]/g, '')
-      .replace(/_+/g, '_')
-      .toLowerCase();
+      .replace(/[^\w-]/g, '');
 
-    const normalizedChild = childSuffix.toLowerCase();
+    const normalizedChild = childSuffix;
 
     if (normalizedChild.startsWith(`${normalizedParent}_`)) {
       return normalizedChild;
