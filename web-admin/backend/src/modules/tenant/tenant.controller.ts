@@ -13,6 +13,7 @@ import { TenantService } from './tenant.service';
 import { UserService } from '../user/user.service';
 import { TeamService } from '../team/team.service';
 import { ProvisionTenantDto } from './dto/provision-tenant.dto';
+import { CreateTenantAdminDto } from './dto/create-tenant-admin.dto';
 import { DeprovisionTenantDto } from './dto/deprovision-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
 import { DeployAppDto } from './dto/deploy-app.dto';
@@ -102,5 +103,15 @@ export class TenantController {
   @Get()
   getTenantsList(@Query() query: QueryTenantsDto, @CurrentUser() user: any) {
     return this.tenantService.getTenantsList(query, user);
+  }
+
+  @HttpCode(201)
+  @Post(':tenantId/admins')
+  createTenantAdmin(
+    @Param('tenantId') tenantId: string,
+    @Body() dto: CreateTenantAdminDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.tenantService.createTenantAdmin(tenantId, dto, user);
   }
 }

@@ -25,6 +25,8 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  getCurrentUser,
+  createTenantAdmin,
 } from '@/services/api';
 import { getTenantSocket, type TenantRealtimeEvent } from '@/services/tenantRealtime';
 import type { TenantDetail, TenantDetailTeam, TenantDetailUser } from '@/types/tenant';
@@ -54,6 +56,9 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const [teamForm, setTeamForm] = useState<{ roomName: string; channelsText: string }>({ roomName: '', channelsText: '' });
   const [importFile, setImportFile] = useState<File | null>(null);
   const [userForm, setUserForm] = useState<Record<string, any>>({ name: '', username: '', email: '', role: undefined, phoneNumber: '', citizenId: '', address: '', dateOfBirth: '', avatarUrl: '' });
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
+  const [createTenantAdminOpen, setCreateTenantAdminOpen] = useState(false);
+  const [tenantAdminForm, setTenantAdminForm] = useState<{ email: string; username: string; password: string; role?: string }>({ email: '', username: '', password: '', role: 'ADMIN' });
 
   // Handle 401 Unauthorized (token expired)
   const handleAuthError = useCallback((error: unknown) => {
@@ -88,7 +93,15 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       return;
     }
 
-    void loadTenant();
+    void (async () => {
+      try {
+        const me = await getCurrentUser();
+        setCurrentUser(me);
+      } catch (err) {
+        // ignore
+      }
+      void loadTenant();
+    })();
   }, [router, loadTenant]);
 
   useEffect(() => {
@@ -560,20 +573,48 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       {createTeamOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-[90%] max-w-lg rounded-2xl bg-white p-6">
-            <h3 className="text-lg font-semibold">Create team</h3>
+            <h3 className="text-lg font-semibold">Tạo team</h3>
             <div className="mt-4 space-y-3">
               <div>
-                <label className="text-sm font-medium">Team name</label>
+                <label className="text-sm font-medium">Tên team</label>
                 <input value={teamForm.roomName} onChange={(e) => setTeamForm((s) => ({ ...s, roomName: e.target.value }))} className="mt-1 w-full rounded-md border px-3 py-2" />
               </div>
               <div>
-                <label className="text-sm font-medium">Child channels (comma separated)</label>
+                <label className="text-sm font-medium">Channel con (ngăn cách bằng dấu phẩy)</label>
                 <input value={teamForm.channelsText} onChange={(e) => setTeamForm((s) => ({ ...s, channelsText: e.target.value }))} className="mt-1 w-full rounded-md border px-3 py-2" />
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <Button size="sm" onClick={() => setCreateTeamOpen(false)}>Cancel</Button>
-              <Button size="sm" onClick={submitCreateTeam}>Create</Button>
+              <Button size="sm" onClick={() => setCreateTeamOpen(false)}>Hủy</Button>
+              <Button size="sm" onClick={submitCreateTeam}>Tạo</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Tenant Admin Modal */}
+      {createTenantAdminOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[90%] max-w-md rounded-2xl bg-white p-6">
+            <h3 className="text-lg font-semibold">Tạo admin tenant</h3>
+            <div className="mt-4 space-y-3">
+              <input placeholder="Email" value={tenantAdminForm.email} onChange={(e) => setTenantAdminForm((s) => ({ ...s, email: e.target.value }))} className="w-full rounded-md border px-3 py-2" />
+              <input placeholder="Tên đăng nhập" value={tenantAdminForm.username} onChange={(e) => setTenantAdminForm((s) => ({ ...s, username: e.target.value }))} className="w-full rounded-md border px-3 py-2" />
+              <input placeholder="Mật khẩu" type="password" value={tenantAdminForm.password} onChange={(e) => setTenantAdminForm((s) => ({ ...s, password: e.target.value }))} className="w-full rounded-md border px-3 py-2" />
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button size="sm" onClick={() => setCreateTenantAdminOpen(false)}>Hủy</Button>
+              <Button size="sm" onClick={async () => {
+                try {
+                  await createTenantAdmin(tenantId, tenantAdminForm);
+                  toast.success('Đã tạo admin tenant');
+                  setCreateTenantAdminOpen(false);
+                  void loadTenant();
+                } catch (error) {
+                  const text = error instanceof ApiError ? error.message : 'Không thể tạo admin';
+                  toast.error('Không thể tạo admin', { description: text });
+                }
+              }}>Tạo</Button>
             </div>
           </div>
         </div>
@@ -681,7 +722,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
             <ShieldCheck className="h-4 w-4" />
-            Teams
+            Teams Rocket.Chat
           </div>
           <div className="flex items-center gap-2">
             <Button 
@@ -690,9 +731,9 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               disabled={syncTeamsLoading}
               className="whitespace-nowrap"
             >
-              {syncTeamsLoading ? 'Syncing...' : 'Sync from Rocket'}
+              {syncTeamsLoading ? 'Đang đồng bộ...' : 'Đồng bộ từ Rocket'}
             </Button>
-            <Button size="sm" onClick={() => setCreateTeamOpen(true)} className="whitespace-nowrap">Create team</Button>
+            <Button size="sm" onClick={() => setCreateTeamOpen(true)} className="whitespace-nowrap">Tạo team</Button>
           </div>
         </div>
 
@@ -700,12 +741,12 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           <table className="w-full table-auto text-sm">
             <thead>
               <tr className="text-left text-slate-500">
-                <th className="px-3 py-2">Name</th>
+                <th className="px-3 py-2">Tên</th>
                 <th className="px-3 py-2">Room ID</th>
                 <th className="px-3 py-2">Team ID</th>
-                <th className="px-3 py-2">Join code</th>
-                <th className="px-3 py-2">Members</th>
-                <th className="px-3 py-2">Actions</th>
+                <th className="px-3 py-2">Mã tham gia</th>
+                <th className="px-3 py-2">Thành viên</th>
+                <th className="px-3 py-2">Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -724,7 +765,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-6 text-center text-slate-500">No teams</td>
+                  <td colSpan={5} className="p-6 text-center text-slate-500">Chưa có team</td>
                 </tr>
               )}
             </tbody>
@@ -732,10 +773,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-slate-500">Page {teamsData?.pagination?.page || 1} / {teamsData?.pagination?.totalPages || 1}</div>
+          <div className="text-sm text-slate-500">Trang {teamsData?.pagination?.page || 1} / {teamsData?.pagination?.totalPages || 1}</div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => setTeamsPage((p) => Math.max(1, p - 1))} disabled={teamsLoading || (teamsData?.pagination?.page || 1) <= 1}>Prev</Button>
-            <Button size="sm" onClick={() => setTeamsPage((p) => p + 1)} disabled={teamsLoading || (teamsData?.pagination?.page || 1) >= (teamsData?.pagination?.totalPages || 1)}>Next</Button>
+            <Button size="sm" onClick={() => setTeamsPage((p) => Math.max(1, p - 1))} disabled={teamsLoading || (teamsData?.pagination?.page || 1) <= 1}>Trước</Button>
+            <Button size="sm" onClick={() => setTeamsPage((p) => p + 1)} disabled={teamsLoading || (teamsData?.pagination?.page || 1) >= (teamsData?.pagination?.totalPages || 1)}>Sau</Button>
           </div>
         </div>
       </section>
@@ -743,8 +784,51 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+            <ShieldCheck className="h-4 w-4" />
+            Admin tenant
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => setCreateTenantAdminOpen(true)}>Thêm admin tenant</Button>
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full table-auto text-sm">
+            <thead>
+              <tr className="text-left text-slate-500">
+                <th className="px-3 py-2">Tên đăng nhập</th>
+                <th className="px-3 py-2">Email</th>
+                <th className="px-3 py-2">Role</th>
+                <th className="px-3 py-2">Trạng thái</th>
+                <th className="px-3 py-2">Tạo lúc</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tenant.tenantAdmins?.length > 0 ? (
+                tenant.tenantAdmins.map((admin) => (
+                  <tr key={admin.id} className="border-t">
+                    <td className="px-3 py-3">{admin.username}</td>
+                    <td className="px-3 py-3">{admin.email}</td>
+                    <td className="px-3 py-3">{admin.role}</td>
+                    <td className="px-3 py-3">{admin.isActive ? 'Đang hoạt động' : 'Đã khóa'}</td>
+                    <td className="px-3 py-3">{formatDate(admin.createdAt)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-slate-500">Chưa có admin tenant</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
             <Users className="h-4 w-4" />
-            Users
+            Users Rocket.Chat
           </div>
           <div className="flex items-center gap-2">
             <Button 
@@ -753,10 +837,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               disabled={syncUsersLoading}
               className="whitespace-nowrap"
             >
-              {syncUsersLoading ? 'Syncing...' : 'Sync from Rocket'}
+              {syncUsersLoading ? 'Đang đồng bộ...' : 'Đồng bộ từ Rocket'}
             </Button>
-            <Button size="sm" onClick={() => setImportOpen(true)}>Import users</Button>
-            <Button size="sm" onClick={() => { setEditingUser(null); setUserForm({ name: '', username: '', email: '', role: undefined, phoneNumber: '', citizenId: '', address: '', dateOfBirth: '', avatarUrl: '' }); setUserFormOpen(true); }}>Add user</Button>
+            <Button size="sm" onClick={() => setImportOpen(true)}>Import user</Button>
+            <Button size="sm" onClick={() => { setEditingUser(null); setUserForm({ name: '', username: '', email: '', role: undefined, phoneNumber: '', citizenId: '', address: '', dateOfBirth: '', avatarUrl: '' }); setUserFormOpen(true); }}>Thêm user</Button>
           </div>
         </div>
 
@@ -764,12 +848,12 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           <table className="w-full table-auto text-sm">
             <thead>
               <tr className="text-left text-slate-500">
-                <th className="px-3 py-2">Name</th>
+                <th className="px-3 py-2">Tên</th>
                 <th className="px-3 py-2">Username</th>
                 <th className="px-3 py-2">Email</th>
                 <th className="px-3 py-2">Role</th>
                 <th className="px-3 py-2">Rocket ID</th>
-                <th className="px-3 py-2">Actions</th>
+                <th className="px-3 py-2">Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -791,7 +875,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="p-6 text-center text-slate-500">No users</td>
+                  <td colSpan={5} className="p-6 text-center text-slate-500">Chưa có user</td>
                 </tr>
               )}
             </tbody>
@@ -799,10 +883,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-slate-500">Page {usersData?.pagination?.page || 1} / {usersData?.pagination?.totalPages || 1}</div>
+          <div className="text-sm text-slate-500">Trang {usersData?.pagination?.page || 1} / {usersData?.pagination?.totalPages || 1}</div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => setUsersPage((p) => Math.max(1, p - 1))} disabled={usersLoading || (usersData?.pagination?.page || 1) <= 1}>Prev</Button>
-            <Button size="sm" onClick={() => setUsersPage((p) => p + 1)} disabled={usersLoading || (usersData?.pagination?.page || 1) >= (usersData?.pagination?.totalPages || 1)}>Next</Button>
+            <Button size="sm" onClick={() => setUsersPage((p) => Math.max(1, p - 1))} disabled={usersLoading || (usersData?.pagination?.page || 1) <= 1}>Trước</Button>
+            <Button size="sm" onClick={() => setUsersPage((p) => p + 1)} disabled={usersLoading || (usersData?.pagination?.page || 1) >= (usersData?.pagination?.totalPages || 1)}>Sau</Button>
           </div>
         </div>
       </section>

@@ -12,7 +12,7 @@ import {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { SearchBar } from '@/components/SearchBar';
 import { TenantCard } from '@/components/TenantCard';
@@ -27,16 +27,12 @@ type CreateTenantFormState = {
   rootUrl: string;
   release: string;
   regToken: string;
-  hostPort: string;
   port: string;
-  metricsPort: string;
   bindIp: string;
   adminUsername: string;
   adminPass: string;
   mongodbBindIp: string;
   mongodbPortNumber: string;
-  mongodbHostPortNumber: string;
-  natsPortNumber: string;
   natsBindIp: string;
 };
 
@@ -47,16 +43,12 @@ const initialCreateTenantForm: CreateTenantFormState = {
   rootUrl: '',
   release: '8.0.1',
   regToken: '',
-  hostPort: '3000',
   port: '3000',
-  metricsPort: '9458',
   bindIp: '0.0.0.0',
   adminUsername: 'admin',
   adminPass: 'admin123',
   mongodbBindIp: '127.0.0.1',
   mongodbPortNumber: '27017',
-  mongodbHostPortNumber: '27017',
-  natsPortNumber: '4222',
   natsBindIp: '127.0.0.1',
 };
 
@@ -135,6 +127,7 @@ export default function DashboardPage() {
     const socket = getTenantSocket();
     socket.connect();
 
+    // Handler được refresh qua closure, không cần dependency
     const handleTenantUpdate = () => {
       void loadTenants(currentSearchRef.current, true);
     };
@@ -145,7 +138,7 @@ export default function DashboardPage() {
       socket.off('tenant.updated', handleTenantUpdate);
       socket.disconnect();
     };
-  }, [loadTenants]);
+  }, []); // Empty dependency - socket setup chỉ chạy 1 lần
 
   useEffect(() => {
     if (!activeProvisionTenant) {
@@ -197,34 +190,38 @@ export default function DashboardPage() {
   const handleSubmitCreateTenant = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsCreatingTenant(true);
-    setIsCreateModalOpen(false);
     setError(null);
 
     const payload = buildCreateTenantPayload(createForm);
+    const tenantName = createForm.name;
     const createRequest = createTenant(payload);
 
+    setIsCreateModalOpen(false);
+    setCreateForm(initialCreateTenantForm);
+
     toast.promise(createRequest, {
-      loading: 'Đang tạo tenant và provision hạ tầng...',
-      success: 'Tenant đã được tạo. Trạng thái sẽ cập nhật realtime.',
+      loading: `Tạo "${tenantName}"... (đang allocate ports)`,
+      success: `"${tenantName}" được tạo. Provision hạ tầng đang chạy...`,
       error: (err: unknown) => (err instanceof Error ? err.message : 'Không thể tạo tenant'),
     });
 
-    try {
-      const created = await createRequest;
-      const refreshedTenants = await loadTenants(currentSearchRef.current, true);
-      const tenantId = resolveProvisionTenantId(created, refreshedTenants, payload.domain);
+    void createRequest
+      .then(async (created) => {
+        const refreshedTenants = await loadTenants(currentSearchRef.current, true);
+        const tenantId = resolveProvisionTenantId(created, refreshedTenants, payload.domain);
 
-      if (tenantId) {
-        setActiveProvisionTenantId(tenantId);
-      }
-    } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Không thể tạo tenant';
-      setError(message);
-      toast.error('Không thể tạo tenant', { description: message });
-      setIsCreateModalOpen(true);
-    } finally {
-      setIsCreatingTenant(false);
-    }
+        if (tenantId) {
+          setActiveProvisionTenantId(tenantId);
+        }
+      })
+      .catch((err) => {
+        const message = err instanceof ApiError ? err.message : 'Không thể tạo tenant';
+        setError(message);
+        toast.error('Không thể tạo tenant', { description: message });
+      })
+      .finally(() => {
+        setIsCreatingTenant(false);
+      });
   };
 
   return (
@@ -233,20 +230,23 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/70">
-              Dashboard
+              Trang quản trị
             </p>
             <h2 className="font-heading text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              Tenant containers, actions, and health in one view
+              Quản lý tenant, thao tác và trạng thái trong một màn hình
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-              Search, inspect, and manage tenants with realtime provisioning feedback and direct access links.
+              Tìm kiếm, kiểm tra và quản lý tenant với phản hồi provision realtime cùng liên kết truy cập trực tiếp.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <Button onClick={handleAddTenant}>Add Tenant</Button>
+            <Button onClick={handleAddTenant}>Thêm tenant</Button>
             <Button variant="secondary" onClick={handleRefresh} disabled={isPending}>
-              Refresh
+              <span className="inline-flex items-center gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Làm mới
+              </span>
             </Button>
           </div>
         </div>
@@ -254,7 +254,7 @@ export default function DashboardPage() {
         <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <SearchBar value={searchTerm} onChange={setSearchTerm} />
           <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-            {visibleTenants.length} tenant(s) visible
+            {visibleTenants.length} tenant đang hiển thị
           </div>
         </div>
       </section>
@@ -278,7 +278,7 @@ export default function DashboardPage() {
 
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/70">
-                  Realtime Provision
+                  Provision realtime
                 </p>
                 <h3 className="mt-1 text-xl font-semibold text-slate-950">
                   {activeProvisionTenant.name}
@@ -294,7 +294,7 @@ export default function DashboardPage() {
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
-                Open Tenant Website
+                Mở website tenant
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M14 5h5v5" />
                   <path d="M10 14 19 5" />
@@ -338,7 +338,7 @@ export default function DashboardPage() {
               <div>
                 <h3 className="font-heading text-2xl font-semibold text-slate-950">Add New Tenant</h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Nhập thông tin tối thiểu trước, phần cấu hình nâng cao có thể mở rộng khi cần.
+                  Nhập thông tin cơ bản, hệ thống sẽ tự cấp phát port và provision hạ tầng.
                 </p>
               </div>
               <button
@@ -360,7 +360,7 @@ export default function DashboardPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <Field>
                   <label htmlFor="tenant-name" className="text-sm font-medium text-slate-700">
-                    Tenant name
+                    Tên tenant
                   </label>
                   <input
                     id="tenant-name"
@@ -404,7 +404,7 @@ export default function DashboardPage() {
 
                 <Field>
                   <label htmlFor="tenant-compose" className="text-sm font-medium text-slate-700">
-                    Compose project name
+                    Tên compose project
                   </label>
                   <input
                     id="tenant-compose"
@@ -417,7 +417,7 @@ export default function DashboardPage() {
                 </Field>
               </div>
 
-            {/* Infrastructure: Ports and IPs */}
+            {/* Infrastructure: Internal configs (auto-allocated ports not shown) */}
               <button
                 type="button"
                 onClick={() => setIsInfrastructureOpen((prev) => !prev)}
@@ -425,7 +425,8 @@ export default function DashboardPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-800">Infrastructure</p>
+                    <p className="text-sm font-semibold text-slate-800">Hạ tầng (nâng cao)</p>
+                    <p className="text-xs text-slate-500 mt-1">Port được tự động cấp phát. Chỉnh bind IP nếu cần.</p>
                   </div>
                   {isInfrastructureOpen ? (
                     <ChevronUp className="h-5 w-5 text-slate-600" />
@@ -438,40 +439,14 @@ export default function DashboardPage() {
               <fieldset className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="mt-3 grid gap-4 md:grid-cols-2">
                   <Field>
-                    <label htmlFor="tenant-host-port" className="text-sm font-medium text-slate-700">
-                      Host port
-                    </label>
-                    <input
-                      id="tenant-host-port"
-                      type="number"
-                      value={createForm.hostPort}
-                      onChange={(event) => setCreateForm((prev) => ({ ...prev, hostPort: event.target.value }))}
-                      className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-                    />
-                  </Field>
-
-                  <Field>
                     <label htmlFor="tenant-port" className="text-sm font-medium text-slate-700">
-                      Port
+                      Port container (nội bộ)
                     </label>
                     <input
                       id="tenant-port"
                       type="number"
                       value={createForm.port}
                       onChange={(event) => setCreateForm((prev) => ({ ...prev, port: event.target.value }))}
-                      className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-                    />
-                  </Field>
-
-                  <Field>
-                    <label htmlFor="tenant-metrics-port" className="text-sm font-medium text-slate-700">
-                      Metrics port
-                    </label>
-                    <input
-                      id="tenant-metrics-port"
-                      type="number"
-                      value={createForm.metricsPort}
-                      onChange={(event) => setCreateForm((prev) => ({ ...prev, metricsPort: event.target.value }))}
                       className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
                     />
                   </Field>
@@ -504,39 +479,13 @@ export default function DashboardPage() {
 
                   <Field>
                     <label htmlFor="tenant-mongodb-port" className="text-sm font-medium text-slate-700">
-                      MongoDB port
+                      Port nội bộ MongoDB
                     </label>
                     <input
                       id="tenant-mongodb-port"
                       type="number"
                       value={createForm.mongodbPortNumber}
                       onChange={(event) => setCreateForm((prev) => ({ ...prev, mongodbPortNumber: event.target.value }))}
-                      className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-                    />
-                  </Field>
-
-                  <Field>
-                    <label htmlFor="tenant-mongodb-host-port" className="text-sm font-medium text-slate-700">
-                      MongoDB host port
-                    </label>
-                    <input
-                      id="tenant-mongodb-host-port"
-                      type="number"
-                      value={createForm.mongodbHostPortNumber}
-                      onChange={(event) => setCreateForm((prev) => ({ ...prev, mongodbHostPortNumber: event.target.value }))}
-                      className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-                    />
-                  </Field>
-
-                  <Field>
-                    <label htmlFor="tenant-nats-port" className="text-sm font-medium text-slate-700">
-                      NATS port
-                    </label>
-                    <input
-                      id="tenant-nats-port"
-                      type="number"
-                      value={createForm.natsPortNumber}
-                      onChange={(event) => setCreateForm((prev) => ({ ...prev, natsPortNumber: event.target.value }))}
                       className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
                     />
                   </Field>
@@ -565,7 +514,7 @@ export default function DashboardPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-800">Advanced settings</p>
+                    <p className="text-sm font-semibold text-slate-800">Cài đặt nâng cao</p>
                   </div>
                   {isAdvancedOpen ? (
                     <ChevronUp className="h-5 w-5 text-slate-600 flex-shrink-0 mt-0.5" />
@@ -580,7 +529,7 @@ export default function DashboardPage() {
                 <div className="mt-3 grid gap-4 md:grid-cols-2">
                   <Field>
                     <label htmlFor="tenant-release" className="text-sm font-medium text-slate-700">
-                      Release
+                      Phiên bản
                     </label>
                     <input
                       id="tenant-release"
@@ -607,7 +556,7 @@ export default function DashboardPage() {
 
                   <Field>
                     <label htmlFor="tenant-admin-user" className="text-sm font-medium text-slate-700">
-                      Admin username
+                      Tên đăng nhập admin
                     </label>
                     <input
                       id="tenant-admin-user"
@@ -620,7 +569,7 @@ export default function DashboardPage() {
 
                   <Field>
                     <label htmlFor="tenant-admin-pass" className="text-sm font-medium text-slate-700">
-                      Admin password
+                      Mật khẩu admin
                     </label>
                     <input
                       id="tenant-admin-pass"
@@ -640,7 +589,7 @@ export default function DashboardPage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isCreatingTenant}>
-                  {isCreatingTenant ? 'Provisioning...' : 'Create Tenant'}
+                  {isCreatingTenant ? 'Đang provision...' : 'Tạo tenant'}
                 </Button>
               </div>
             </form>
@@ -663,16 +612,12 @@ function buildCreateTenantPayload(form: CreateTenantFormState): CreateTenantPayl
     rootUrl: trimToUndefined(form.rootUrl),
     release: trimToUndefined(form.release),
     regToken: trimToUndefined(form.regToken),
-    hostPort: toOptionalNumber(form.hostPort),
     port: toOptionalNumber(form.port),
-    metricsPort: toOptionalNumber(form.metricsPort),
     bindIp: trimToUndefined(form.bindIp),
     adminUsername: trimToUndefined(form.adminUsername),
     adminPass: trimToUndefined(form.adminPass),
     mongodbBindIp: trimToUndefined(form.mongodbBindIp),
     mongodbPortNumber: toOptionalNumber(form.mongodbPortNumber),
-    mongodbHostPortNumber: toOptionalNumber(form.mongodbHostPortNumber),
-    natsPortNumber: toOptionalNumber(form.natsPortNumber),
     natsBindIp: trimToUndefined(form.natsBindIp),
   };
 }

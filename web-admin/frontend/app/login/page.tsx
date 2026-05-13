@@ -29,11 +29,11 @@ export default function LoginPage() {
       const session = await login({ identifier: email, password });
       setStoredToken(session.token);
       toast.success('Đăng nhập thành công', {
-        description: 'Đang chuyển đến dashboard...',
+        description: 'Đang chuyển đến trang quản trị...',
       });
       router.replace('/dashboard');
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Unable to sign in';
+      const message = err instanceof ApiError ? err.message : 'Không thể đăng nhập';
       setError(message);
       toast.error('Đăng nhập thất bại', { description: message });
     } finally {
@@ -49,29 +49,29 @@ export default function LoginPage() {
             WT
           </div>
           <h1 className="font-heading text-3xl font-semibold tracking-tight text-slate-950">
-            Sign in to WeTeams
+            Đăng nhập WeTeams
           </h1>
           <p className="text-sm leading-6 text-slate-500">
-            Use your admin credentials to reach the dashboard.
+            Dùng tài khoản quản trị để vào trang quản trị.
           </p>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <Field>
-            <label htmlFor="email">Email or Username</label>
+            <label htmlFor="email">Email hoặc tên đăng nhập</label>
             <input
               id="email"
               type="text"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-              placeholder="Enter username or email"
+              placeholder="Nhập tên đăng nhập hoặc email"
               autoComplete="username"
             />
           </Field>
 
           <Field>
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Mật khẩu</label>
             <div className="relative mt-2">
               <input
                 id="password"
@@ -79,7 +79,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-12 text-sm outline-none transition placeholder:text-slate-400 focus:border-primary/30 focus:ring-4 focus:ring-primary/10"
-                placeholder="Enter password"
+                placeholder="Nhập mật khẩu"
                 autoComplete="current-password"
               />
               <button
@@ -101,7 +101,7 @@ export default function LoginPage() {
           ) : null}
 
           <Button className="w-full" size="lg" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in...' : 'Sign in'}
+            {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </Button>
         </form>
       </div>

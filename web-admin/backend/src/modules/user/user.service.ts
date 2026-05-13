@@ -397,7 +397,7 @@ export class UserService {
     };
   }
 
-  async deleteUser(id: string) {
+  async deleteUser(id: string, callerUser?: any) {
     const user = await this.prisma.user.findUnique({
       where: { id },
     });
@@ -408,6 +408,20 @@ export class UserService {
         errorCode: 'USER_NOT_FOUND',
         data: { id },
       });
+    }
+
+    // Permission: SUPER_ADMIN can delete any user. ADMIN/TENANT_USER can only delete users within their tenant
+    if (callerUser) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (
+        callerUser.role !== 'SUPER_ADMIN' &&
+        callerUser.tenantId !== user.tenantId
+      ) {
+        throw new AppException(HttpStatus.FORBIDDEN, {
+          message: 'Bạn không có quyền thực hiện hành động này',
+          errorCode: 'FORBIDDEN',
+        });
+      }
     }
 
     try {

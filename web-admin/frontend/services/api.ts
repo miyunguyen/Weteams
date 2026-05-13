@@ -191,6 +191,14 @@ export async function getTenantById(tenantId: string): Promise<TenantDetail> {
   return response.data;
 }
 
+export async function getCurrentUser() {
+  const response = await request<any>('/auth/me', {
+    method: 'GET',
+  });
+
+  return response.data;
+}
+
 export async function createTenant(payload: CreateTenantPayload): Promise<CreateTenantResult> {
   const response = await request<CreateTenantResult>('/tenants', {
     method: 'POST',
@@ -229,6 +237,15 @@ export async function restartTenantService(payload: TenantActionPayload) {
 
 export async function deployTenantApp(payload: TenantDeployAppPayload) {
   const response = await request<TenantDeployAppResult>('/tenants/deployments', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+export async function createTenantAdmin(tenantId: string, payload: { email: string; username: string; password: string; role?: string }) {
+  const response = await request<any>(`/tenants/${tenantId}/admins`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
