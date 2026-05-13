@@ -53,7 +53,28 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const [userFormOpen, setUserFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any | null>(null);
 
-  const [teamForm, setTeamForm] = useState<{ roomName: string; channelsText: string }>({ roomName: '', channelsText: '' });
+  const [teamForm, setTeamForm] = useState<{ roomName: string }>({ roomName: '' });
+  const DEFAULT_CHANNELS = [
+    'Ngữ văn',
+    'Toán',
+    'Anh',
+    'Lịch sử',
+    'Thể dục',
+    'GDQP',
+    'Địa lí',
+    'Vật lí',
+    'Hóa học',
+    'Sinh học',
+    'Công nghệ',
+    'Tin học',
+    'Thông báo',
+    'Phụ huynh',
+  ];
+  const [selectedChannels, setSelectedChannels] = useState<Set<string>>(
+    new Set(DEFAULT_CHANNELS),
+  );
+  const [customChannels, setCustomChannels] = useState<string[]>([]);
+  const [newChannel, setNewChannel] = useState('');
   const [importFile, setImportFile] = useState<File | null>(null);
   const [userForm, setUserForm] = useState<Record<string, any>>({ name: '', username: '', email: '', role: undefined, phoneNumber: '', citizenId: '', address: '', dateOfBirth: '', avatarUrl: '' });
   const [currentUser, setCurrentUser] = useState<any | null>(null);
@@ -136,7 +157,6 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             { label: 'Status', value: tenant.deployStatus },
             { label: 'Teams', value: String(tenant._count.teams) },
             { label: 'Users', value: String(tenant._count.users) },
-            { label: 'Team members', value: String(tenant.teamMemberTotal) },
             { label: 'Last provisioned', value: formatDate(tenant.lastProvisionedAt) },
           ]
         : [],
@@ -308,15 +328,15 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const submitCreateTeam = useCallback(async () => {
     if (!tenant) return;
     try {
-      const channels = teamForm.channelsText
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const channels = Array.from(selectedChannels);
 
       await createTeamWithChannels({ tenantId: tenant.id, roomName: teamForm.roomName, channelsName: channels });
       toast.success('Team created');
       setCreateTeamOpen(false);
-      setTeamForm({ roomName: '', channelsText: '' });
+      setTeamForm({ roomName: '' });
+      setSelectedChannels(new Set());
+      setCustomChannels([]);
+      setNewChannel('');
       void loadTeams();
     } catch (error) {
       if (!handleAuthError(error)) {
@@ -424,6 +444,15 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   useEffect(() => {
     void loadTeams();
   }, [loadTeams]);
+
+  useEffect(() => {
+    if (createTeamOpen) {
+      setTeamForm({ roomName: '' });
+      setSelectedChannels(new Set(DEFAULT_CHANNELS));
+      setCustomChannels([]);
+      setNewChannel('');
+    }
+  }, [createTeamOpen]);
 
   useEffect(() => {
     void loadUsers();
@@ -575,19 +604,93 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
 
       {/* Create Team Modal */}
       {createTeamOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-[90%] max-w-lg rounded-2xl bg-white p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 bg-black/40">
+          <div className="w-[90%] max-w-2xl rounded-2xl bg-white p-6 overflow-auto">
             <h3 className="text-lg font-semibold">Tạo team</h3>
-            <div className="mt-4 space-y-3">
+            <div className="mt-4 space-y-4">
               <div>
                 <label className="text-sm font-medium">Tên team</label>
-                <input value={teamForm.roomName} onChange={(e) => setTeamForm((s) => ({ ...s, roomName: e.target.value }))} className="mt-1 w-full rounded-md border px-3 py-2" />
+                <input
+                  value={teamForm.roomName}
+                  onChange={(e) => setTeamForm((s) => ({ ...s, roomName: e.target.value }))}
+                  className="mt-1 w-full rounded-md border px-3 py-2"
+                />
               </div>
+
               <div>
-                <label className="text-sm font-medium">Channel con (ngăn cách bằng dấu phẩy)</label>
-                <input value={teamForm.channelsText} onChange={(e) => setTeamForm((s) => ({ ...s, channelsText: e.target.value }))} className="mt-1 w-full rounded-md border px-3 py-2" />
+                <label className="text-sm font-medium">Chọn kênh (có thể chọn nhiều)</label>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {DEFAULT_CHANNELS.map((ch) => (
+                    <label key={ch} className="inline-flex items-center gap-2 rounded-md border px-2 py-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedChannels.has(ch)}
+                        onChange={() => {
+                          const s = new Set(selectedChannels);
+                          if (s.has(ch)) {
+                            s.delete(ch);
+                          } else {
+                            s.add(ch);
+                          }
+                          setSelectedChannels(s);
+                        }}
+                      />
+                      <span className="text-sm">{ch}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {customChannels.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium">Lựa chọn thêm</label>
+                  <div className="mt-2 flex flex-col gap-2">
+                    {customChannels.map((ch) => (
+                      <label key={ch} className="inline-flex items-center gap-2 rounded-md border px-2 py-1">
+                        <input
+                          type="checkbox"
+                          checked={selectedChannels.has(ch)}
+                          onChange={() => {
+                            const s = new Set(selectedChannels);
+                            if (s.has(ch)) s.delete(ch); else s.add(ch);
+                            setSelectedChannels(s);
+                          }}
+                        />
+                        <span className="text-sm">{ch}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 items-center">
+                <input
+                  value={newChannel}
+                  onChange={(e) => setNewChannel(e.target.value)}
+                  placeholder="Thêm lựa chọn khác"
+                  className="flex-1 rounded-md border px-3 py-2"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const v = newChannel.trim();
+                    if (!v) return;
+                    if (DEFAULT_CHANNELS.includes(v) || customChannels.includes(v)) {
+                      setNewChannel('');
+                      return;
+                    }
+                    setCustomChannels((s) => [...s, v]);
+                    const setSel = new Set(selectedChannels);
+                    setSel.add(v);
+                    setSelectedChannels(setSel);
+                    setNewChannel('');
+                  }}
+                >
+                  Thêm lựa chọn
+                </Button>
               </div>
             </div>
+
             <div className="mt-4 flex justify-end gap-2">
               <Button size="sm" onClick={() => setCreateTeamOpen(false)}>Hủy</Button>
               <Button size="sm" onClick={submitCreateTeam}>Tạo</Button>
@@ -674,7 +777,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
         <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
           <Layers3 className="h-4 w-4" />
-          Overview
+          Tổng quan
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {overviewCards.map((card) => (
