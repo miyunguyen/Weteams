@@ -9,6 +9,8 @@ import { DeployAppDto } from './dto/deploy-app.dto';
 import { QueryTenantsDto } from './dto/query-tenants.dto';
 import { AppException } from '../../common/exceptions/app.exception';
 import { TenantGateway } from './tenant.gateway';
+import { AuthService } from '../auth/auth.service';
+import { CreateTenantAdminDto } from './dto/create-tenant-admin.dto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import * as path from 'node:path';
@@ -41,6 +43,7 @@ export class TenantService {
     private readonly prisma: PrismaService,
     private readonly rocketChatService: RocketChatService,
     private readonly tenantGateway: TenantGateway,
+    private readonly authService: AuthService,
   ) {}
 
   private emitTenantUpdated(
@@ -145,6 +148,34 @@ export class TenantService {
             deployStatus: 'DEPLOYING',
           },
         });
+
+    // Ensure there is a WebAdminUser for this tenant (create default admin user)
+    try {
+      const adminEmail = `${String(resolved.adminUsername)}@${String(resolved.domain)}`;
+      const existingWebAdmin = await this.prisma.webAdminUser.findFirst({
+        where: {
+          OR: [{ username: resolved.adminUsername }, { email: adminEmail }],
+        },
+      });
+
+      if (!existingWebAdmin) {
+        const hashed = await this.authService.hashPassword(
+          String(resolved.adminPass),
+        );
+        await this.prisma.webAdminUser.create({
+          data: {
+            email: adminEmail,
+            username: String(resolved.adminUsername),
+            hashedPassword: hashed,
+            role: 'ADMIN' as any,
+            tenantId: tenant.id,
+          },
+        });
+      }
+    } catch (err) {
+      // Do not fail tenant provisioning if creating web admin fails; record in logs
+      console.warn('Failed to create tenant web admin:', err);
+    }
 
     this.emitTenantUpdated(
       tenant.id,
@@ -645,9 +676,92 @@ export class TenantService {
       });
     }
 
+    const tenantAdmins = await this.prisma.webAdminUser.findMany({
+      where: {
+        tenantId: tenant.id,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
     return {
       message: 'Lấy chi tiết tenant thành công',
-      data: detail,
+      data: {
+        ...detail,
+        tenantAdmins,
+      },
+    };
+  }
+
+  async createTenantAdmin(
+    tenantId: string,
+    dto: CreateTenantAdminDto,
+    user?: any,
+  ) {
+    const tenantRef = await this.findTenantByIdentifier(
+      this.cleanString(tenantId),
+      undefined,
+    );
+
+    this.checkTenantAccess(user, tenantRef.id);
+
+    // Only SUPER_ADMIN and ADMIN can create tenant admin accounts
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
+      throw new AppException(HttpStatus.FORBIDDEN, {
+        message: 'Bạn không có quyền tạo admin cho tenant',
+        errorCode: 'FORBIDDEN',
+      });
+    }
+
+    // If caller is ADMIN ensure they belong to the same tenant
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (user.role === 'ADMIN' && user.tenantId !== tenantRef.id) {
+      throw new AppException(HttpStatus.FORBIDDEN, {
+        message: 'Bạn chỉ có thể tạo admin cho tenant của mình',
+        errorCode: 'FORBIDDEN',
+      });
+    }
+
+    const exists = await this.prisma.webAdminUser.findFirst({
+      where: {
+        OR: [{ email: dto.email }, { username: dto.username }],
+      },
+    });
+
+    if (exists) {
+      throw new AppException(HttpStatus.CONFLICT, {
+        message: 'Admin với email hoặc username đã tồn tại',
+        errorCode: 'WEBADMIN_EXISTS',
+        data: { email: dto.email, username: dto.username },
+      });
+    }
+
+    const hashed = await this.authService.hashPassword(dto.password);
+
+    const created = await this.prisma.webAdminUser.create({
+      data: {
+        email: dto.email,
+        username: dto.username,
+        hashedPassword: hashed,
+        role: (dto.role ?? 'ADMIN') as any,
+        tenantId: tenantRef.id,
+      },
+    });
+
+    return {
+      message: 'Tạo tenant admin thành công',
+      data: created,
     };
   }
 
@@ -849,29 +963,29 @@ export class TenantService {
     domain: string,
     composeProjectName: string,
   ) {
-    const hostPort =
-      dto.hostPort ??
-      (await this.allocatePort('hostPort', defaults.hostPort, 3000));
-
+    // Always allocate ports automatically - never use user input for ports
+    const hostPort = await this.allocatePort(
+      'hostPort',
+      defaults.hostPort,
+      3000,
+    );
     const rootUrl =
       this.cleanString(dto.rootUrl) ?? this.buildRootUrl(domain, hostPort);
-    const metricsPort =
-      dto.metricsPort ??
-      (await this.allocatePort('metricsPort', defaults.metricsPort, 9458));
-    const mongodbHostPortNumber =
-      dto.mongodbHostPortNumber ??
-      (await this.allocatePort(
-        'mongodbHostPortNumber',
-        defaults.mongodbHostPortNumber,
-        27017,
-      ));
-    const natsPortNumber =
-      dto.natsPortNumber ??
-      (await this.allocatePort(
-        'natsPortNumber',
-        defaults.natsPortNumber,
-        4222,
-      ));
+    const metricsPort = await this.allocatePort(
+      'metricsPort',
+      defaults.metricsPort,
+      9458,
+    );
+    const mongodbHostPortNumber = await this.allocatePort(
+      'mongodbHostPortNumber',
+      defaults.mongodbHostPortNumber,
+      27017,
+    );
+    const natsPortNumber = await this.allocatePort(
+      'natsPortNumber',
+      defaults.natsPortNumber,
+      4222,
+    );
 
     return {
       name: this.cleanString(dto.name) ?? domain,
@@ -935,23 +1049,50 @@ export class TenantService {
     });
 
     const used = new Set<number>();
+    let latest = 0;
     for (const tenant of tenants) {
       const value = tenant[field];
       if (typeof value === 'number') {
         used.add(value);
+        if (value > latest) {
+          latest = value;
+        }
       }
     }
 
-    if (!used.has(fallback)) {
-      return fallback;
-    }
-
-    let candidate = base;
-    while (used.has(candidate)) {
+    let candidate = Math.max(base, latest + 1, fallback);
+    while (used.has(candidate) || !(await this.isPortAvailable(candidate))) {
       candidate += 1;
     }
 
     return candidate;
+  }
+
+  private async isPortAvailable(port: number): Promise<boolean> {
+    const probeScript = [
+      "const net = require('node:net');",
+      'const port = Number(process.argv[1]);',
+      "const socket = net.createConnection({ host: '127.0.0.1', port, timeout: 1200 });",
+      'const finish = (available) => { socket.destroy(); process.exit(available ? 0 : 1); };',
+      "socket.once('connect', () => finish(false));",
+      "socket.once('timeout', () => finish(true));",
+      "socket.once('error', (error) => {",
+      "  if (error && error.code === 'ECONNREFUSED') {",
+      '    finish(true);',
+      '    return;',
+      '  }',
+      '  finish(false);',
+      '});',
+    ].join(' ');
+
+    try {
+      await execFileAsync(process.execPath, ['-e', probeScript, String(port)], {
+        timeout: 2000,
+      });
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private resolveComposeDir(): string {

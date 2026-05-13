@@ -148,6 +148,16 @@ export interface TenantDetailUser {
   teamMembers: TenantDetailUserTeamMember[];
 }
 
+export interface TenantDetailAdmin {
+  id: string;
+  email: string;
+  username: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TenantDetail extends Tenant {
   _count: {
     users: number;
@@ -156,6 +166,7 @@ export interface TenantDetail extends Tenant {
   teamMemberTotal: number;
   teams: TenantDetailTeam[];
   users: TenantDetailUser[];
+  tenantAdmins: TenantDetailAdmin[];
 }
 
 export interface CreateTenantPayload {
@@ -165,16 +176,12 @@ export interface CreateTenantPayload {
   rootUrl?: string;
   release?: string;
   regToken?: string;
-  hostPort?: number;
   port?: number;
-  metricsPort?: number;
   bindIp?: string;
   adminUsername?: string;
   adminPass?: string;
   mongodbBindIp?: string;
   mongodbPortNumber?: number;
-  mongodbHostPortNumber?: number;
-  natsPortNumber?: number;
   natsBindIp?: string;
 }
 

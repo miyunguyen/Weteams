@@ -39,21 +39,7 @@ export class ProvisionTenantDto {
   @IsInt()
   @Min(1)
   @Max(65535)
-  hostPort?: number;
-
-  @ApiPropertyOptional({ default: 3000 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
   port?: number;
-
-  @ApiPropertyOptional({ default: 9458 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  metricsPort?: number;
 
   @ApiPropertyOptional({ default: '0.0.0.0' })
   @IsOptional()
@@ -81,20 +67,6 @@ export class ProvisionTenantDto {
   @Min(1)
   @Max(65535)
   mongodbPortNumber?: number;
-
-  @ApiPropertyOptional({ default: 27017 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  mongodbHostPortNumber?: number;
-
-  @ApiPropertyOptional({ default: 4222 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  natsPortNumber?: number;
 
   @ApiPropertyOptional({ default: '127.0.0.1' })
   @IsOptional()
