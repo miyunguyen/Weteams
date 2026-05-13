@@ -9,7 +9,7 @@ interface SearchBarProps {
 export function SearchBar({
   value,
   onChange,
-  placeholder = 'Search tenants by name or domain',
+  placeholder,
 }: SearchBarProps) {
   return (
     <label className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-primary/30 focus-within:shadow-container">
