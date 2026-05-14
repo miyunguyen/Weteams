@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { createServer } from 'node:http';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
 import { ProvisionTenantDto } from './dto/provision-tenant.dto';
@@ -7,6 +8,7 @@ import { DeprovisionTenantDto } from './dto/deprovision-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
 import { DeployAppDto } from './dto/deploy-app.dto';
 import { QueryTenantsDto } from './dto/query-tenants.dto';
+import { UpdateTenantUrlsDto } from './dto/update-tenant-urls.dto';
 import { AppException } from '../../common/exceptions/app.exception';
 import { TenantGateway } from './tenant.gateway';
 import { AuthService } from '../auth/auth.service';
@@ -461,6 +463,58 @@ export class TenantService {
         appEngineDir,
         ...deployResult,
       },
+    };
+  }
+
+  async updateTenantUrls(
+    tenantId: string,
+    dto: UpdateTenantUrlsDto,
+    user?: any,
+  ) {
+    const tenant = await this.findTenantByIdentifier(
+      this.cleanString(tenantId),
+      undefined,
+    );
+
+    this.checkTenantAccess(user, tenant.id);
+
+    const updateData: Record<string, unknown> = {};
+    if (this.cleanString(dto.rootUrl)) {
+      updateData.rootUrl = this.cleanString(dto.rootUrl);
+    }
+    if (this.cleanString(dto.rocketUrl)) {
+      updateData.rocketUrl = this.cleanString(dto.rocketUrl);
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Phải cung cấp ít nhất một URL để cập nhật',
+        errorCode: 'NO_URLS_PROVIDED',
+        data: null,
+      });
+    }
+
+    const updatedTenant = await this.prisma.tenant.update({
+      where: { id: tenant.id },
+      data: updateData,
+      select: {
+        id: true,
+        rootUrl: true,
+        rocketUrl: true,
+        updatedAt: true,
+      },
+    });
+
+    this.emitTenantUpdated(
+      updatedTenant.id,
+      'urls_updated',
+      undefined,
+      updatedTenant.updatedAt,
+    );
+
+    return {
+      message: 'Cập nhật URLs tenant thành công',
+      data: updatedTenant,
     };
   }
 
@@ -1086,30 +1140,31 @@ export class TenantService {
   }
 
   private async isPortAvailable(port: number): Promise<boolean> {
-    const probeScript = [
-      "const net = require('node:net');",
-      'const port = Number(process.argv[1]);',
-      "const socket = net.createConnection({ host: '127.0.0.1', port, timeout: 1200 });",
-      'const finish = (available) => { socket.destroy(); process.exit(available ? 0 : 1); };',
-      "socket.once('connect', () => finish(false));",
-      "socket.once('timeout', () => finish(true));",
-      "socket.once('error', (error) => {",
-      "  if (error && error.code === 'ECONNREFUSED') {",
-      '    finish(true);',
-      '    return;',
-      '  }',
-      '  finish(false);',
-      '});',
-    ].join(' ');
+    return new Promise((resolve) => {
+      const server = createServer();
+      const timeout = setTimeout(() => {
+        server.close();
+        resolve(false);
+      }, 1500);
 
-    try {
-      await execFileAsync(process.execPath, ['-e', probeScript, String(port)], {
-        timeout: 2000,
+      server.once('error', (err: any) => {
+        clearTimeout(timeout);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        if (err.code === 'EADDRINUSE') {
+          resolve(false); // Port in use
+        } else {
+          resolve(true); // Other error, assume available
+        }
       });
-      return true;
-    } catch {
-      return false;
-    }
+
+      server.once('listening', () => {
+        clearTimeout(timeout);
+        server.close();
+        resolve(true); // Successfully bound, port is available
+      });
+
+      server.listen(port, '0.0.0.0');
+    });
   }
 
   private resolveComposeDir(): string {

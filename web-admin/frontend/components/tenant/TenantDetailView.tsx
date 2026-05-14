@@ -27,6 +27,7 @@ import {
   deleteUser,
   getCurrentUser,
   createTenantAdmin,
+  updateTenantUrls,
 } from '@/services/api';
 import { getTenantSocket, type TenantRealtimeEvent } from '@/services/tenantRealtime';
 import type { TenantDetail, TenantDetailTeam, TenantDetailUser } from '@/types/tenant';
@@ -80,6 +81,8 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [createTenantAdminOpen, setCreateTenantAdminOpen] = useState(false);
   const [tenantAdminForm, setTenantAdminForm] = useState<{ email: string; username: string; password: string; role?: string }>({ email: '', username: '', password: '', role: 'ADMIN' });
+    const [editUrlsOpen, setEditUrlsOpen] = useState(false);
+    const [urlsForm, setUrlsForm] = useState<{ rootUrl: string; rocketUrl: string }>({ rootUrl: '', rocketUrl: '' });
 
   // Handle 401 Unauthorized (token expired)
   const handleAuthError = useCallback((error: unknown) => {
@@ -448,7 +451,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   useEffect(() => {
     if (createTeamOpen) {
       setTeamForm({ roomName: '' });
-      setSelectedChannels(new Set(DEFAULT_CHANNELS));
+      setSelectedChannels(new Set());
       setCustomChannels([]);
       setNewChannel('');
     }
@@ -613,6 +616,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                 <input
                   value={teamForm.roomName}
                   onChange={(e) => setTeamForm((s) => ({ ...s, roomName: e.target.value }))}
+                  placeholder='Tên Team'
                   className="mt-1 w-full rounded-md border px-3 py-2"
                 />
               </div>
@@ -727,6 +731,36 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         </div>
       )}
 
+      {/* Edit URLs Modal */}
+      {editUrlsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[90%] max-w-md rounded-2xl bg-white p-6">
+            <h3 className="text-lg font-semibold">Chỉnh sửa URLs</h3>
+            <div className="mt-4 space-y-3">
+              <input placeholder="Root URL" value={urlsForm.rootUrl} onChange={(e) => setUrlsForm((s) => ({ ...s, rootUrl: e.target.value }))} className="w-full rounded-md border px-3 py-2" />
+              <input placeholder="Rocket URL" value={urlsForm.rocketUrl} onChange={(e) => setUrlsForm((s) => ({ ...s, rocketUrl: e.target.value }))} className="w-full rounded-md border px-3 py-2" />
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button size="sm" onClick={() => setEditUrlsOpen(false)}>Hủy</Button>
+              <Button size="sm" onClick={async () => {
+                try {
+                  await updateTenantUrls(tenant?.id ?? tenantId, urlsForm);
+                  toast.success('URLs đã được cập nhật');
+                  setEditUrlsOpen(false);
+                  void loadTenant();
+                } catch (error) {
+                  if (error instanceof ApiError) {
+                    toast.error('Không thể cập nhật URLs', { description: error.message });
+                  } else {
+                    toast.error('Không thể cập nhật URLs');
+                  }
+                }
+              }}>Lưu</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Import Users Modal */}
       {importOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -816,6 +850,12 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             open={showProvision}
             onToggle={() => setShowProvision((value) => !value)}
           >
+            <div className="flex justify-end mb-3">
+              <Button size="sm" onClick={() => {
+                setUrlsForm({ rootUrl: tenant.rootUrl ?? '', rocketUrl: tenant.rocketUrl ?? '' });
+                setEditUrlsOpen(true);
+              }}>Chỉnh sửa URL</Button>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               {provisionRows.map(([label, value]) => (
                 <DetailRow key={label} label={label} value={value} />
