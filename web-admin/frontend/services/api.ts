@@ -253,6 +253,14 @@ export async function createTenantAdmin(tenantId: string, payload: { email: stri
   return response.data;
 }
 
+export async function updateTenantUrls(tenantId: string, payload: { rootUrl?: string; rocketUrl?: string }) {
+  const response = await request<any>(`/tenants/${tenantId}/urls`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
 export async function fetchTenantLogs(payload: TenantActionPayload) {
   const response = await request<TenantActionResult>(`/tenants/${payload.tenantId}/logs`, {
     method: 'GET',

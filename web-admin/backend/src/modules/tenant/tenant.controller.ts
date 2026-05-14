@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { UserService } from '../user/user.service';
@@ -18,6 +19,7 @@ import { DeprovisionTenantDto } from './dto/deprovision-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
 import { DeployAppDto } from './dto/deploy-app.dto';
 import { QueryTenantsDto } from './dto/query-tenants.dto';
+import { UpdateTenantUrlsDto } from './dto/update-tenant-urls.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -58,6 +60,16 @@ export class TenantController {
   @Post(':tenantId/config')
   updateConfig(@Param('tenantId') tenantId: string, @CurrentUser() user: any) {
     return this.tenantService.updateTenantConfig(tenantId, user);
+  }
+
+  @HttpCode(200)
+  @Patch(':tenantId/urls')
+  updateUrls(
+    @Param('tenantId') tenantId: string,
+    @Body() dto: UpdateTenantUrlsDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.tenantService.updateTenantUrls(tenantId, dto, user);
   }
 
   @HttpCode(200)
