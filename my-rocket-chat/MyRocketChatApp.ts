@@ -39,6 +39,8 @@ export class MyRocketChatApp
 {
     private readonly JOIN_MODAL_BLOCK = "join_team_code_block";
     private readonly JOIN_MODAL_INPUT = "join_team_code_input";
+    private readonly apiBaseEndpoint =
+        "https://generativelanguage.googleapis.com/v1beta/models";
 
     constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
         super(info, logger, accessors);
@@ -53,6 +55,12 @@ export class MyRocketChatApp
             labelI18n: "Join team",
             context: UIActionButtonContext.USER_DROPDOWN_ACTION,
             category: "ai",
+        });
+
+        configuration.ui.registerButton({
+            actionId: "summarize-btn",
+            labelI18n: "AI Summarize",
+            context: UIActionButtonContext.MESSAGE_BOX_ACTION,
         });
 
         await Promise.all(
@@ -223,11 +231,65 @@ export class MyRocketChatApp
     public async executeActionButtonHandler(
         context: UIKitActionButtonInteractionContext,
         read: IRead,
-        _http: IHttp,
+        http: IHttp,
         _persistence: IPersistence,
         modify: IModify,
     ): Promise<IUIKitResponse> {
         const data = context.getInteractionData();
+
+        if (data.actionId === "summarize-btn") {
+            const userPrompt =
+                "Hãy tóm tắt cuộc trò chuyện hiện tại theo các ý chính, quyết định, việc cần làm và các điểm đáng chú ý.";
+
+            try {
+                const { apiKey, llmModel } = await this.getAiRuntimeSettings();
+
+                if (!apiKey) {
+                    await this.openAiResultModal(
+                        modify,
+                        data.triggerId,
+                        data.user,
+                        "Lỗi: API Key chưa được cấu hình. Vui lòng liên hệ quản trị viên.",
+                    );
+                    return context.getInteractionResponder().successResponse();
+                }
+
+                const chatContext = await this.buildChatContext(
+                    read,
+                    data.room.id,
+                );
+                const aiResponse = await this.callGeminiApi(
+                    chatContext,
+                    userPrompt,
+                    http,
+                    apiKey,
+                    llmModel,
+                );
+
+                await this.openAiResultModal(
+                    modify,
+                    data.triggerId,
+                    data.user,
+                    aiResponse,
+                );
+
+                return context.getInteractionResponder().successResponse();
+            } catch (error) {
+                const errorMessage =
+                    error instanceof Error
+                        ? error.message
+                        : "Đã xảy ra lỗi không xác định";
+
+                await this.openAiResultModal(
+                    modify,
+                    data.triggerId,
+                    data.user,
+                    `Lỗi khi tóm tắt bằng Gemini: ${errorMessage}`,
+                );
+
+                return context.getInteractionResponder().successResponse();
+            }
+        }
 
         if (data.actionId === "join-team-btn") {
             await modify.getUiController().openSurfaceView(
@@ -388,6 +450,134 @@ export class MyRocketChatApp
         return "";
     }
 
+    private async buildChatContext(
+        read: IRead,
+        roomId: string,
+    ): Promise<string> {
+        const rawMessages = await read.getRoomReader().getMessages(roomId);
+
+        const lines = rawMessages
+            .reverse()
+            .map((msg) => {
+                const username =
+                    msg.sender && msg.sender.username
+                        ? msg.sender.username
+                        : "unknown";
+                const text = String(msg.text).replace(/\s+/g, " ").trim();
+                const content = `[${username}]: ${text}`;
+                return content;
+            })
+            .join("\n");
+
+        return lines;
+    }
+
+    private async callGeminiApi(
+        chatContext: string,
+        userPrompt: string,
+        http: IHttp,
+        apiKey: string,
+        llmModel: string,
+    ): Promise<string> {
+        const modelId = llmModel || "gemini-flash-lite-latest";
+        const apiEndpoint = `${this.apiBaseEndpoint}/${modelId}:generateContent`;
+        const systemPrompt = `Bạn là WeTeams AI, một trợ lý ảo: tóm tắt ngắn gọn, liệt kê quyết định, việc cần làm và điểm đáng chú ý. Ưu tiên súc tích và dễ đọc. Sử dụng Markdown.`;
+
+        // Use full chat context as requested (no truncation) and omit userPrompt
+        let finalPrompt = "";
+        if (chatContext) {
+            finalPrompt += `--- NGỮ CẢNH ---\n${chatContext}\n---------------------------\n\n`;
+        }
+
+        finalPrompt += `**Lệnh của người dùng:** ${userPrompt}`;
+
+        const response = await http.post(apiEndpoint, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-goog-api-key": apiKey,
+            },
+            data: {
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }],
+                },
+                contents: [
+                    {
+                        parts: [{ text: finalPrompt }],
+                    },
+                ],
+                generationConfig: {
+                    temperature: 0.3,
+                    maxOutputTokens: 600,
+                },
+            },
+        });
+
+        if (response.statusCode !== 200) {
+            throw new Error(
+                `Google API Status ${response.statusCode}: ${response.content}`,
+            );
+        }
+
+        const data = JSON.parse(response.content || "{}");
+        const aiText =
+            data.candidates?.[0]?.content?.parts?.[0]?.text ||
+            "Không có phản hồi từ LLM.";
+
+        return aiText.trim();
+    }
+
+    private async openAiResultModal(
+        modify: IModify,
+        triggerId: string,
+        user: IUser,
+        aiResponse: string,
+    ): Promise<void> {
+        const modalText = this.formatModalText(aiResponse);
+
+        await modify.getUiController().openSurfaceView(
+            {
+                type: UIKitSurfaceType.MODAL,
+                id: "ai-summarize-modal",
+                title: {
+                    text: "AI Summarize",
+                    type: "plain_text",
+                },
+                close: {
+                    type: "button",
+                    text: {
+                        type: "plain_text",
+                        text: "Close",
+                    },
+                    appId: this.getID(),
+                    blockId: "ai_summarize_close_block",
+                    actionId: "ai_summarize_close_action",
+                },
+                blocks: [
+                    {
+                        type: "section",
+                        blockId: "ai_summarize_result_block",
+                        text: {
+                            type: "mrkdwn",
+                            text: modalText,
+                        },
+                    },
+                ],
+            },
+            { triggerId },
+            user,
+        );
+    }
+
+    private formatModalText(text: string): string {
+        const trimmedText = text.trim();
+
+        if (trimmedText.length <= 2800) {
+            return trimmedText || "Không có nội dung để hiển thị.";
+        }
+
+        return `${trimmedText.slice(0, 2800)}\n\n...`;
+    }
+
     private async getRuntimeSettings(): Promise<{
         tenantId: string;
         apiUrl: string;
@@ -402,6 +592,26 @@ export class MyRocketChatApp
         return {
             tenantId: typeof tenantId === "string" ? tenantId : "",
             apiUrl: typeof apiUrl === "string" ? apiUrl : "",
+        };
+    }
+
+    private async getAiRuntimeSettings(): Promise<{
+        apiKey: string;
+        llmModel: string;
+    }> {
+        const settingsReader =
+            this.getAccessors().environmentReader.getSettings();
+        const [apiKey, llmModel] = await Promise.all([
+            settingsReader.getValueById("apiKey"),
+            settingsReader.getValueById("llmModel"),
+        ]);
+
+        return {
+            apiKey: typeof apiKey === "string" ? apiKey : "",
+            llmModel:
+                typeof llmModel === "string"
+                    ? llmModel
+                    : "gemini-flash-lite-latest",
         };
     }
 }
