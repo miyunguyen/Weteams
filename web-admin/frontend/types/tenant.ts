@@ -58,6 +58,25 @@ export interface TenantActionResult {
   data: unknown;
 }
 
+export interface SendTenantTeamsMessagePayload {
+  tenantId: string;
+  teamIds: string[];
+  text: string;
+}
+
+export interface SendTenantTeamsMessageResult {
+  message: string;
+  data: {
+    sentCount: number;
+    teamIds: string[];
+    failedTeams?: Array<{
+      teamId: string;
+      roomId: string;
+      message: string;
+    }>;
+  };
+}
+
 export interface TenantDeployAppPayload {
   tenantId: string;
   maxAttempts?: number;

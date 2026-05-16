@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronDown, ChevronUp, CircleCheckBig, ExternalLink, Layers3, Loader2, Rocket, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import { SearchBar } from '@/components/SearchBar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
   ApiError,
@@ -21,6 +22,7 @@ import {
   syncTenantUsersFromRocket,
   syncTeamMembershipsFromRocket,
   createTeamWithChannels,
+  sendTenantTeamsMessage,
   importUsers,
   createUser,
   updateUser,
@@ -83,6 +85,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const [tenantAdminForm, setTenantAdminForm] = useState<{ email: string; username: string; password: string; role?: string }>({ email: '', username: '', password: '', role: 'ADMIN' });
     const [editUrlsOpen, setEditUrlsOpen] = useState(false);
     const [urlsForm, setUrlsForm] = useState<{ rootUrl: string; rocketUrl: string }>({ rootUrl: '', rocketUrl: '' });
+  const [teamMessageText, setTeamMessageText] = useState('');
+  const [teamMessageSearch, setTeamMessageSearch] = useState('');
+  const [selectedMessageTeamIds, setSelectedMessageTeamIds] = useState<Set<string>>(new Set());
+  const [teamMessageLoading, setTeamMessageLoading] = useState(false);
 
   // Handle 401 Unauthorized (token expired)
   const handleAuthError = useCallback((error: unknown) => {
@@ -264,6 +270,24 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const [teamsData, setTeamsData] = useState<any | null>(null);
   const [teamsLoading, setTeamsLoading] = useState(false);
 
+  const filteredMessageTeams = useMemo(() => {
+    const query = teamMessageSearch.trim().toLowerCase();
+    const teams = (teamsData?.items ?? tenant?.teams ?? []) as TenantDetailTeam[];
+
+    if (!query) {
+      return teams;
+    }
+
+    return teams.filter((team: TenantDetailTeam) => {
+      const searchableText = [team.name, team.roomId, team.joinCode, team.teamId]
+        .filter((value): value is string => Boolean(value))
+        .join(' ')
+        .toLowerCase();
+
+      return searchableText.includes(query);
+    });
+  }, [teamsData, tenant?.teams, teamMessageSearch]);
+
   // users table state
   const [usersPage, setUsersPage] = useState(1);
   const [usersPageSize] = useState(10);
@@ -443,6 +467,48 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       setSyncTeamsLoading(false);
     }
   }, [tenant, loadTeams, handleAuthError]);
+
+  const handleSendTeamMessage = useCallback(async () => {
+    if (!tenant) return;
+
+    const text = teamMessageText.trim();
+    const teamIds = Array.from(selectedMessageTeamIds);
+
+    if (!text) {
+      toast.error('Vui lòng nhập nội dung tin nhắn');
+      return;
+    }
+
+    if (teamIds.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một team');
+      return;
+    }
+
+    setTeamMessageLoading(true);
+
+    try {
+      const result = await sendTenantTeamsMessage({
+        tenantId: tenant.id,
+        teamIds,
+        text,
+      });
+
+      toast.success('Đã gửi tin nhắn tới team', {
+        description: result?.data?.sentCount
+          ? `Đã gửi tới ${result.data.sentCount} team`
+          : 'Hoàn tất',
+      });
+      setTeamMessageText('');
+      setSelectedMessageTeamIds(new Set());
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        const textMessage = error instanceof ApiError ? error.message : 'Không thể gửi tin nhắn';
+        toast.error('Không thể gửi tin nhắn', { description: textMessage });
+      }
+    } finally {
+      setTeamMessageLoading(false);
+    }
+  }, [tenant, selectedMessageTeamIds, teamMessageText, handleAuthError]);
 
   useEffect(() => {
     void loadTeams();
@@ -866,6 +932,135 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
       </div>
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <Rocket className="h-4 w-4" />
+              Gửi tin nhắn tới teams
+            </div>
+            <p className="mt-2 text-sm text-slate-500">
+              Chọn một hoặc nhiều team, lọc nhanh bằng thanh tìm kiếm rồi gửi cùng một nội dung text.
+            </p>
+          </div>
+          <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            {selectedMessageTeamIds.size} team đã chọn
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-slate-700">
+              Nội dung tin nhắn
+              <textarea
+                value={teamMessageText}
+                onChange={(event) => setTeamMessageText(event.target.value)}
+                placeholder="Nhập nội dung text cần gửi tới các team..."
+                rows={8}
+                className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-primary/40 focus:ring-4 focus:ring-primary/10"
+              />
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setSelectedMessageTeamIds(new Set(filteredMessageTeams.map((team) => team.id)))}
+                disabled={filteredMessageTeams.length === 0}
+              >
+                Chọn tất cả team đang lọc
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSelectedMessageTeamIds(new Set())}
+                disabled={selectedMessageTeamIds.size === 0}
+              >
+                Bỏ chọn
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <SearchBar
+              value={teamMessageSearch}
+              onChange={setTeamMessageSearch}
+              placeholder="Lọc theo tên team, room, join code..."
+            />
+
+            <div className="max-h-80 overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              {filteredMessageTeams.length > 0 ? (
+                <div className="space-y-2">
+                  {filteredMessageTeams.map((team) => {
+                    const isSelected = selectedMessageTeamIds.has(team.id);
+
+                    return (
+                      <label
+                        key={team.id}
+                        className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-3 py-3 transition ${
+                          isSelected
+                            ? 'border-primary/30 bg-primary/5'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {
+                            const next = new Set(selectedMessageTeamIds);
+                            if (next.has(team.id)) {
+                              next.delete(team.id);
+                            } else {
+                              next.add(team.id);
+                            }
+                            setSelectedMessageTeamIds(next);
+                          }}
+                          className="mt-1 h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-slate-900">
+                                {team.name || 'Unnamed team'}
+                              </p>
+                              <p className="mt-0.5 text-xs text-slate-500">
+                                Room: {team.roomId}
+                              </p>
+                            </div>
+                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                              {team.members?.length ?? 0} members
+                            </span>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-500">
+                            <span className="rounded-full bg-slate-100 px-2 py-1">Team ID: {team.teamId}</span>
+                            <span className="rounded-full bg-slate-100 px-2 py-1">Join code: {team.joinCode}</span>
+                          </div>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : (
+                <EmptyState
+                  title="Không tìm thấy team"
+                  description="Thử thay đổi từ khóa tìm kiếm hoặc mở rộng danh sách team hiện có."
+                />
+              )}
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={handleSendTeamMessage}
+              disabled={teamMessageLoading || selectedMessageTeamIds.size === 0 || !teamMessageText.trim()}
+            >
+              {teamMessageLoading
+                ? 'Đang gửi...'
+                : `Gửi tới ${selectedMessageTeamIds.size} team`}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
             <ShieldCheck className="h-4 w-4" />
@@ -1154,7 +1349,7 @@ function TeamCard({ team }: { team: TenantDetailTeam }) {
           <p className="mt-1 text-sm text-slate-500">Room: {team.roomId}</p>
         </div>
         <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-          {team.members.length} members
+          {team.members?.length ?? 0} members
         </span>
       </div>
 
@@ -1168,7 +1363,7 @@ function TeamCard({ team }: { team: TenantDetailTeam }) {
       <div className="mt-4">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Members</p>
         <div className="mt-3 space-y-3">
-          {team.members.length > 0 ? (
+          {team.members?.length > 0 ? (
             team.members.map((member) => (
               <div key={member.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

@@ -4,7 +4,11 @@ import { PinMessageDto } from './dto/pin-message.dto';
 
 @Controller('messages')
 export class MessageController {
-  constructor(private readonly messageService: MessageService) {}
+  private readonly messageService: MessageService;
+
+  constructor(messageService: MessageService) {
+    this.messageService = messageService;
+  }
 
   @HttpCode(200)
   @Post(':messageId/pin')
@@ -13,5 +17,25 @@ export class MessageController {
     @Body() dto: PinMessageDto,
   ) {
     return this.messageService.pinMessage(dto.tenantId, messageId);
+  }
+
+  @HttpCode(200)
+  @Post('send')
+  async sendTeamsMessage(
+    @Body() dto: { tenantId: string; teamIds: string[]; text: string },
+  ): Promise<unknown> {
+    const messageService = this.messageService as {
+      sendTeamsMessage: (
+        tenantId: string,
+        teamIds: string[],
+        text: string,
+      ) => Promise<unknown>;
+    };
+
+    return await messageService.sendTeamsMessage(
+      dto.tenantId,
+      dto.teamIds,
+      dto.text,
+    );
   }
 }

@@ -15,6 +15,8 @@ import type {
   TenantActionResult,
   TenantListQuery,
   TenantListResponse,
+  SendTenantTeamsMessagePayload,
+  SendTenantTeamsMessageResult,
 } from '@/types/tenant';
 
 const API_BASE_URL =
@@ -261,6 +263,16 @@ export async function updateTenantUrls(tenantId: string, payload: { rootUrl?: st
 
   return response.data;
 }
+
+export async function sendTenantTeamsMessage(payload: SendTenantTeamsMessagePayload) {
+  const response = await request<SendTenantTeamsMessageResult>('/messages/send', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
 export async function fetchTenantLogs(payload: TenantActionPayload) {
   const response = await request<TenantActionResult>(`/tenants/${payload.tenantId}/logs`, {
     method: 'GET',

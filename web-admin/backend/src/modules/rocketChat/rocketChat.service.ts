@@ -216,6 +216,21 @@ export class RocketChatService {
     );
   }
 
+  async sendMessage(tenantId: string, roomId: string, text: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/chat.sendMessage`,
+        {
+          message: {
+            rid: roomId,
+            msg: text,
+          },
+        },
+        { headers },
+      ),
+    );
+  }
+
   async postMessage(tenantId: string, roomId: string, text: string) {
     return this.callApi(tenantId, (headers, tenant) =>
       axios.post(
