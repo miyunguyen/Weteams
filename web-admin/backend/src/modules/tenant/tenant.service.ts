@@ -39,6 +39,25 @@ type TenantDefaults = {
   natsBindIp: string;
 };
 
+type RocketCreateChannelResponse = {
+  data?: {
+    success?: boolean;
+    channel?: { _id?: string };
+  };
+};
+
+type RocketRoomInfoByNameResponse = {
+  data?: {
+    room?: { _id?: string };
+  };
+};
+
+type RocketSetDefaultChannelResponse = {
+  data?: {
+    success?: boolean;
+  };
+};
+
 @Injectable()
 export class TenantService {
   constructor(
@@ -269,6 +288,8 @@ export class TenantService {
           },
         };
       }
+
+      await this.ensureDefaultBroadcastChannelAfterProvision(tenant.id);
 
       let autoDeployResult:
         | {
@@ -1382,6 +1403,96 @@ export class TenantService {
 
   private async sleep(ms: number): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async ensureDefaultBroadcastChannelAfterProvision(
+    tenantId: string,
+  ): Promise<void> {
+    const channelName = 'Thong-bao-chung';
+    let roomId = '';
+
+    try {
+      const createResponse = await this.rocketChatService.createChannel(
+        tenantId,
+        channelName,
+        {
+          readOnly: true,
+          broadcast: true,
+        },
+      );
+      const createData = (createResponse as RocketCreateChannelResponse)?.data;
+
+      if (createData?.success) {
+        roomId = String(createData?.channel?._id ?? '').trim();
+      }
+    } catch (error) {
+      const status = (error as { response?: { status?: number } })?.response
+        ?.status;
+      const errorType = String(
+        (error as { response?: { data?: { errorType?: string } } })?.response
+          ?.data?.errorType ?? '',
+      );
+
+      const isAlreadyExistsError =
+        status === 400 &&
+        (errorType.includes('duplicate') ||
+          errorType.includes('exists') ||
+          errorType.includes('error-room-name-already-in-use'));
+
+      if (!isAlreadyExistsError) {
+        throw new AppException(HttpStatus.BAD_REQUEST, {
+          message: 'Tạo channel mặc định sau provision thất bại',
+          errorCode: 'PROVISION_DEFAULT_CHANNEL_CREATE_FAILED',
+          data: {
+            tenantId,
+            channelName,
+            reason: this.getErrorMessage(error),
+          },
+        });
+      }
+    }
+
+    if (!roomId) {
+      const roomResponse = await this.rocketChatService.getRoomInfoByName(
+        tenantId,
+        channelName,
+      );
+      const roomData = (roomResponse as RocketRoomInfoByNameResponse)?.data;
+      roomId = String(roomData?.room?._id ?? '').trim();
+    }
+
+    if (!roomId) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Không lấy được roomId của channel mặc định',
+        errorCode: 'PROVISION_DEFAULT_CHANNEL_ROOM_NOT_FOUND',
+        data: {
+          tenantId,
+          channelName,
+        },
+      });
+    }
+
+    const setDefaultResponse = await this.rocketChatService.setDefaultChannel(
+      tenantId,
+      roomId,
+      true,
+    );
+    const setDefaultData = (
+      setDefaultResponse as RocketSetDefaultChannelResponse
+    ).data;
+
+    if (!setDefaultData?.success) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Set default channel sau provision thất bại',
+        errorCode: 'PROVISION_SET_DEFAULT_CHANNEL_FAILED',
+        data: {
+          tenantId,
+          channelName,
+          roomId,
+          response: setDefaultData ?? null,
+        },
+      });
+    }
   }
 
   private toEnvFileContent(input: {

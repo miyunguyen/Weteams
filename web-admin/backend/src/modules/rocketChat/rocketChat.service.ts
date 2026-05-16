@@ -155,11 +155,65 @@ export class RocketChatService {
     );
   }
 
-  async createChannel(tenantId: string, name: string) {
+  async createChannel(
+    tenantId: string,
+    name: string,
+    options?: {
+      readOnly?: boolean;
+      broadcast?: boolean;
+      members?: string[];
+      excludeSelf?: boolean;
+    },
+  ) {
     return this.callApi(tenantId, (headers, tenant) =>
       axios.post(
         `${tenant.rocketUrl}/api/v1/channels.create`,
-        { name },
+        {
+          name,
+          ...(Array.isArray(options?.members)
+            ? { members: options.members }
+            : {}),
+          ...(typeof options?.readOnly === 'boolean'
+            ? { readOnly: options.readOnly }
+            : {}),
+          ...(typeof options?.excludeSelf === 'boolean'
+            ? { excludeSelf: options.excludeSelf }
+            : {}),
+          ...(typeof options?.broadcast === 'boolean'
+            ? {
+                extraData: {
+                  broadcast: options.broadcast,
+                },
+              }
+            : {}),
+        },
+        { headers },
+      ),
+    );
+  }
+
+  async getRoomInfoByName(tenantId: string, roomName: string) {
+    const encodedRoomName = encodeURIComponent(roomName);
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.get(
+        `${tenant.rocketUrl}/api/v1/rooms.info?roomName=${encodedRoomName}`,
+        { headers },
+      ),
+    );
+  }
+
+  async setDefaultChannel(
+    tenantId: string,
+    roomId: string,
+    isDefault: boolean,
+  ) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/channels.setDefault`,
+        {
+          roomId,
+          default: isDefault,
+        },
         { headers },
       ),
     );
