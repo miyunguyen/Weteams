@@ -25,6 +25,7 @@ export interface Tenant {
   createdAt: string;
   updatedAt: string;
   lastProvisionedAt?: string | null;
+  isDeleted?: boolean;
 }
 
 export interface TenantListQuery {

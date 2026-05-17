@@ -6,6 +6,7 @@ import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
 import 'dotenv/config';
 import { AppException } from '../../common/exceptions/app.exception';
+import type { RocketChatSettingUpdate } from './rocket-chat-settings';
 
 @Injectable()
 export class RocketChatService {
@@ -217,6 +218,29 @@ export class RocketChatService {
         { headers },
       ),
     );
+  }
+
+  async updateSetting(
+    tenantId: string,
+    settingId: string,
+    body: RocketChatSettingUpdate['body'],
+  ) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/settings/${encodeURIComponent(settingId)}`,
+        body,
+        { headers },
+      ),
+    );
+  }
+
+  async updateSettings(
+    tenantId: string,
+    settings: readonly RocketChatSettingUpdate[],
+  ): Promise<void> {
+    for (const setting of settings) {
+      await this.updateSetting(tenantId, setting.id, setting.body);
+    }
   }
 
   async inviteUser(tenantId: string, roomId: string, userId: string) {

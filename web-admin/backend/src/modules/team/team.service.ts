@@ -3,7 +3,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { AppException } from 'src/common/exceptions/app.exception';
-import { VietnameseUtil } from 'src/common/utils/vietnamese.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
 import { CreateFromRoomDto } from './dto/create-from-room.dto';
@@ -109,12 +108,12 @@ export class TeamService {
       }> = [];
 
       for (const rawChannelName of channelsName) {
-        const suffix = this.normalizeChannelSuffix(rawChannelName);
-        if (!suffix) {
+        const childSuffix = this.cleanChannelName(rawChannelName);
+        if (!childSuffix) {
           continue;
         }
 
-        const childName = this.buildChildChannelName(roomName, suffix);
+        const childName = this.buildChildChannelName(roomName, childSuffix);
         try {
           const groupResponse = await createGroup(childName);
           const groupData = groupResponse?.data;
@@ -134,11 +133,10 @@ export class TeamService {
             rocketResponse: groupData,
           });
         } catch (error) {
-          // If it's already an AppException, rethrow it
           if (error instanceof AppException) {
             throw error;
           }
-          // Otherwise wrap the error
+
           throw new AppException(HttpStatus.BAD_REQUEST, {
             message: `Lỗi khi tạo group ${childName}: ${error instanceof Error ? error.message : String(error)}`,
             errorCode: 'ROCKET_CREATE_GROUP_ERROR',
@@ -156,11 +154,10 @@ export class TeamService {
         },
       };
     } catch (error) {
-      // If it's already an AppException, rethrow it
       if (error instanceof AppException) {
         throw error;
       }
-      // Log unexpected errors and wrap them
+
       console.error('Unexpected error in createTeamWithChannels:', error);
       throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, {
         message: `Lỗi không mong đợi khi tạo team: ${error instanceof Error ? error.message : String(error)}`,
@@ -414,35 +411,25 @@ export class TeamService {
     };
   }
 
-  private transliterateVietnamese(text: string): string {
-    return VietnameseUtil.transliterate(text);
-  }
-
-  private normalizeChannelSuffix(value: string): string {
-    return this.transliterateVietnamese(value)
-      .trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^\w-]/g, '')
-      .replace(/_+/g, '_')
-      .replace(/^_+|_+$/g, '');
+  private cleanChannelName(value: string): string {
+    return typeof value === 'string' ? value.trim() : '';
   }
 
   private buildChildChannelName(
     parentName: string,
     childSuffix: string,
   ): string {
-    const normalizedParent = this.transliterateVietnamese(parentName)
-      .trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^\w-]/g, '');
+    const normalizedParent = parentName.trim();
 
-    const normalizedChild = childSuffix;
-
-    if (normalizedChild.startsWith(`${normalizedParent}_`)) {
-      return normalizedChild;
+    if (!normalizedParent) {
+      return childSuffix;
     }
 
-    return `${normalizedParent}_${normalizedChild}`;
+    if (childSuffix.startsWith(`${normalizedParent}-`)) {
+      return childSuffix;
+    }
+
+    return `${normalizedParent}-${childSuffix}`;
   }
 
   async searchTeams(dto: {
