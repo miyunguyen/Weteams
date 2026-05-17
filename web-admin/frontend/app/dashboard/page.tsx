@@ -62,6 +62,7 @@ export default function DashboardPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isInfrastructureOpen, setIsInfrastructureOpen] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(true);
   const [isCreatingTenant, setIsCreatingTenant] = useState(false);
   const [activeProvisionTenantId, setActiveProvisionTenantId] = useState<string | null>(null);
   const [createForm, setCreateForm] = useState<CreateTenantFormState>(initialCreateTenantForm);
@@ -75,7 +76,7 @@ export default function DashboardPage() {
     [activeProvisionTenantId, visibleTenants],
   );
 
-  const loadTenants = useCallback(async (search: string, silent = false) => {
+  const loadTenants = useCallback(async (search: string, silent = false, includeDeleted = true) => {
     if (!silent) {
       setIsLoading(true);
     }
@@ -83,12 +84,14 @@ export default function DashboardPage() {
     setError(null);
 
     try {
+      const isDeletedParam = includeDeleted ? undefined : false;
       const result = await getTenants({
         search: search.trim() || undefined,
         page: 1,
         pageSize: 50,
         sortBy: 'updatedAt',
         sortOrder: 'desc',
+        isDeleted: isDeletedParam,
       });
 
       setTenants(result.items);
@@ -113,7 +116,7 @@ export default function DashboardPage() {
       return;
     }
 
-    void loadTenants(searchTerm);
+    void loadTenants(searchTerm, false, showDeleted);
   }, [router, searchTerm, loadTenants]);
 
   useEffect(() => {
@@ -145,7 +148,7 @@ export default function DashboardPage() {
 
     // Handler được refresh qua closure, không cần dependency
     const handleTenantUpdate = () => {
-      void loadTenants(currentSearchRef.current, true);
+      void loadTenants(currentSearchRef.current, true, showDeleted);
     };
 
     socket.on('tenant.updated', handleTenantUpdate);
@@ -191,7 +194,7 @@ export default function DashboardPage() {
   const handleRefresh = () => {
     toast.info('Đang làm mới dashboard...');
     startTransition(() => {
-      void loadTenants(searchTerm);
+      void loadTenants(searchTerm, false, showDeleted);
     });
   };
 
@@ -230,7 +233,7 @@ export default function DashboardPage() {
 
     void createRequest
       .then(async (created) => {
-        const refreshedTenants = await loadTenants(currentSearchRef.current, true);
+      const refreshedTenants = await loadTenants(currentSearchRef.current, true, showDeleted);
         const tenantId = resolveProvisionTenantId(created, refreshedTenants, payload.domain);
 
         if (tenantId) {
@@ -278,8 +281,22 @@ export default function DashboardPage() {
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <SearchBar value={searchTerm} onChange={setSearchTerm} placeholder='Nhập tên hoặc domain'/>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-            {visibleTenants.length} tenant đang hiển thị
+          <div className="flex items-center gap-4">
+            <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+              {visibleTenants.length} tenant đang hiển thị
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm text-slate-500">
+              <input
+                type="checkbox"
+                checked={showDeleted}
+                onChange={(e) => {
+                  const v = e.target.checked;
+                  setShowDeleted(v);
+                  void loadTenants(searchTerm, false, v);
+                }}
+              />
+              Hiện tenant đã xoá
+            </label>
           </div>
         </div>
       </section>

@@ -34,9 +34,12 @@ export function TenantCard({ tenant }: TenantCardProps) {
             <h3 className="text-lg font-semibold tracking-tight text-slate-950">
               {tenant.name}
             </h3>
+            {tenant.isDeleted ? (
+              <span className="rounded-full bg-rose-50 text-rose-700 ring-rose-200 px-3 py-1 text-xs font-semibold">DELETED</span>
+            ) : (
             <span className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${statusStyles[tenant.deployStatus]}`}>
               {tenant.deployStatus}
-            </span>
+            </span>)}
           </div>
           <p className="text-sm text-slate-500">{tenant.domain}</p>
         </div>
@@ -76,7 +79,7 @@ export function TenantCard({ tenant }: TenantCardProps) {
         <InfoRow label="Updated" value={new Date(tenant.updatedAt).toLocaleString()} />
       </div>
 
-      {tenant.deployError ? (
+      {tenant.deployError && !tenant.isDeleted ? (
         <p className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {tenant.deployError}
         </p>

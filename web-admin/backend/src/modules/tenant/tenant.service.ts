@@ -23,6 +23,16 @@ import axios from 'axios';
 
 const execFileAsync = promisify(execFile);
 
+type InitialTenantRocketSetting = {
+  id: string;
+  body: {
+    value: string | boolean;
+    color?: string;
+    editor?: string;
+    execute?: boolean;
+  };
+};
+
 type TenantDefaults = {
   release: string;
   regToken: string;
@@ -288,6 +298,11 @@ export class TenantService {
           },
         };
       }
+
+      await this.rocketChatService.updateSettings(
+        tenant.id,
+        this.getInitialTenantRocketSettings(),
+      );
 
       await this.ensureDefaultBroadcastChannelAfterProvision(tenant.id);
 
@@ -1408,57 +1423,71 @@ export class TenantService {
   private async ensureDefaultBroadcastChannelAfterProvision(
     tenantId: string,
   ): Promise<void> {
-    const channelName = 'Thong-bao-chung';
+    const channelCandidates = ['Thông báo chung', 'Thong-bao-chung'];
     let roomId = '';
+    let lastError: unknown = null;
+    let usedChannelName = channelCandidates[0];
 
-    try {
-      const createResponse = await this.rocketChatService.createChannel(
-        tenantId,
-        channelName,
-        {
-          readOnly: true,
-          broadcast: true,
-        },
-      );
-      const createData = (createResponse as RocketCreateChannelResponse)?.data;
+    for (const channelName of channelCandidates) {
+      usedChannelName = channelName;
 
-      if (createData?.success) {
-        roomId = String(createData?.channel?._id ?? '').trim();
-      }
-    } catch (error) {
-      const status = (error as { response?: { status?: number } })?.response
-        ?.status;
-      const errorType = String(
-        (error as { response?: { data?: { errorType?: string } } })?.response
-          ?.data?.errorType ?? '',
-      );
+      try {
+        const createResponse = await this.rocketChatService.createChannel(
+          tenantId,
+          channelName,
+          {
+            readOnly: true,
+            broadcast: true,
+          },
+        );
+        const createData = (createResponse as RocketCreateChannelResponse)
+          ?.data;
 
-      const isAlreadyExistsError =
-        status === 400 &&
-        (errorType.includes('duplicate') ||
-          errorType.includes('exists') ||
-          errorType.includes('error-room-name-already-in-use'));
+        if (createData?.success) {
+          roomId = String(createData?.channel?._id ?? '').trim();
+          break;
+        }
+      } catch (error) {
+        lastError = error;
 
-      if (!isAlreadyExistsError) {
-        throw new AppException(HttpStatus.BAD_REQUEST, {
-          message: 'Tạo channel mặc định sau provision thất bại',
-          errorCode: 'PROVISION_DEFAULT_CHANNEL_CREATE_FAILED',
-          data: {
+        const status = (error as { response?: { status?: number } })?.response
+          ?.status;
+        const errorType = String(
+          (error as { response?: { data?: { errorType?: string } } })?.response
+            ?.data?.errorType ?? '',
+        );
+
+        const isAlreadyExistsError =
+          status === 400 &&
+          (errorType.includes('duplicate') ||
+            errorType.includes('exists') ||
+            errorType.includes('error-room-name-already-in-use'));
+
+        if (isAlreadyExistsError) {
+          const roomResponse = await this.rocketChatService.getRoomInfoByName(
             tenantId,
             channelName,
-            reason: this.getErrorMessage(error),
-          },
-        });
+          );
+          const roomData = (roomResponse as RocketRoomInfoByNameResponse)?.data;
+          roomId = String(roomData?.room?._id ?? '').trim();
+
+          if (roomId) {
+            break;
+          }
+        }
       }
     }
 
-    if (!roomId) {
-      const roomResponse = await this.rocketChatService.getRoomInfoByName(
-        tenantId,
-        channelName,
-      );
-      const roomData = (roomResponse as RocketRoomInfoByNameResponse)?.data;
-      roomId = String(roomData?.room?._id ?? '').trim();
+    if (!roomId && lastError) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Tạo channel mặc định sau provision thất bại',
+        errorCode: 'PROVISION_DEFAULT_CHANNEL_CREATE_FAILED',
+        data: {
+          tenantId,
+          channelName: usedChannelName,
+          reason: this.getErrorMessage(lastError),
+        },
+      });
     }
 
     if (!roomId) {
@@ -1467,7 +1496,7 @@ export class TenantService {
         errorCode: 'PROVISION_DEFAULT_CHANNEL_ROOM_NOT_FOUND',
         data: {
           tenantId,
-          channelName,
+          channelName: usedChannelName,
         },
       });
     }
@@ -1487,7 +1516,7 @@ export class TenantService {
         errorCode: 'PROVISION_SET_DEFAULT_CHANNEL_FAILED',
         data: {
           tenantId,
-          channelName,
+          channelName: usedChannelName,
           roomId,
           response: setDefaultData ?? null,
         },
@@ -1573,18 +1602,26 @@ export class TenantService {
     const skip = (page - 1) * pageSize;
     const sortBy = query.sortBy ?? 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
-    const isDeleted = this.parseBooleanQuery(query.isDeleted, false);
+    // If caller provided `isDeleted` filter, respect it. If omitted, do not
+    // include the `isDeleted` clause so both deleted and non-deleted tenants
+    // are returned.
+    const isDeletedProvided = Object.prototype.hasOwnProperty.call(
+      query,
+      'isDeleted',
+    );
 
     // Build where clause
     interface TenantWhere {
-      isDeleted: boolean;
+      isDeleted?: boolean;
       OR?: any[];
       deployStatus?: any;
       id?: any;
     }
-    const where: TenantWhere = {
-      isDeleted,
-    };
+    const where: TenantWhere = {};
+
+    if (isDeletedProvided) {
+      where.isDeleted = this.parseBooleanQuery(query.isDeleted, false);
+    }
 
     // Filter tenants based on user role
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -1623,6 +1660,7 @@ export class TenantService {
         id: true,
         name: true,
         domain: true,
+        isDeleted: true,
         rootUrl: true,
         rocketUrl: true,
         composeProjectName: true,
@@ -1753,5 +1791,28 @@ export class TenantService {
     }
 
     return fallback;
+  }
+
+  private getInitialTenantRocketSettings(): InitialTenantRocketSetting[] {
+    return [
+      {
+        id: 'Show_Setup_Wizard',
+        body: {
+          value: 'completed',
+        },
+      },
+      {
+        id: 'Accounts_TwoFactorAuthentication_Enabled',
+        body: {
+          value: false,
+        },
+      },
+      {
+        id: 'UI_Allow_room_names_with_special_chars',
+        body: {
+          value: true,
+        },
+      },
+    ];
   }
 }
