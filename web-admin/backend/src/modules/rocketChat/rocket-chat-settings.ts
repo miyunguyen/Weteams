@@ -10,8 +10,12 @@ export type RocketChatSettingUpdate = {
   };
 };
 
-export function buildInitialTenantRocketSettings(): RocketChatSettingUpdate[] {
-  return [
+export function buildInitialTenantRocketSettings(
+  orgName?: string,
+): RocketChatSettingUpdate[] {
+  const settings: RocketChatSettingUpdate[] = [];
+
+  settings.push(
     {
       id: 'Show_Setup_Wizard',
       body: {
@@ -30,5 +34,16 @@ export function buildInitialTenantRocketSettings(): RocketChatSettingUpdate[] {
         value: true,
       },
     },
-  ];
+  );
+
+  if (orgName) {
+    settings.push({
+      id: 'Organization_Name',
+      body: {
+        value: orgName,
+      },
+    });
+  }
+
+  return settings;
 }
