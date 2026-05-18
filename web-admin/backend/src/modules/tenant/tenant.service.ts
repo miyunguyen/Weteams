@@ -3,6 +3,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { createServer } from 'node:http';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
+import { buildInitialTenantRocketSettings } from '../rocketChat/rocket-chat-settings';
 import { ProvisionTenantDto } from './dto/provision-tenant.dto';
 import { DeprovisionTenantDto } from './dto/deprovision-tenant.dto';
 import { LoginTenantDto } from './dto/login-tenant.dto';
@@ -23,15 +24,7 @@ import axios from 'axios';
 
 const execFileAsync = promisify(execFile);
 
-type InitialTenantRocketSetting = {
-  id: string;
-  body: {
-    value: string | boolean;
-    color?: string;
-    editor?: string;
-    execute?: boolean;
-  };
-};
+// RocketChat setting shape is defined centrally in rocket-chat-settings.ts
 
 type TenantDefaults = {
   release: string;
@@ -301,7 +294,7 @@ export class TenantService {
 
       await this.rocketChatService.updateSettings(
         tenant.id,
-        this.getInitialTenantRocketSettings(),
+        buildInitialTenantRocketSettings(resolved.name),
       );
 
       await this.ensureDefaultBroadcastChannelAfterProvision(tenant.id);
@@ -1791,28 +1784,5 @@ export class TenantService {
     }
 
     return fallback;
-  }
-
-  private getInitialTenantRocketSettings(): InitialTenantRocketSetting[] {
-    return [
-      {
-        id: 'Show_Setup_Wizard',
-        body: {
-          value: 'completed',
-        },
-      },
-      {
-        id: 'Accounts_TwoFactorAuthentication_Enabled',
-        body: {
-          value: false,
-        },
-      },
-      {
-        id: 'UI_Allow_room_names_with_special_chars',
-        body: {
-          value: true,
-        },
-      },
-    ];
   }
 }
