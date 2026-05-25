@@ -9,6 +9,15 @@ import { Button } from '@/components/ui/Button';
 import { SearchBar } from '@/components/SearchBar';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
+  TenantTeamMembersModal,
+  type TenantTeamMembersData,
+} from '@/components/tenant/TenantTeamMembersModal';
+import {
+  TenantUserFormModal,
+  createEmptyTenantUserForm,
+  type TenantUserFormState,
+} from '@/components/tenant/TenantUserFormModal';
+import {
   ApiError,
   deployTenantApp,
   deleteTenant,
@@ -73,18 +82,16 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     'Thông báo',
     'Phụ huynh',
   ];
-  const [selectedChannels, setSelectedChannels] = useState<Set<string>>(
-    new Set(),
-  );
+  const [selectedChannels, setSelectedChannels] = useState<Set<string>>(new Set());
   const [customChannels, setCustomChannels] = useState<string[]>([]);
   const [newChannel, setNewChannel] = useState('');
   const [importFile, setImportFile] = useState<File | null>(null);
-  const [userForm, setUserForm] = useState<Record<string, any>>({ name: '', username: '', email: '', role: undefined, phoneNumber: '', citizenId: '', address: '', dateOfBirth: '', avatarUrl: '' });
+  const [userForm, setUserForm] = useState<TenantUserFormState>(createEmptyTenantUserForm());
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [createTenantAdminOpen, setCreateTenantAdminOpen] = useState(false);
   const [tenantAdminForm, setTenantAdminForm] = useState<{ email: string; username: string; password: string; role?: string }>({ email: '', username: '', password: '', role: 'ADMIN' });
-    const [editUrlsOpen, setEditUrlsOpen] = useState(false);
-    const [urlsForm, setUrlsForm] = useState<{ rootUrl: string; rocketUrl: string }>({ rootUrl: '', rocketUrl: '' });
+  const [editUrlsOpen, setEditUrlsOpen] = useState(false);
+  const [urlsForm, setUrlsForm] = useState<{ rootUrl: string; rocketUrl: string }>({ rootUrl: '', rocketUrl: '' });
   const [teamMessageText, setTeamMessageText] = useState('');
   const [teamMessageSearch, setTeamMessageSearch] = useState('');
   const [selectedMessageTeamIds, setSelectedMessageTeamIds] = useState<Set<string>>(new Set());
@@ -264,7 +271,6 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     }
   }, [tenant, loadTenant, handleAuthError]);
 
-  // teams table state
   const [teamsPage, setTeamsPage] = useState(1);
   const [teamsPageSize] = useState(10);
   const [teamsData, setTeamsData] = useState<any | null>(null);
@@ -299,7 +305,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [membersPage, setMembersPage] = useState(1);
   const [membersPageSize] = useState(10);
-  const [membersData, setMembersData] = useState<any | null>(null);
+  const [membersData, setMembersData] = useState<TenantTeamMembersData | null>(null);
   const [membersLoading, setMembersLoading] = useState(false);
 
   // sync states
@@ -391,16 +397,43 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
 
   const submitCreateOrUpdateUser = useCallback(async () => {
     if (!tenant) return;
+
+    const cleanedForm = {
+      name: userForm.name.trim(),
+      username: userForm.username.trim(),
+      email: userForm.email.trim(),
+      role: userForm.role || undefined,
+      phoneNumber: userForm.phoneNumber.trim() || undefined,
+      citizenId: userForm.citizenId.trim() || undefined,
+      address: userForm.address.trim() || undefined,
+      dateOfBirth: userForm.dateOfBirth.trim() || undefined,
+    };
+
     try {
       if (editingUser) {
-        await updateUser(editingUser.id, { ...userForm, tenantId: tenant.id });
+        await updateUser(editingUser.id, { ...cleanedForm, tenantId: tenant.id });
         toast.success('User updated');
       } else {
-        await createUser({ ...userForm, tenantId: tenant.id });
+        if (!userForm.password.trim()) {
+          toast.error('Vui lòng nhập mật khẩu');
+          return;
+        }
+
+        if (userForm.password !== userForm.confirmPassword) {
+          toast.error('Mật khẩu xác nhận không khớp');
+          return;
+        }
+
+        await createUser({
+          ...cleanedForm,
+          tenantId: tenant.id,
+          password: userForm.password,
+        });
         toast.success('User created');
       }
       setUserFormOpen(false);
       setEditingUser(null);
+      setUserForm(createEmptyTenantUserForm());
       void loadUsers();
     } catch (error) {
       if (!handleAuthError(error)) {
@@ -412,7 +445,18 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
 
   const handleEditUser = useCallback((u: any) => {
     setEditingUser(u);
-    setUserForm({ name: u.name ?? '', username: u.username ?? '', email: u.email ?? '', role: u.role ?? undefined, phoneNumber: u.phoneNumber ?? '', citizenId: u.citizenId ?? '', address: u.address ?? '', dateOfBirth: u.dateOfBirth ?? '', avatarUrl: u.avatarUrl ?? '' });
+    setUserForm({
+      name: u.name ?? '',
+      username: u.username ?? '',
+      email: u.email ?? '',
+      password: '',
+      confirmPassword: '',
+      role: u.role ?? '',
+      phoneNumber: u.phoneNumber ?? '',
+      citizenId: u.citizenId ?? '',
+      address: u.address ?? '',
+      dateOfBirth: u.dateOfBirth ?? '',
+    });
     setUserFormOpen(true);
   }, []);
 
@@ -844,92 +888,30 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         </div>
       )}
 
-      {/* User Create/Edit Modal */}
-      {userFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-[95%] max-w-2xl rounded-2xl bg-white p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">{editingUser ? 'Edit user' : 'Create user'}</h3>
-              <div className="flex items-center gap-2">
-                <Button size="sm" onClick={() => { setUserFormOpen(false); setEditingUser(null); }}>Close</Button>
-              </div>
-            </div>
+      <TenantUserFormModal
+        open={userFormOpen}
+        editingUser={editingUser}
+        form={userForm}
+        setForm={setUserForm}
+        onClose={() => {
+          setUserFormOpen(false);
+          setEditingUser(null);
+          setUserForm(createEmptyTenantUserForm());
+        }}
+        onSubmit={submitCreateOrUpdateUser}
+      />
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <input placeholder="Name" value={userForm.name} onChange={(e) => setUserForm((s) => ({ ...s, name: e.target.value }))} className="rounded-md border px-3 py-2" />
-              <input placeholder="Username" value={userForm.username} onChange={(e) => setUserForm((s) => ({ ...s, username: e.target.value }))} className="rounded-md border px-3 py-2" />
-              <input placeholder="Email" value={userForm.email} onChange={(e) => setUserForm((s) => ({ ...s, email: e.target.value }))} className="rounded-md border px-3 py-2" />
-              <input placeholder="Phone" value={userForm.phoneNumber} onChange={(e) => setUserForm((s) => ({ ...s, phoneNumber: e.target.value }))} className="rounded-md border px-3 py-2" />
-              <input placeholder="Citizen ID" value={userForm.citizenId} onChange={(e) => setUserForm((s) => ({ ...s, citizenId: e.target.value }))} className="rounded-md border px-3 py-2" />
-              <input placeholder="Address" value={userForm.address} onChange={(e) => setUserForm((s) => ({ ...s, address: e.target.value }))} className="rounded-md border px-3 py-2" />
-              <input placeholder="Date of birth (YYYY-MM-DD)" value={userForm.dateOfBirth} onChange={(e) => setUserForm((s) => ({ ...s, dateOfBirth: e.target.value }))} className="rounded-md border px-3 py-2" />
-              <input placeholder="Avatar URL" value={userForm.avatarUrl} onChange={(e) => setUserForm((s) => ({ ...s, avatarUrl: e.target.value }))} className="rounded-md border px-3 py-2" />
-            </div>
-
-            <div className="mt-4 flex justify-end gap-2">
-              {editingUser ? <Button size="sm" onClick={() => { setEditingUser(null); setUserFormOpen(false); }}>Cancel</Button> : <Button size="sm" onClick={() => { setUserFormOpen(false); }}>Cancel</Button>}
-              <Button size="sm" onClick={submitCreateOrUpdateUser}>{editingUser ? 'Save' : 'Create'}</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
-        <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-          <Layers3 className="h-4 w-4" />
-          Tổng quan
-        </div>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {overviewCards.map((card) => (
-            <div key={card.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                {card.label}
-              </div>
-              <div className="mt-1 break-words text-sm font-medium text-slate-800">
-                {card.value}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
-          <CollapsibleSection
-            title="Infrastructure"
-            description="Port, IP và các binding service nội bộ"
-            open={showInfrastructure}
-            onToggle={() => setShowInfrastructure((value) => !value)}
-          >
-            <div className="grid gap-4 sm:grid-cols-2">
-              {infrastructureRows.map(([label, value]) => (
-                <DetailRow key={label} label={label} value={value} />
-              ))}
-            </div>
-          </CollapsibleSection>
-        </section>
-
-        <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
-          <CollapsibleSection
-            title="Provision & Access"
-            description="Thông tin triển khai, credential và trạng thái"
-            open={showProvision}
-            onToggle={() => setShowProvision((value) => !value)}
-          >
-            <div className="flex justify-end mb-3">
-              <Button size="sm" onClick={() => {
-                setUrlsForm({ rootUrl: tenant.rootUrl ?? '', rocketUrl: tenant.rocketUrl ?? '' });
-                setEditUrlsOpen(true);
-              }}>Chỉnh sửa URL</Button>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {provisionRows.map(([label, value]) => (
-                <DetailRow key={label} label={label} value={value} />
-              ))}
-            </div>
-          </CollapsibleSection>
-        </section>
-      </div>
+      <TenantTeamMembersModal
+        open={membersModalOpen}
+        membersData={membersData}
+        membersLoading={membersLoading}
+        onClose={() => {
+          setMembersModalOpen(false);
+          setSelectedTeamId(null);
+        }}
+        onPrevPage={() => setMembersPage((p) => Math.max(1, p - 1))}
+        onNextPage={() => setMembersPage((p) => p + 1)}
+      />
 
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -1182,7 +1164,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               {syncUsersLoading ? 'Đang đồng bộ...' : 'Đồng bộ từ Rocket'}
             </Button>
             <Button size="sm" onClick={() => setImportOpen(true)}>Import user</Button>
-            <Button size="sm" onClick={() => { setEditingUser(null); setUserForm({ name: '', username: '', email: '', role: undefined, phoneNumber: '', citizenId: '', address: '', dateOfBirth: '', avatarUrl: '' }); setUserFormOpen(true); }}>Thêm user</Button>
+            <Button size="sm" onClick={() => { setEditingUser(null); setUserForm(createEmptyTenantUserForm()); setUserFormOpen(true); }}>Thêm user</Button>
           </div>
         </div>
 
@@ -1232,52 +1214,6 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           </div>
         </div>
       </section>
-
-      {/* Team members modal */}
-      {membersModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-[90%] max-w-2xl rounded-2xl bg-white p-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Team members</h3>
-              <div className="flex items-center gap-2">
-                <div className="text-sm text-slate-500">Page {membersData?.pagination?.page || 1} / {membersData?.pagination?.totalPages || 1}</div>
-                <Button size="sm" onClick={() => setMembersPage((p) => Math.max(1, p - 1))} disabled={membersLoading || (membersData?.pagination?.page || 1) <= 1}>Prev</Button>
-                <Button size="sm" onClick={() => setMembersPage((p) => p + 1)} disabled={membersLoading || (membersData?.pagination?.page || 1) >= (membersData?.pagination?.totalPages || 1)}>Next</Button>
-                <Button size="sm" onClick={() => { setMembersModalOpen(false); setSelectedTeamId(null); }}>Close</Button>
-              </div>
-            </div>
-
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full table-auto text-sm">
-                <thead>
-                  <tr className="text-left text-slate-500">
-                    <th className="px-3 py-2">Name</th>
-                    <th className="px-3 py-2">Username</th>
-                    <th className="px-3 py-2">Email</th>
-                    <th className="px-3 py-2">Role</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {membersData?.items?.length > 0 ? (
-                    membersData.items.map((m: any) => (
-                      <tr key={m.id} className="border-t">
-                        <td className="px-3 py-3">{m.user?.name || m.user?.username}</td>
-                        <td className="px-3 py-3">{m.user?.username}</td>
-                        <td className="px-3 py-3">{m.user?.email || 'N/A'}</td>
-                        <td className="px-3 py-3">{m.user?.role || 'N/A'}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="p-6 text-center text-slate-500">No members</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
 
       <ConfirmDialog
         open={isDeleteDialogOpen}
