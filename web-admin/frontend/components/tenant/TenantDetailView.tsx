@@ -913,6 +913,49 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         onNextPage={() => setMembersPage((p) => p + 1)}
       />
 
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
+          <CollapsibleSection
+            title="Infrastructure"
+            description="Port, IP và các binding service nội bộ"
+            open={showInfrastructure}
+            onToggle={() => setShowInfrastructure((value) => !value)}
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              {infrastructureRows.map(([label, value]) => (
+                <DetailRow key={label} label={label} value={value} />
+              ))}
+            </div>
+          </CollapsibleSection>
+        </section>
+
+        <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
+          <CollapsibleSection
+            title="Provision & Access"
+            description="Thông tin triển khai, credential và trạng thái"
+            open={showProvision}
+            onToggle={() => setShowProvision((value) => !value)}
+          >
+            <div className="flex justify-end mb-3">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setUrlsForm({ rootUrl: tenant.rootUrl ?? '', rocketUrl: tenant.rocketUrl ?? '' });
+                  setEditUrlsOpen(true);
+                }}
+              >
+                Chỉnh sửa URL
+              </Button>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {provisionRows.map(([label, value]) => (
+                <DetailRow key={label} label={label} value={value} />
+              ))}
+            </div>
+          </CollapsibleSection>
+        </section>
+      </div>
+
       <section className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-container">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>

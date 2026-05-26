@@ -59,6 +59,8 @@ export function TenantUserFormModal({
 
   const isEditing = Boolean(editingUser);
 
+  const RequiredMark = () => <span className="ml-1 text-rose-500">*</span>;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-[95%] max-w-2xl rounded-2xl bg-white p-6">
@@ -76,10 +78,9 @@ export function TenantUserFormModal({
 
         <div className="mt-4 space-y-5">
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Thông tin cơ bản</h4>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="space-y-1 text-sm font-medium text-slate-700">
-                <span>Họ và tên</span>
+                <span>Họ và tên<RequiredMark /></span>
                 <input
                   value={form.name}
                   onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
@@ -88,7 +89,7 @@ export function TenantUserFormModal({
                 />
               </label>
               <label className="space-y-1 text-sm font-medium text-slate-700">
-                <span>Tên đăng nhập</span>
+                <span>Tên đăng nhập<RequiredMark /></span>
                 <input
                   value={form.username}
                   onChange={(e) => setForm((s) => ({ ...s, username: e.target.value }))}
@@ -97,7 +98,7 @@ export function TenantUserFormModal({
                 />
               </label>
               <label className="space-y-1 text-sm font-medium text-slate-700">
-                <span>Email</span>
+                <span>Email<RequiredMark /></span>
                 <input
                   type="email"
                   value={form.email}
@@ -128,7 +129,7 @@ export function TenantUserFormModal({
               <p className="mt-1 text-sm text-slate-500">Mật khẩu này sẽ được dùng để tạo user trên Rocket.Chat.</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <label className="space-y-1 text-sm font-medium text-slate-700">
-                  <span>Mật khẩu</span>
+                  <span>Mật khẩu<RequiredMark /></span>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -148,7 +149,7 @@ export function TenantUserFormModal({
                   </div>
                 </label>
                 <label className="space-y-1 text-sm font-medium text-slate-700">
-                  <span>Xác nhận mật khẩu</span>
+                  <span>Xác nhận mật khẩu<RequiredMark /></span>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
