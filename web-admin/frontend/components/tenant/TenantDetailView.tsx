@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, CircleCheckBig, ExternalLink, Layers3, Loader2, Rocket, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, CircleCheckBig, ExternalLink, Layers3, Loader2, RefreshCcw, Rocket, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { SearchBar } from '@/components/SearchBar';
@@ -24,6 +24,7 @@ import {
   getStoredToken,
   getTenantById,
   restartTenantService,
+  retryTenantLogin,
   updateTenantConfig,
   getTenantUsers,
   getTenantTeams,
@@ -268,6 +269,28 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         setDeployMessage(text);
         toast.error('Deploy app engine thất bại', { description: text });
       }
+    }
+  }, [tenant, loadTenant, handleAuthError]);
+
+  const handleRetryTenantLogin = useCallback(async () => {
+    if (!tenant) return;
+
+    setActionLoading('retry-login');
+    setMessage(null);
+
+    try {
+      const result = await retryTenantLogin({ tenantId: tenant.id });
+      toast.success('Đã kích hoạt retry login', {
+        description: result?.message ?? 'Tenant sẽ được thử login lại trong nền.',
+      });
+      void loadTenant();
+    } catch (error) {
+      if (!handleAuthError(error)) {
+        const text = error instanceof ApiError ? error.message : 'Retry login failed';
+        toast.error('Không thể retry login', { description: text });
+      }
+    } finally {
+      setActionLoading(null);
     }
   }, [tenant, loadTenant, handleAuthError]);
 
@@ -639,6 +662,19 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           </div>
 
           <div className="flex flex-wrap gap-3">
+            {currentUser?.role === 'SUPER_ADMIN' ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRetryTenantLogin}
+                disabled={actionLoading !== null}
+                icon={actionLoading === 'retry-login' ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                aria-label="Retry tenant login"
+                title="Retry tenant login"
+              >
+                <span className="sr-only">Retry</span>
+              </Button>
+            ) : null}
             {currentUser?.role === 'SUPER_ADMIN' ? (
               <Button
                 variant="secondary"

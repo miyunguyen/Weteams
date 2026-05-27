@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { createServer } from 'node:http';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
@@ -62,13 +68,36 @@ type RocketSetDefaultChannelResponse = {
 };
 
 @Injectable()
-export class TenantService {
+export class TenantService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(TenantService.name);
+  private retrySweepTimer?: NodeJS.Timeout;
+  private retrySweepRunning = false;
+  private readonly activeLoginTenantIds = new Set<string>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly rocketChatService: RocketChatService,
     private readonly tenantGateway: TenantGateway,
     private readonly authService: AuthService,
   ) {}
+
+  onModuleInit(): void {
+    const sweepIntervalMs = this.resolvePositiveIntEnv(
+      'PROVISION_RETRY_SWEEP_INTERVAL_MS',
+      60000,
+    );
+
+    this.retrySweepTimer = setInterval(() => {
+      void this.retryPendingTenantLogins();
+    }, sweepIntervalMs);
+  }
+
+  onModuleDestroy(): void {
+    if (this.retrySweepTimer) {
+      clearInterval(this.retrySweepTimer);
+      this.retrySweepTimer = undefined;
+    }
+  }
 
   private emitTenantUpdated(
     tenantId: string,
@@ -406,6 +435,47 @@ export class TenantService {
         tenant: activation.tenant,
       },
     };
+  }
+
+  private async retryPendingTenantLogins(): Promise<void> {
+    if (this.retrySweepRunning) {
+      return;
+    }
+
+    this.retrySweepRunning = true;
+
+    try {
+      const pendingTenants = await this.prisma.tenant.findMany({
+        where: {
+          deployStatus: 'DEPLOYING',
+          isDeleted: false,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      for (const tenant of pendingTenants) {
+        if (this.activeLoginTenantIds.has(tenant.id)) {
+          continue;
+        }
+
+        try {
+          const activation = await this.activateTenantLogin(tenant.id, 1, 0);
+          if (!activation.success) {
+            this.logger.debug(
+              `Retry login chưa sẵn sàng cho tenant ${tenant.id}: ${activation.reason}`,
+            );
+          }
+        } catch (error) {
+          this.logger.warn(
+            `Retry login thất bại cho tenant ${tenant.id}: ${this.getErrorMessage(error)}`,
+          );
+        }
+      }
+    } finally {
+      this.retrySweepRunning = false;
+    }
   }
 
   async deployTenantApp(dto: DeployAppDto, user?: any) {
@@ -934,114 +1004,130 @@ export class TenantService {
         reason: string;
       }
   > {
-    const tenant = await this.prisma.tenant.findUnique({
-      where: { id: tenantId },
-      select: {
-        id: true,
-        rocketUrl: true,
-        hostPort: true,
-        adminUsername: true,
-        adminPass: true,
-        isDeleted: true,
-      },
-    });
-
-    if (!tenant) {
-      throw new AppException(HttpStatus.NOT_FOUND, {
-        message: 'Không tìm thấy tenant',
-        errorCode: 'TENANT_NOT_FOUND',
-        data: { tenantId },
-      });
+    if (this.activeLoginTenantIds.has(tenantId)) {
+      return {
+        success: false,
+        reason: 'Tenant login đang được xử lý',
+      };
     }
 
-    if (!tenant.adminUsername || !tenant.adminPass) {
-      throw new AppException(HttpStatus.BAD_REQUEST, {
-        message: 'Tenant chưa có admin credential',
-        errorCode: 'TENANT_ADMIN_CREDENTIAL_MISSING',
-        data: { tenantId },
+    this.activeLoginTenantIds.add(tenantId);
+
+    try {
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { id: tenantId },
+        select: {
+          id: true,
+          rocketUrl: true,
+          hostPort: true,
+          adminUsername: true,
+          adminPass: true,
+          isDeleted: true,
+        },
       });
-    }
 
-    if ((tenant as { isDeleted?: boolean }).isDeleted) {
-      throw new AppException(HttpStatus.BAD_REQUEST, {
-        message: 'Tenant đã bị xoá',
-        errorCode: 'TENANT_DELETED',
-        data: { tenantId },
-      });
-    }
+      if (!tenant) {
+        throw new AppException(HttpStatus.NOT_FOUND, {
+          message: 'Không tìm thấy tenant',
+          errorCode: 'TENANT_NOT_FOUND',
+          data: { tenantId },
+        });
+      }
 
-    let lastError = 'Tenant chưa sẵn sàng';
-    const localHosts = this.getLocalHostCandidates();
+      if (!tenant.adminUsername || !tenant.adminPass) {
+        throw new AppException(HttpStatus.BAD_REQUEST, {
+          message: 'Tenant chưa có admin credential',
+          errorCode: 'TENANT_ADMIN_CREDENTIAL_MISSING',
+          data: { tenantId },
+        });
+      }
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      for (const host of localHosts) {
-        const localRocketUrl = this.buildLocalRocketUrl(host, tenant.hostPort);
+      if ((tenant as { isDeleted?: boolean }).isDeleted) {
+        throw new AppException(HttpStatus.BAD_REQUEST, {
+          message: 'Tenant đã bị xoá',
+          errorCode: 'TENANT_DELETED',
+          data: { tenantId },
+        });
+      }
 
-        try {
-          const healthy = await this.checkRocketHealth(localRocketUrl);
-          if (!healthy) {
-            lastError = `Health check chưa pass ở ${localRocketUrl}`;
-            continue;
+      let lastError = 'Tenant chưa sẵn sàng';
+      const localHosts = this.getLocalHostCandidates();
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        for (const host of localHosts) {
+          const localRocketUrl = this.buildLocalRocketUrl(
+            host,
+            tenant.hostPort,
+          );
+
+          try {
+            const healthy = await this.checkRocketHealth(localRocketUrl);
+            if (!healthy) {
+              lastError = `Health check chưa pass ở ${localRocketUrl}`;
+              continue;
+            }
+
+            const login = await this.rocketChatService.loginWithCredentials(
+              localRocketUrl,
+              String(tenant.adminUsername),
+              String(tenant.adminPass),
+            );
+
+            const updatedTenant = await this.prisma.tenant.update({
+              where: { id: tenant.id },
+              data: {
+                adminUserId: login.userId,
+                adminAuthToken: login.authToken,
+                adminTokenExpireAt: null,
+                deployStatus: 'RUNNING',
+                deployError: null,
+                lastProvisionedAt: new Date(),
+              },
+            });
+
+            this.emitTenantUpdated(
+              updatedTenant.id,
+              'login_success',
+              'RUNNING',
+              updatedTenant.updatedAt,
+            );
+
+            return {
+              success: true,
+              tenant: updatedTenant,
+              loginUrl: localRocketUrl,
+            };
+          } catch (error) {
+            lastError = `${this.getErrorMessage(error)} @ ${localRocketUrl}`;
           }
+        }
 
-          const login = await this.rocketChatService.loginWithCredentials(
-            localRocketUrl,
-            String(tenant.adminUsername),
-            String(tenant.adminPass),
-          );
-
-          const updatedTenant = await this.prisma.tenant.update({
-            where: { id: tenant.id },
-            data: {
-              adminUserId: login.userId,
-              adminAuthToken: login.authToken,
-              adminTokenExpireAt: null,
-              deployStatus: 'RUNNING',
-              deployError: null,
-              lastProvisionedAt: new Date(),
-            },
-          });
-
-          this.emitTenantUpdated(
-            updatedTenant.id,
-            'login_success',
-            'RUNNING',
-            updatedTenant.updatedAt,
-          );
-
-          return {
-            success: true,
-            tenant: updatedTenant,
-            loginUrl: localRocketUrl,
-          };
-        } catch (error) {
-          lastError = `${this.getErrorMessage(error)} @ ${localRocketUrl}`;
+        if (attempt < maxAttempts) {
+          await this.sleep(delayMs);
         }
       }
 
-      if (attempt < maxAttempts) {
-        await this.sleep(delayMs);
-      }
+      const pendingTenant = await this.prisma.tenant.update({
+        where: { id: tenant.id },
+        data: {
+          deployStatus: 'DEPLOYING',
+          deployError: lastError,
+        },
+      });
+      this.emitTenantUpdated(
+        pendingTenant.id,
+        'login_retrying',
+        'DEPLOYING',
+        pendingTenant.updatedAt,
+      );
+
+      return {
+        success: false,
+        reason: lastError,
+      };
+    } finally {
+      this.activeLoginTenantIds.delete(tenantId);
     }
-
-    const pendingTenant = await this.prisma.tenant.update({
-      where: { id: tenant.id },
-      data: {
-        deployStatus: 'DEPLOYING',
-        deployError: lastError,
-      },
-    });
-    this.emitTenantUpdated(
-      pendingTenant.id,
-      'login_retrying',
-      'DEPLOYING',
-      pendingTenant.updatedAt,
-    );
-
-    return {
-      success: false,
-      reason: lastError,
-    };
   }
 
   private async checkRocketHealth(baseUrl: string): Promise<boolean> {
@@ -1063,7 +1149,7 @@ export class TenantService {
     domain: string,
     composeProjectName: string,
   ) {
-    // Always allocate ports automatically - never use user input for ports
+    // Always allocate ports automatically
     const hostPort = await this.allocatePort(
       'hostPort',
       defaults.hostPort,
