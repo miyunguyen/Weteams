@@ -237,6 +237,15 @@ export async function restartTenantService(payload: TenantActionPayload) {
   return response.data;
 }
 
+export async function retryTenantLogin(payload: TenantActionPayload) {
+  const response = await request<TenantActionResult>('/tenants/sessions', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
 export async function deployTenantApp(payload: TenantDeployAppPayload) {
   const response = await request<TenantDeployAppResult>('/tenants/deployments', {
     method: 'POST',
