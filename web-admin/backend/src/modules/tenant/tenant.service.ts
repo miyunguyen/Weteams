@@ -321,12 +321,7 @@ export class TenantService implements OnModuleInit, OnModuleDestroy {
         };
       }
 
-      await this.rocketChatService.updateSettings(
-        tenant.id,
-        buildInitialTenantRocketSettings(resolved.name),
-      );
-
-      await this.ensureDefaultBroadcastChannelAfterProvision(tenant.id);
+      await this.runPostLoginTenantSetup(tenant.id, resolved.name);
 
       let autoDeployResult:
         | {
@@ -429,6 +424,8 @@ export class TenantService implements OnModuleInit, OnModuleDestroy {
       });
     }
 
+    await this.runPostLoginTenantSetup(tenant.id, tenant.name);
+
     return {
       message: 'Login tenant thành công',
       data: {
@@ -452,6 +449,7 @@ export class TenantService implements OnModuleInit, OnModuleDestroy {
         },
         select: {
           id: true,
+          name: true,
         },
       });
 
@@ -466,7 +464,10 @@ export class TenantService implements OnModuleInit, OnModuleDestroy {
             this.logger.debug(
               `Retry login chưa sẵn sàng cho tenant ${tenant.id}: ${activation.reason}`,
             );
+            continue;
           }
+
+          await this.runPostLoginTenantSetup(tenant.id, tenant.name);
         } catch (error) {
           this.logger.warn(
             `Retry login thất bại cho tenant ${tenant.id}: ${this.getErrorMessage(error)}`,
@@ -938,7 +939,7 @@ export class TenantService implements OnModuleInit, OnModuleDestroy {
   private async findTenantByIdentifier(
     tenantId: string | undefined,
     composeProjectName: string | undefined,
-  ): Promise<{ id: string; composeProjectName: string }> {
+  ): Promise<{ id: string; composeProjectName: string; name: string }> {
     if (!tenantId && !composeProjectName) {
       throw new AppException(HttpStatus.BAD_REQUEST, {
         message: 'Cần truyền tenantId hoặc composeProjectName',
@@ -957,6 +958,7 @@ export class TenantService implements OnModuleInit, OnModuleDestroy {
       select: {
         id: true,
         composeProjectName: true,
+        name: true,
         isDeleted: true,
       },
     });
@@ -986,6 +988,7 @@ export class TenantService implements OnModuleInit, OnModuleDestroy {
     return {
       id: tenant.id,
       composeProjectName: String(tenant.composeProjectName),
+      name: String(tenant.name),
     };
   }
 
@@ -1128,6 +1131,18 @@ export class TenantService implements OnModuleInit, OnModuleDestroy {
     } finally {
       this.activeLoginTenantIds.delete(tenantId);
     }
+  }
+
+  private async runPostLoginTenantSetup(
+    tenantId: string,
+    tenantName: string,
+  ): Promise<void> {
+    await this.rocketChatService.updateSettings(
+      tenantId,
+      buildInitialTenantRocketSettings(tenantName),
+    );
+
+    await this.ensureDefaultBroadcastChannelAfterProvision(tenantId);
   }
 
   private async checkRocketHealth(baseUrl: string): Promise<boolean> {
