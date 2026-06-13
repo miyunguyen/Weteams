@@ -11,6 +11,8 @@
 export type * from './models/Tenant.js'
 export type * from './models/User.js'
 export type * from './models/Team.js'
+export type * from './models/Channel.js'
+export type * from './models/ChannelMember.js'
 export type * from './models/TeamMember.js'
 export type * from './models/WebAdminUser.js'
 export type * from './models/WebAdminUserTenant.js'

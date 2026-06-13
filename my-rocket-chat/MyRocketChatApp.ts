@@ -110,17 +110,6 @@ export class MyRocketChatApp
                     : "";
 
             this.getLogger().log(response, body, joinCode);
-            if (joinCode) {
-                await this.sendJoinCodeMessage(
-                    room,
-                    joinCode,
-                    read,
-                    http,
-                    modify,
-                    tenantId,
-                    apiUrl,
-                );
-            }
         } catch (error) {
             this.getLogger().log("failed: ", error);
         }
@@ -148,59 +137,6 @@ export class MyRocketChatApp
             this.getLogger().log(response, body);
         } catch (error) {
             this.getLogger().log("failed: ", error);
-        }
-    }
-
-    private async sendJoinCodeMessage(
-        room: IRoom,
-        joinCode: string,
-        read: IRead,
-        http: IHttp,
-        modify: IModify,
-        tenantId: string,
-        apiUrl: string,
-    ): Promise<void> {
-        const appUser = await read.getUserReader().getAppUser(this.getID());
-
-        if (!appUser) {
-            this.getLogger().warn(
-                "Unable to send join code message: app user not found",
-            );
-            return;
-        }
-
-        const messageBuilder = modify.getCreator().startMessage();
-        messageBuilder.setSender(appUser);
-        messageBuilder.setRoom(room);
-        messageBuilder.setText(`Mã tham gia team: ${joinCode}`);
-
-        const messageId = await modify.getCreator().finish(messageBuilder);
-
-        await this.pinMessage(http, apiUrl, tenantId, messageId);
-    }
-
-    private async pinMessage(
-        http: IHttp,
-        apiUrl: string,
-        tenantId: string,
-        messageId: string,
-    ): Promise<void> {
-        try {
-            const response = await http.post(
-                `${apiUrl}/v1/messages/${messageId}/pin`,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    data: {
-                        tenantId,
-                    },
-                },
-            );
-
-            this.getLogger().log("Pinned by backend", response?.data);
-        } catch (error) {
-            this.getLogger().warn("Pin by backend failed", error);
         }
     }
 

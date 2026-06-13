@@ -3,6 +3,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { AppException } from 'src/common/exceptions/app.exception';
+import type { Channel as ChannelRecord } from 'src/generated/prisma/client';
+import type { ChannelDelegate } from 'src/generated/prisma/models/Channel';
+import type { ChannelMemberDelegate } from 'src/generated/prisma/models/ChannelMember';
 import { PrismaService } from '../prisma/prisma.service';
 import { RocketChatService } from '../rocketChat/rocketChat.service';
 import { CreateFromRoomDto } from './dto/create-from-room.dto';
@@ -20,8 +23,59 @@ export class TeamService {
     private readonly rocketChat: RocketChatService,
   ) {}
 
+  private get channelRepo(): ChannelDelegate {
+    return this.prisma.channel as unknown as ChannelDelegate;
+  }
+
+  private get channelMemberRepo(): ChannelMemberDelegate {
+    return this.prisma.channelMember as unknown as ChannelMemberDelegate;
+  }
+
   generateJoinCode() {
     return randomBytes(3).toString('hex').toUpperCase();
+  }
+
+  private async createJoinCodeAnnouncement(
+    tenantId: string,
+    roomId: string,
+    label: string,
+    joinCode?: string,
+  ) {
+    const code = joinCode ?? this.generateJoinCode();
+    const messageText = `Mã tham gia ${label}: ${code}`;
+
+    const postMessageResponse = await this.rocketChat.postMessage(
+      tenantId,
+      roomId,
+      messageText,
+    );
+    const postMessageData = postMessageResponse?.data;
+    const messageId: string = postMessageData?.message?._id;
+
+    if (!postMessageData?.success || !messageId) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: `Gửi message join code cho ${label} thất bại`,
+        errorCode: 'ROCKET_POST_JOIN_CODE_FAILED',
+        data: postMessageData ?? null,
+      });
+    }
+
+    const pinResponse = await this.rocketChat.pinMessage(tenantId, messageId);
+    const pinData = pinResponse?.data;
+
+    if (!pinData?.success) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: `Pin message join code cho ${label} thất bại`,
+        errorCode: 'ROCKET_PIN_JOIN_CODE_FAILED',
+        data: pinData ?? null,
+      });
+    }
+
+    return {
+      joinCode: code,
+      joinCodeMessageId: messageId,
+      messageText,
+    };
   }
 
   async createTeamWithChannels(dto: CreateTeamWithChannelsDto) {
@@ -54,44 +108,23 @@ export class TeamService {
         });
       }
 
-      const joinCode = this.generateJoinCode();
+      const teamJoinCode = this.generateJoinCode();
       const createdTeam = await this.prisma.team.create({
         data: {
           tenantId,
           roomId: String(teamData?.team?.roomId ?? rocketTeamId),
           name: roomName,
-          joinCode,
+          joinCode: teamJoinCode,
           teamId: String(rocketTeamId),
         },
       });
 
-      const joinCodeText = `Mã tham gia team: ${joinCode}`;
-      const postMessageResponse = await this.rocketChat.postMessage(
+      const teamJoinCodeAnnouncement = await this.createJoinCodeAnnouncement(
         tenantId,
         createdTeam.roomId,
-        joinCodeText,
+        'team',
+        teamJoinCode,
       );
-      const postMessageData = postMessageResponse?.data;
-      const messageId: string = postMessageData?.message?._id;
-
-      if (!postMessageData?.success || !messageId) {
-        throw new AppException(HttpStatus.BAD_REQUEST, {
-          message: 'Gửi message join code thất bại',
-          errorCode: 'ROCKET_POST_JOIN_CODE_FAILED',
-          data: postMessageData ?? null,
-        });
-      }
-
-      const pinResponse = await this.rocketChat.pinMessage(tenantId, messageId);
-      const pinData = pinResponse?.data;
-
-      if (!pinData?.success) {
-        throw new AppException(HttpStatus.BAD_REQUEST, {
-          message: 'Pin message join code thất bại',
-          errorCode: 'ROCKET_PIN_JOIN_CODE_FAILED',
-          data: pinData ?? null,
-        });
-      }
 
       const createGroup = async (channelName: string): Promise<any> => {
         return this.rocketChat.createGroup(
@@ -102,8 +135,13 @@ export class TeamService {
       };
 
       const createdChannels: Array<{
+        channelId: string;
         inputName: string;
         name: string;
+        roomId: string;
+        isPrivate: boolean;
+        joinCode: string;
+        joinCodeMessageId: string;
         rocketResponse: unknown;
       }> = [];
 
@@ -117,8 +155,16 @@ export class TeamService {
         try {
           const groupResponse = await createGroup(childName);
           const groupData = groupResponse?.data;
+          const childRoomId = String(
+            groupData?.group?._id ??
+              groupData?.group?.roomId ??
+              groupData?.group?.id ??
+              groupData?.room?._id ??
+              groupData?.roomId ??
+              '',
+          ).trim();
 
-          if (!groupData?.success) {
+          if (!groupData?.success || !childRoomId) {
             const errorMsg = groupData?.error || 'Unknown error';
             throw new AppException(HttpStatus.BAD_REQUEST, {
               message: `Tạo group ${childName} thất bại: ${errorMsg}`,
@@ -127,9 +173,32 @@ export class TeamService {
             });
           }
 
+          const childJoinCodeAnnouncement =
+            await this.createJoinCodeAnnouncement(
+              tenantId,
+              childRoomId,
+              `channel ${childName}`,
+            );
+
+          const createdChannel = await this.channelRepo.create({
+            data: {
+              tenantId,
+              teamId: createdTeam.id,
+              roomId: childRoomId,
+              name: childName,
+              joinCode: childJoinCodeAnnouncement.joinCode,
+              isPrivate: true,
+            },
+          });
+
           createdChannels.push({
+            channelId: createdChannel.id,
             inputName: rawChannelName,
             name: childName,
+            roomId: childRoomId,
+            isPrivate: createdChannel.isPrivate,
+            joinCode: childJoinCodeAnnouncement.joinCode,
+            joinCodeMessageId: childJoinCodeAnnouncement.joinCodeMessageId,
             rocketResponse: groupData,
           });
         } catch (error) {
@@ -149,7 +218,8 @@ export class TeamService {
         message: 'Tạo team kèm channels thành công',
         data: {
           team: createdTeam,
-          joinCodeMessageId: messageId,
+          joinCode: teamJoinCodeAnnouncement.joinCode,
+          joinCodeMessageId: teamJoinCodeAnnouncement.joinCodeMessageId,
           channels: createdChannels,
         },
       };
@@ -168,25 +238,103 @@ export class TeamService {
   }
 
   async createFromRoom(dto: CreateFromRoomDto) {
-    const { tenantId, roomId, roomName } = dto;
+    const { tenantId, roomId } = dto;
+    const roomName = dto.roomName.trim();
+
+    if (!roomName) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'roomName không hợp lệ',
+        errorCode: 'TEAM_NAME_REQUIRED',
+        data: null,
+      });
+    }
 
     const team = await this.rocketChat.isTeam(tenantId, roomId);
 
-    if (!team) {
+    if (team) {
+      const existing = await this.prisma.team.findFirst({
+        where: { tenantId, teamId: team._id },
+      });
+
+      if (existing) {
+        return {
+          message: 'Team đã tồn tại',
+          data: { skipped: true, reason: 'ALREADY_EXISTS' },
+        };
+      }
+
+      for (let i = 0; i < TeamService.MAX_RETRY; i++) {
+        const joinCode = this.generateJoinCode();
+
+        try {
+          const createdTeam = await this.prisma.team.create({
+            data: {
+              tenantId,
+              roomId,
+              name: roomName,
+              joinCode,
+              teamId: team._id,
+            },
+          });
+
+          const joinCodeAnnouncement = await this.createJoinCodeAnnouncement(
+            tenantId,
+            createdTeam.roomId,
+            'team',
+            joinCode,
+          );
+
+          return {
+            message: 'Tạo team thành công',
+            data: {
+              team: createdTeam,
+              joinCode: joinCodeAnnouncement.joinCode,
+              joinCodeMessageId: joinCodeAnnouncement.joinCodeMessageId,
+            },
+          };
+        } catch (err) {
+          if ((err as { code?: string })?.code === 'P2002') {
+            continue;
+          }
+          throw err;
+        }
+      }
+
+      throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, {
+        message: 'Không thể tạo join code cho team',
+        errorCode: 'JOIN_CODE_GENERATION_FAILED',
+        data: null,
+      });
+    }
+
+    const roomInfoResponse = await this.rocketChat.getRoomInfo(
+      tenantId,
+      roomId,
+    );
+    const roomInfoData = roomInfoResponse?.data;
+    const roomInfo = roomInfoData?.room;
+    const roomType = String(roomInfo?.t ?? '').trim();
+    const teamRocketId = String(roomInfo?.teamId ?? '').trim();
+
+    if (!roomInfo || (roomType !== 'c' && roomType !== 'p')) {
       return {
-        message: 'Room không phải là team',
-        data: { skipped: true, reason: 'NOT_A_TEAM' },
+        message: 'Room không phải là team hoặc channel',
+        data: { skipped: true, reason: 'NOT_TEAM_OR_CHANNEL' },
       };
     }
 
-    const existing = await this.prisma.team.findFirst({
-      where: { tenantId, teamId: team._id },
+    const localTeam = await this.prisma.team.findFirst({
+      where: { tenantId, teamId: teamRocketId },
     });
 
-    if (existing) {
+    const existingChannel = await this.channelRepo.findFirst({
+      where: { tenantId, roomId },
+    });
+
+    if (existingChannel) {
       return {
-        message: 'Team đã tồn tại',
-        data: { skipped: true, reason: 'ALREADY_EXISTS' },
+        message: 'Channel đã tồn tại',
+        data: { skipped: true, reason: 'CHANNEL_ALREADY_EXISTS' },
       };
     }
 
@@ -194,19 +342,32 @@ export class TeamService {
       const joinCode = this.generateJoinCode();
 
       try {
-        const createdTeam = await this.prisma.team.create({
+        const createdChannel = await this.channelRepo.create({
           data: {
             tenantId,
+            teamId: localTeam ? localTeam.id : undefined,
             roomId,
-            name: roomName,
+            name: roomName || String(roomInfo?.name ?? roomId),
             joinCode,
-            teamId: team._id,
+            isPrivate: roomType === 'p',
           },
         });
+        const createdChannelRoomId = String(createdChannel.roomId);
+
+        const joinCodeAnnouncement = await this.createJoinCodeAnnouncement(
+          tenantId,
+          createdChannelRoomId,
+          'channel',
+          joinCode,
+        );
 
         return {
-          message: 'Tạo team thành công',
-          data: createdTeam,
+          message: 'Tạo channel thành công',
+          data: {
+            channel: createdChannel,
+            joinCode: joinCodeAnnouncement.joinCode,
+            joinCodeMessageId: joinCodeAnnouncement.joinCodeMessageId,
+          },
         };
       } catch (err) {
         if ((err as { code?: string })?.code === 'P2002') {
@@ -217,8 +378,8 @@ export class TeamService {
     }
 
     throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, {
-      message: 'Không thể tạo join code cho team',
-      errorCode: 'JOIN_CODE_GENERATION_FAILED',
+      message: 'Không thể tạo join code cho channel',
+      errorCode: 'CHANNEL_JOIN_CODE_GENERATION_FAILED',
       data: null,
     });
   }
@@ -233,7 +394,19 @@ export class TeamService {
       },
     });
 
-    if (!team) {
+    const channel = team
+      ? null
+      : await this.channelRepo.findFirst({
+          where: {
+            tenantId,
+            joinCode,
+          },
+          include: {
+            team: true,
+          },
+        });
+
+    if (!team && !channel) {
       throw new AppException(HttpStatus.BAD_REQUEST, {
         message: 'Không tìm thấy join code hợp lệ',
         errorCode: 'INVALID_CODE',
@@ -258,37 +431,97 @@ export class TeamService {
       });
     }
 
-    const existing = await this.prisma.teamMember.findFirst({
-      where: {
-        teamId: team.id,
-        userId: user.id,
-      },
-    });
+    if (team) {
+      const existing = await this.prisma.teamMember.findFirst({
+        where: {
+          teamId: team.id,
+          userId: user.id,
+        },
+      });
 
-    if (existing) {
-      return {
-        message: 'Người dùng đã tham gia team',
+      if (existing) {
+        return {
+          message: 'Người dùng đã tham gia team',
+          data: {
+            alreadyJoined: true,
+            teamId: team.id,
+            userId: user.id,
+          },
+        };
+      }
+
+      await this.rocketChat.addMemberToTeam(
+        tenantId,
+        team.teamId,
+        rocketUserId,
+      );
+
+      await this.prisma.teamMember.create({
         data: {
-          alreadyJoined: true,
+          teamId: team.id,
+          userId: user.id,
+        },
+      });
+
+      return {
+        message: 'Join team thành công',
+        data: {
           teamId: team.id,
           userId: user.id,
         },
       };
     }
 
-    await this.rocketChat.addMemberToTeam(tenantId, team.teamId, rocketUserId);
+    if (!channel) {
+      throw new AppException(HttpStatus.BAD_REQUEST, {
+        message: 'Không tìm thấy join code channel hợp lệ',
+        errorCode: 'INVALID_CHANNEL_CODE',
+        data: null,
+      });
+    }
 
-    await this.prisma.teamMember.create({
+    const channelRecord = channel as ChannelRecord;
+    const channelRoomId = String(channelRecord.roomId);
+    const channelIsPrivate = Boolean(channelRecord.isPrivate);
+
+    const existingChannelMember = await this.channelMemberRepo.findFirst({
+      where: {
+        channelId: channelRecord.id,
+        userId: user.id,
+      },
+    });
+
+    if (existingChannelMember) {
+      return {
+        message: 'Người dùng đã tham gia channel',
+        data: {
+          alreadyJoined: true,
+          channelId: channelRecord.id,
+          teamId: channelRecord.teamId,
+          userId: user.id,
+        },
+      };
+    }
+
+    await this.rocketChat.inviteUser(
+      tenantId,
+      channelRoomId,
+      rocketUserId,
+      channelIsPrivate,
+    );
+
+    await this.channelMemberRepo.create({
       data: {
-        teamId: team.id,
+        channelId: channelRecord.id,
         userId: user.id,
       },
     });
 
     return {
-      message: 'Join team thành công',
+      message: 'Join channel thành công',
       data: {
-        teamId: team.id,
+        channelId: channelRecord.id,
+        teamId: channelRecord.teamId,
         userId: user.id,
       },
     };
@@ -367,21 +600,24 @@ export class TeamService {
     const rooms = Array.isArray(roomsData?.rooms) ? roomsData.rooms : [];
 
     for (const roomItem of rooms) {
-      if (roomItem.t !== 'p') {
-        continue;
-      }
-
       const roomIdToKick = String(roomItem?._id ?? '').trim();
 
       if (!roomIdToKick) {
         continue;
       }
 
-      const kickResponse = await this.rocketChat.kickFromGroup(
-        tenantId,
-        roomIdToKick,
-        rocketUserId,
-      );
+      const kickResponse =
+        roomItem.t === 'p'
+          ? await this.rocketChat.kickFromGroup(
+              tenantId,
+              roomIdToKick,
+              rocketUserId,
+            )
+          : await this.rocketChat.kickFromChannel(
+              tenantId,
+              roomIdToKick,
+              rocketUserId,
+            );
       const kickData = kickResponse?.data;
 
       if (!kickData?.success) {

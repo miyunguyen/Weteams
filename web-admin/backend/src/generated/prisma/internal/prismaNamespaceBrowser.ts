@@ -54,6 +54,8 @@ export const ModelName = {
   Tenant: 'Tenant',
   User: 'User',
   Team: 'Team',
+  Channel: 'Channel',
+  ChannelMember: 'ChannelMember',
   TeamMember: 'TeamMember',
   WebAdminUser: 'WebAdminUser',
   WebAdminUserTenant: 'WebAdminUserTenant'
@@ -142,6 +144,30 @@ export const TeamScalarFieldEnum = {
 } as const
 
 export type TeamScalarFieldEnum = (typeof TeamScalarFieldEnum)[keyof typeof TeamScalarFieldEnum]
+
+
+export const ChannelScalarFieldEnum = {
+  id: 'id',
+  tenantId: 'tenantId',
+  teamId: 'teamId',
+  roomId: 'roomId',
+  name: 'name',
+  joinCode: 'joinCode',
+  isPrivate: 'isPrivate',
+  createdAt: 'createdAt'
+} as const
+
+export type ChannelScalarFieldEnum = (typeof ChannelScalarFieldEnum)[keyof typeof ChannelScalarFieldEnum]
+
+
+export const ChannelMemberScalarFieldEnum = {
+  id: 'id',
+  channelId: 'channelId',
+  userId: 'userId',
+  joinedAt: 'joinedAt'
+} as const
+
+export type ChannelMemberScalarFieldEnum = (typeof ChannelMemberScalarFieldEnum)[keyof typeof ChannelMemberScalarFieldEnum]
 
 
 export const TeamMemberScalarFieldEnum = {
