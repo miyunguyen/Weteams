@@ -146,6 +146,14 @@ export class RocketChatService {
     return data?.team;
   }
 
+  async getRoomInfo(tenantId: string, roomId: string): Promise<any> {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.get(`${tenant.rocketUrl}/api/v1/rooms.info?roomId=${roomId}`, {
+        headers,
+      }),
+    );
+  }
+
   async createTeam(tenantId: string, name: string, type: number) {
     return this.callApi(tenantId, (headers, tenant) =>
       axios.post(
@@ -243,10 +251,17 @@ export class RocketChatService {
     }
   }
 
-  async inviteUser(tenantId: string, roomId: string, userId: string) {
+  async inviteUser(
+    tenantId: string,
+    roomId: string,
+    userId: string,
+    isPrivate = false,
+  ) {
+    const endpoint = isPrivate ? 'groups.invite' : 'channels.invite';
+
     return this.callApi(tenantId, (headers, tenant) =>
       axios.post(
-        `${tenant.rocketUrl}/api/v1/channels.invite`,
+        `${tenant.rocketUrl}/api/v1/${endpoint}`,
         { roomId, userId },
         { headers },
       ),
@@ -334,6 +349,19 @@ export class RocketChatService {
     return this.callApi(tenantId, (headers, tenant) =>
       axios.post(
         `${tenant.rocketUrl}/api/v1/groups.kick`,
+        {
+          roomId,
+          userId,
+        },
+        { headers },
+      ),
+    );
+  }
+
+  async kickFromChannel(tenantId: string, roomId: string, userId: string) {
+    return this.callApi(tenantId, (headers, tenant) =>
+      axios.post(
+        `${tenant.rocketUrl}/api/v1/channels.kick`,
         {
           roomId,
           userId,

@@ -55,6 +55,16 @@ export type User = Prisma.UserModel
  */
 export type Team = Prisma.TeamModel
 /**
+ * Model Channel
+ * 
+ */
+export type Channel = Prisma.ChannelModel
+/**
+ * Model ChannelMember
+ * 
+ */
+export type ChannelMember = Prisma.ChannelMemberModel
+/**
  * Model TeamMember
  * 
  */

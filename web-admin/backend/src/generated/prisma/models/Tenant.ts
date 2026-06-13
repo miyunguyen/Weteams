@@ -434,6 +434,7 @@ export type TenantWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Tenant"> | Date | string
   users?: Prisma.UserListRelationFilter
   teams?: Prisma.TeamListRelationFilter
+  channels?: Prisma.ChannelListRelationFilter
 }
 
 export type TenantOrderByWithRelationInput = {
@@ -469,6 +470,7 @@ export type TenantOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   users?: Prisma.UserOrderByRelationAggregateInput
   teams?: Prisma.TeamOrderByRelationAggregateInput
+  channels?: Prisma.ChannelOrderByRelationAggregateInput
 }
 
 export type TenantWhereUniqueInput = Prisma.AtLeast<{
@@ -507,6 +509,7 @@ export type TenantWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Tenant"> | Date | string
   users?: Prisma.UserListRelationFilter
   teams?: Prisma.TeamListRelationFilter
+  channels?: Prisma.ChannelListRelationFilter
 }, "id" | "composeProjectName" | "domain" | "rootUrl">
 
 export type TenantOrderByWithAggregationInput = {
@@ -616,6 +619,7 @@ export type TenantCreateInput = {
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutTenantInput
   teams?: Prisma.TeamCreateNestedManyWithoutTenantInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutTenantInput
 }
 
 export type TenantUncheckedCreateInput = {
@@ -651,6 +655,7 @@ export type TenantUncheckedCreateInput = {
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutTenantInput
   teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTenantInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutTenantInput
 }
 
 export type TenantUpdateInput = {
@@ -686,6 +691,7 @@ export type TenantUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutTenantNestedInput
   teams?: Prisma.TeamUpdateManyWithoutTenantNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantUncheckedUpdateInput = {
@@ -721,6 +727,7 @@ export type TenantUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutTenantNestedInput
   teams?: Prisma.TeamUncheckedUpdateManyWithoutTenantNestedInput
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantCreateManyInput = {
@@ -1010,6 +1017,20 @@ export type TenantUpdateOneRequiredWithoutTeamsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TenantUpdateToOneWithWhereWithoutTeamsInput, Prisma.TenantUpdateWithoutTeamsInput>, Prisma.TenantUncheckedUpdateWithoutTeamsInput>
 }
 
+export type TenantCreateNestedOneWithoutChannelsInput = {
+  create?: Prisma.XOR<Prisma.TenantCreateWithoutChannelsInput, Prisma.TenantUncheckedCreateWithoutChannelsInput>
+  connectOrCreate?: Prisma.TenantCreateOrConnectWithoutChannelsInput
+  connect?: Prisma.TenantWhereUniqueInput
+}
+
+export type TenantUpdateOneRequiredWithoutChannelsNestedInput = {
+  create?: Prisma.XOR<Prisma.TenantCreateWithoutChannelsInput, Prisma.TenantUncheckedCreateWithoutChannelsInput>
+  connectOrCreate?: Prisma.TenantCreateOrConnectWithoutChannelsInput
+  upsert?: Prisma.TenantUpsertWithoutChannelsInput
+  connect?: Prisma.TenantWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TenantUpdateToOneWithWhereWithoutChannelsInput, Prisma.TenantUpdateWithoutChannelsInput>, Prisma.TenantUncheckedUpdateWithoutChannelsInput>
+}
+
 export type TenantCreateWithoutUsersInput = {
   id?: string
   name: string
@@ -1042,6 +1063,7 @@ export type TenantCreateWithoutUsersInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamCreateNestedManyWithoutTenantInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutTenantInput
 }
 
 export type TenantUncheckedCreateWithoutUsersInput = {
@@ -1076,6 +1098,7 @@ export type TenantUncheckedCreateWithoutUsersInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTenantInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutTenantInput
 }
 
 export type TenantCreateOrConnectWithoutUsersInput = {
@@ -1126,6 +1149,7 @@ export type TenantUpdateWithoutUsersInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUpdateManyWithoutTenantNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantUncheckedUpdateWithoutUsersInput = {
@@ -1160,6 +1184,7 @@ export type TenantUncheckedUpdateWithoutUsersInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   teams?: Prisma.TeamUncheckedUpdateManyWithoutTenantNestedInput
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantCreateWithoutTeamsInput = {
@@ -1194,6 +1219,7 @@ export type TenantCreateWithoutTeamsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserCreateNestedManyWithoutTenantInput
+  channels?: Prisma.ChannelCreateNestedManyWithoutTenantInput
 }
 
 export type TenantUncheckedCreateWithoutTeamsInput = {
@@ -1228,6 +1254,7 @@ export type TenantUncheckedCreateWithoutTeamsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   users?: Prisma.UserUncheckedCreateNestedManyWithoutTenantInput
+  channels?: Prisma.ChannelUncheckedCreateNestedManyWithoutTenantInput
 }
 
 export type TenantCreateOrConnectWithoutTeamsInput = {
@@ -1278,6 +1305,7 @@ export type TenantUpdateWithoutTeamsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUpdateManyWithoutTenantNestedInput
+  channels?: Prisma.ChannelUpdateManyWithoutTenantNestedInput
 }
 
 export type TenantUncheckedUpdateWithoutTeamsInput = {
@@ -1312,6 +1340,163 @@ export type TenantUncheckedUpdateWithoutTeamsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   users?: Prisma.UserUncheckedUpdateManyWithoutTenantNestedInput
+  channels?: Prisma.ChannelUncheckedUpdateManyWithoutTenantNestedInput
+}
+
+export type TenantCreateWithoutChannelsInput = {
+  id?: string
+  name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
+  rocketUrl: string
+  release?: string
+  regToken?: string | null
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
+  adminAuthToken?: string | null
+  adminTokenExpireAt?: Date | string | null
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserCreateNestedManyWithoutTenantInput
+  teams?: Prisma.TeamCreateNestedManyWithoutTenantInput
+}
+
+export type TenantUncheckedCreateWithoutChannelsInput = {
+  id?: string
+  name: string
+  composeProjectName: string
+  domain: string
+  rootUrl: string
+  rocketUrl: string
+  release?: string
+  regToken?: string | null
+  hostPort?: number
+  port?: number
+  metricsPort?: number
+  bindIp?: string
+  adminUsername?: string
+  adminPass?: string
+  adminUserId?: string | null
+  adminAuthToken?: string | null
+  adminTokenExpireAt?: Date | string | null
+  mongodbBindIp?: string
+  mongodbPortNumber?: number
+  mongodbHostPortNumber?: number | null
+  natsPortNumber?: number
+  natsBindIp?: string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: boolean
+  deletedAt?: Date | string | null
+  deployStatus?: $Enums.DeployStatus
+  deployError?: string | null
+  lastProvisionedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutTenantInput
+  teams?: Prisma.TeamUncheckedCreateNestedManyWithoutTenantInput
+}
+
+export type TenantCreateOrConnectWithoutChannelsInput = {
+  where: Prisma.TenantWhereUniqueInput
+  create: Prisma.XOR<Prisma.TenantCreateWithoutChannelsInput, Prisma.TenantUncheckedCreateWithoutChannelsInput>
+}
+
+export type TenantUpsertWithoutChannelsInput = {
+  update: Prisma.XOR<Prisma.TenantUpdateWithoutChannelsInput, Prisma.TenantUncheckedUpdateWithoutChannelsInput>
+  create: Prisma.XOR<Prisma.TenantCreateWithoutChannelsInput, Prisma.TenantUncheckedCreateWithoutChannelsInput>
+  where?: Prisma.TenantWhereInput
+}
+
+export type TenantUpdateToOneWithWhereWithoutChannelsInput = {
+  where?: Prisma.TenantWhereInput
+  data: Prisma.XOR<Prisma.TenantUpdateWithoutChannelsInput, Prisma.TenantUncheckedUpdateWithoutChannelsInput>
+}
+
+export type TenantUpdateWithoutChannelsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUpdateManyWithoutTenantNestedInput
+  teams?: Prisma.TeamUpdateManyWithoutTenantNestedInput
+}
+
+export type TenantUncheckedUpdateWithoutChannelsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  composeProjectName?: Prisma.StringFieldUpdateOperationsInput | string
+  domain?: Prisma.StringFieldUpdateOperationsInput | string
+  rootUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  rocketUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  release?: Prisma.StringFieldUpdateOperationsInput | string
+  regToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  hostPort?: Prisma.IntFieldUpdateOperationsInput | number
+  port?: Prisma.IntFieldUpdateOperationsInput | number
+  metricsPort?: Prisma.IntFieldUpdateOperationsInput | number
+  bindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUsername?: Prisma.StringFieldUpdateOperationsInput | string
+  adminPass?: Prisma.StringFieldUpdateOperationsInput | string
+  adminUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  adminAuthToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  adminTokenExpireAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  mongodbBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  mongodbPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mongodbHostPortNumber?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  natsPortNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  natsBindIp?: Prisma.StringFieldUpdateOperationsInput | string
+  envRaw?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  isDeleted?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deployStatus?: Prisma.EnumDeployStatusFieldUpdateOperationsInput | $Enums.DeployStatus
+  deployError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastProvisionedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserUncheckedUpdateManyWithoutTenantNestedInput
+  teams?: Prisma.TeamUncheckedUpdateManyWithoutTenantNestedInput
 }
 
 
@@ -1322,11 +1507,13 @@ export type TenantUncheckedUpdateWithoutTeamsInput = {
 export type TenantCountOutputType = {
   users: number
   teams: number
+  channels: number
 }
 
 export type TenantCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | TenantCountOutputTypeCountUsersArgs
   teams?: boolean | TenantCountOutputTypeCountTeamsArgs
+  channels?: boolean | TenantCountOutputTypeCountChannelsArgs
 }
 
 /**
@@ -1351,6 +1538,13 @@ export type TenantCountOutputTypeCountUsersArgs<ExtArgs extends runtime.Types.Ex
  */
 export type TenantCountOutputTypeCountTeamsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.TeamWhereInput
+}
+
+/**
+ * TenantCountOutputType without action
+ */
+export type TenantCountOutputTypeCountChannelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ChannelWhereInput
 }
 
 
@@ -1387,6 +1581,7 @@ export type TenantSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   updatedAt?: boolean
   users?: boolean | Prisma.Tenant$usersArgs<ExtArgs>
   teams?: boolean | Prisma.Tenant$teamsArgs<ExtArgs>
+  channels?: boolean | Prisma.Tenant$channelsArgs<ExtArgs>
   _count?: boolean | Prisma.TenantCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["tenant"]>
 
@@ -1493,6 +1688,7 @@ export type TenantOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 export type TenantInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | Prisma.Tenant$usersArgs<ExtArgs>
   teams?: boolean | Prisma.Tenant$teamsArgs<ExtArgs>
+  channels?: boolean | Prisma.Tenant$channelsArgs<ExtArgs>
   _count?: boolean | Prisma.TenantCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TenantIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1503,6 +1699,7 @@ export type $TenantPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
   objects: {
     users: Prisma.$UserPayload<ExtArgs>[]
     teams: Prisma.$TeamPayload<ExtArgs>[]
+    channels: Prisma.$ChannelPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1931,6 +2128,7 @@ export interface Prisma__TenantClient<T, Null = never, ExtArgs extends runtime.T
   readonly [Symbol.toStringTag]: "PrismaPromise"
   users<T extends Prisma.Tenant$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tenant$usersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   teams<T extends Prisma.Tenant$teamsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tenant$teamsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  channels<T extends Prisma.Tenant$channelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Tenant$channelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ChannelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2428,6 +2626,30 @@ export type Tenant$teamsArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   distinct?: Prisma.TeamScalarFieldEnum | Prisma.TeamScalarFieldEnum[]
+}
+
+/**
+ * Tenant.channels
+ */
+export type Tenant$channelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Channel
+   */
+  select?: Prisma.ChannelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Channel
+   */
+  omit?: Prisma.ChannelOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ChannelInclude<ExtArgs> | null
+  where?: Prisma.ChannelWhereInput
+  orderBy?: Prisma.ChannelOrderByWithRelationInput | Prisma.ChannelOrderByWithRelationInput[]
+  cursor?: Prisma.ChannelWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ChannelScalarFieldEnum | Prisma.ChannelScalarFieldEnum[]
 }
 
 /**

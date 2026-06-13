@@ -50,8 +50,9 @@ model Tenant {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  users User[]
-  teams Team[]
+  users    User[]
+  teams    Team[]
+  channels Channel[]
 }
 
 model User {
@@ -70,8 +71,9 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  tenant      Tenant       @relation(fields: [tenantId], references: [id])
-  teamMembers TeamMember[]
+  tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  teamMembers    TeamMember[]
+  channelMembers ChannelMember[]
 
   @@unique([tenantId, rocketUserId])
   @@unique([tenantId, username])
@@ -88,11 +90,43 @@ model Team {
   teamId    String // Rocket teamId
   createdAt DateTime @default(now())
 
-  tenant  Tenant       @relation(fields: [tenantId], references: [id])
-  members TeamMember[]
+  tenant   Tenant       @relation(fields: [tenantId], references: [id])
+  members  TeamMember[]
+  channels Channel[]
 
   @@unique([tenantId, roomId])
   @@unique([tenantId, joinCode])
+}
+
+model Channel {
+  id        String   @id @default(uuid())
+  tenantId  String
+  teamId    String?
+  roomId    String // Rocket roomId
+  name      String?
+  joinCode  String
+  isPrivate Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  tenant  Tenant          @relation(fields: [tenantId], references: [id])
+  team    Team?           @relation(fields: [teamId], references: [id])
+  members ChannelMember[]
+
+  @@unique([tenantId, roomId])
+  @@unique([tenantId, joinCode])
+  @@index([teamId])
+}
+
+model ChannelMember {
+  id        String   @id @default(uuid())
+  channelId String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([channelId, userId])
 }
 
 model TeamMember {
